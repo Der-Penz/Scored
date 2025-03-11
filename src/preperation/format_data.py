@@ -197,7 +197,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(  
         description='convert label studio csv data annotation format into yolo format')  
     parser.add_argument(
-        "annotation-file", type=is_valid_csv,
+        "annotation_file", type=is_valid_csv,
         help="The CSV annotation file"
     )
     parser.add_argument(
