@@ -1,3 +1,4 @@
+from math import ceil
 import os
 from pathlib import Path
 import pandas as pd
@@ -96,13 +97,14 @@ def generate_file_structure(annotation_data, out_path, img_dir, keypoint_order, 
             os.makedirs(annotation_file)
         annotation_file = annotation_file / (img_name.split(".")[0] + ".txt")
         with open(annotation_file, "w") as file:
-            for order in keypoint_order:
+            for i, order in enumerate(keypoint_order):
                 try:
                     annotation = get_annotation_in_yolo_format(keypoints, labels, order, **kwargs)
                 except Exception as e:
                     print(f"\nError: {str(e)} for image {img_name}")
                 file.write(" ".join(map(lambda x : str(x), annotation)))
-                file.write("\n")
+                if i != len(keypoint_order) - 1:
+                    file.write("\n")
 
     loading_bar(total, total)
     print()    
@@ -156,8 +158,8 @@ def loading_bar(iteration, total, length=30):
 
 def split_data(data, split_ratios):
     np.random.shuffle(data)
-    train_size = int(len(data) * split_ratios[0])
-    val_size = int(len(data) * split_ratios[1])
+    train_size = ceil(len(data) * split_ratios[0])
+    val_size = ceil(len(data) * split_ratios[1])
     
     train_data = data[:train_size]
     val_data = data[train_size:train_size + val_size]
