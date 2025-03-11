@@ -197,11 +197,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(  
         description='convert label studio csv data annotation format into yolo format')  
     parser.add_argument(
-        "annotation_file", type=is_valid_csv,
+        "annotation-file", type=is_valid_csv,
         help="The CSV annotation file"
     )
     parser.add_argument(
-        "--img_dir", type=is_valid_directory, default="./",
+        "--img-dir", type=is_valid_directory, default="./",
         help="The location of the image files relative to the annotation file (default: same directory)"
     )
     parser.add_argument(
@@ -213,11 +213,11 @@ if __name__ == "__main__":
         help="Padding in percentage of the img size around the bounding box"
     )
     parser.add_argument(
-        "--keypoint_column", type=str, default="kp-1",
+        "--keypoint-column", type=str, default="kp-1",
         help="The column name for the keypoint data"
     )
     parser.add_argument(
-        "--keypoint_order", type=str, nargs="*", action="append", required=True,
+        "--keypoint-order", type=str, nargs="*", action="append", required=True,
         help="The keypoints in the order they will appear in the generated files"
     )
 
