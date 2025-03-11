@@ -235,6 +235,11 @@ if __name__ == "__main__":
         "--no-image", action="store_true",
         help="Do not copy the images into the output dataset"
     )
+
+    parser.add_argument(
+        "--zip", action="store_true",
+        help="zip the resulting dataset"
+    )
     
     args = parser.parse_args()  
 
@@ -279,4 +284,8 @@ if __name__ == "__main__":
     generate_config(out, labels, splitted_data, args.classes, args.keypoint_order)
 
     print("Converted annotation into yolo format")
+
+    if args.zip:
+        shutil.make_archive("dataset", 'zip', out)
+        print("Zipped dataset")
     
