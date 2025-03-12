@@ -33,7 +33,7 @@ def compute_bounding_box(
         print(
             "Only one keypoint provided, returning a bounding box with width and height 0."
         )
-        return BBYolo(key_points[0], 0, 0)
+        return BBYolo(key_points[0], 0.01, 0.01)
 
     x, y = np.stack(key_points).T
     min_x, min_y = max(np.min(x) - padding, 0), max(np.min(y) - padding, 0)
