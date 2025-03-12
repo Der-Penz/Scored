@@ -99,7 +99,7 @@ def generate_file_structure(annotation_data, out_path, img_dir, keypoint_order, 
         with open(annotation_file, "w") as file:
             for i, order in enumerate(keypoint_order):
                 try:
-                    annotation = get_annotation_in_yolo_format(keypoints, labels, order, **kwargs)
+                    annotation = get_annotation_in_yolo_format(i, keypoints, labels, order, **kwargs)
                 except Exception as e:
                     print(f"\nError: {str(e)} for image {img_name}")
                 file.write(" ".join(map(lambda x : str(x), annotation)))
@@ -109,9 +109,7 @@ def generate_file_structure(annotation_data, out_path, img_dir, keypoint_order, 
     loading_bar(total, total)
     print()    
 
-def get_annotation_in_yolo_format(keypoints, labels, keypoint_order, **kwargs):
-    class_index = 0
-
+def get_annotation_in_yolo_format(class_index, keypoints, labels, keypoint_order, **kwargs):
     keypoint_dict = dict(zip(map(lambda x : x.lower(), labels), keypoints))
     try:
         keypoints = [keypoint_dict[label.lower()] for label in keypoint_order]
@@ -125,9 +123,11 @@ def get_annotation_in_yolo_format(keypoints, labels, keypoint_order, **kwargs):
 
     line = [class_index, bb_center_x, bb_center_y, bb_width, bb_height]
 
+    visible = 1
     for keypoint in keypoints:
         line.append(keypoint[0])
         line.append(keypoint[1])
+        line.append(visible)
     return line
 
 def is_valid_directory(path):
