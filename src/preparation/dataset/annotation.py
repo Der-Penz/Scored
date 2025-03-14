@@ -121,6 +121,7 @@ def get_yolo_annotation_for_class(
     class_index: int,
     keypoints: List[str],
     annotation: LabelStudioAnnotation,
+    max_keypoints: int,
     visible=True,
     **kwargs,
 ) -> List[List[Any]]:
@@ -130,6 +131,7 @@ def get_yolo_annotation_for_class(
     :param class_index: The index of the class
     :param keypoints: The list of keypoints
     :param annotation: The annotation
+    :param max_keypoints: The maximum number of keypoints over all classes, if the current class has less keypoints, the remaining ones are filled with zeros
     :param visible: Whether the keypoints are visible, only supports all visible or all invisible keypoints
     :param kwargs: Additional arguments for the compute_bounding_box function
     :return: A list of yolo annotations that can be written to a file
@@ -156,18 +158,31 @@ def get_yolo_annotation_for_class(
     ]
     label_to_index = {label: index for index, label in enumerate(keypoints)}
 
+    def get_annotation_line(bb: BBYolo, keypoints: List[LabelStudioKeypoint]):
+        line = [class_index, bb.center[0], bb.center[1], bb.width, bb.height]
+
+        for i in range(max_keypoints):
+            if i >= len(keypoints):
+                line.append(0)
+                line.append(0)
+                line.append(0)
+                continue
+
+            keypoint = keypoints[i]
+            line.append(keypoint.pos[0])
+            line.append(keypoint.pos[1])
+            line.append(int(visible))
+
+        return line
+
     # if no relations are found, all existing keypoints correspond to the same object
     if len(selected_relations) == 0:
         bb = compute_bounding_box([k.pos for k in selected_keypoints], **kwargs)
         ordered_keypoints = sorted(
             selected_keypoints, key=lambda keypoint: label_to_index[keypoint.label]
         )
-        line = [class_index, bb.center[0], bb.center[1], bb.width, bb.height]
-        for keypoint in ordered_keypoints:
-            line.append(keypoint.pos[0])
-            line.append(keypoint.pos[1])
-            line.append(int(visible))
-        return [line]
+
+        return [get_annotation_line(bb, ordered_keypoints)]
 
     lines = []
 
@@ -185,12 +200,7 @@ def get_yolo_annotation_for_class(
             selected_keypoints_for_object,
             key=lambda keypoint: label_to_index[keypoint.label],
         )
-        line = [class_index, bb.center[0], bb.center[1], bb.width, bb.height]
-        for keypoint in ordered_keypoints:
-            line.append(keypoint.pos[0])
-            line.append(keypoint.pos[1])
-            line.append(int(visible))
-        lines.append(line)
+        lines.append(get_annotation_line(bb, ordered_keypoints))
     return lines
 
 
@@ -229,7 +239,9 @@ def read_yolo_annotation(
         class_name = classes[class_index]
         bb = BBYolo((float(data[1]), float(data[2])), float(data[3]), float(data[4]))
         keypoints = []
-        for i, keypoint_label in zip(range(5, len(data), 3), keypoints_per_class[class_name]):
+        for i, keypoint_label in zip(
+            range(5, len(data), 3), keypoints_per_class[class_name]
+        ):
             keypoints.append((float(data[i]), float(data[i + 1]), keypoint_label))
 
         annotations.append(YoloAnnotation(class_index, class_name, bb, keypoints))

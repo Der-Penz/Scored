@@ -86,6 +86,7 @@ def generate_file_structure(
     os.makedirs(img_out, exist_ok=True)
     os.makedirs(annotation_out, exist_ok=True)
 
+    max_keypoints = len(max(classes_with_keypoints.values(), key=lambda x: len(x)))
     for i, annotation in enumerate(annotation_data):
         loading_bar(i, total)
         img_path = img_dir / annotation.img_name
@@ -103,7 +104,7 @@ def generate_file_structure(
         for i, keypoints in enumerate(classes_with_keypoints.values()):
             try:
                 yolo_data = get_yolo_annotation_for_class(
-                    i, keypoints, annotation, **kwargs
+                    i, keypoints, annotation, max_keypoints, **kwargs
                 )
                 collected_lines.extend(yolo_data)
             except Exception as e:
