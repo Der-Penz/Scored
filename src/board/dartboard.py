@@ -54,6 +54,9 @@ class DartBoard:
 
     def get_size(self) -> int:
         return self._size
+    
+    def shape(self) -> Tuple[int, int]:
+        return (self._size, self._size)
 
     def get_center(self) -> Position:
         return self._center

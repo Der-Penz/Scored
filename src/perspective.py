@@ -4,8 +4,8 @@ import cv2
 
 
 def compute_perspective(
-    src: Sequence[Tuple[int, int]],
-    dest: Sequence[Tuple[int, int]],
+    src: Sequence[Tuple[float, float]],
+    dest: Sequence[Tuple[float, float]],
 ) -> np.ndarray:
     """
     Compute the perspective transform matrix
@@ -21,7 +21,7 @@ def compute_perspective(
     return matrix
 
 
-def warp_point(M: np.ndarray, point: Tuple[int, int]) -> Tuple[int, int]:
+def warp_point(M: np.ndarray, point: Tuple[float, float]) -> Tuple[float, float]:
     """
     Applies a perspective transformation to a single point using matrix M.
 
@@ -35,7 +35,7 @@ def warp_point(M: np.ndarray, point: Tuple[int, int]) -> Tuple[int, int]:
     x_warped = transformed_point[0, 0] / transformed_point[0, 2]
     y_warped = transformed_point[0, 1] / transformed_point[0, 2]
 
-    return int(x_warped), int(y_warped)
+    return x_warped, y_warped
 
 
 def warp_image(M: np.ndarray, image: np.ndarray, shape: Tuple[int, int]) -> np.ndarray:
