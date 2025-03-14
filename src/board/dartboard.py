@@ -49,12 +49,21 @@ class DartBoard:
 
     def __init__(self, resolution: int):
         self._size = resolution
-        self._center: Position = (resolution / 2, resolution / 2)
+        self._center: Position = (resolution // 2, resolution // 2)
         self._rings = DartBoard._get_rings(resolution)
+
+    def get_size(self) -> int:
+        return self._size
+
+    def get_center(self) -> Position:
+        return self._center
+
+    def get_rings(self) -> dict[str, float]:
+        return self._rings
 
     @staticmethod
     def _get_rings(size: int) -> dict[str, float]:
-        scale_factor = size / DIMENSIONS["double_outer"]
+        scale_factor = (size / 2) / DIMENSIONS["double_outer"]
 
         rings = {
             "inner_bull": DIMENSIONS["inner_bull"] * scale_factor,
