@@ -5,14 +5,13 @@ import numpy as np
 from perspective import compute_perspective, warp_point
 from ultralytics import YOLO
 import json
-from util import BBYolo, compute_bounding_box
 
 
 @dataclass(frozen=True)
 class KeypointObject:
     name: str
     keypoints: List[Tuple[float, float]]
-    bb: BBYolo
+    bb: Tuple[Tuple[float, float], float, float]
     conf: float
 
     def keypoints_x(self) -> List[float]:
@@ -56,18 +55,19 @@ class DartPredictor:
         res = json.loads(res.to_json())
         dartboard = None
 
-        objects: List[KeypointObject] = [
-            KeypointObject(obj["name"], obj["keypoints"], obj["confidence"])
-            for obj in res
-            if obj["confidence"] > self.conf
-        ]
+        objects: List[KeypointObject] = []
         for a in res:
             if a["confidence"] < self.conf:
                 continue
 
-            keypoints = zip(a["keypoints"]["x"], a["keypoints"]["y"])
-            bb = compute_bounding_box(keypoints)
-            obj = KeypointObject(a["name"], keypoints, bb, a["confidence"])
+            keypoints = list(zip(a["keypoints"]["x"], a["keypoints"]["y"]))
+            top_left = a["box"]["x1"], a["box"]["y1"]
+            width = a["box"]["x2"] - a["box"]["x1"]
+            height = a["box"]["y2"] - a["box"]["y1"]
+
+            obj = KeypointObject(
+                a["name"], keypoints, (top_left, width, height), a["confidence"]
+            )
             objects.append(obj)
 
             if obj.name == "dartboard":
