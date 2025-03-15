@@ -15,11 +15,6 @@ DIMENSIONS = {
 }
 
 DARTBOARD_NUMBERS = [
-    20,
-    1,
-    18,
-    4,
-    13,
     6,
     10,
     15,
@@ -35,6 +30,11 @@ DARTBOARD_NUMBERS = [
     9,
     12,
     5,
+    20,
+    1,
+    18,
+    4,
+    13,
 ]
 
 type Position = Tuple[int, int]
@@ -86,7 +86,7 @@ class DartBoard:
         :param position: The position of the dart throw.
         :return: The score of the dart
         """
-        number = self._get_dart_number()
+        number = self._get_dart_number(position)
         multiplier = self._get_dart_multiplier(position)
         return DartThrow(number, multiplier)
 
@@ -98,9 +98,7 @@ class DartBoard:
 
         if angle < 0:
             angle += 2 * np.pi
-
-        angle = (angle + np.pi / 20) % (2 * np.pi)
-
+            
         segment_index = int(angle // segment_angle)
 
         return DARTBOARD_NUMBERS[segment_index]
