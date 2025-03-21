@@ -7,6 +7,60 @@ services:
     volumes:
       - ./label-studio:/label-studio/data
     environment:
-      - LABEL_STUDIO_USERNAME=admin@admi.com
-      - LABEL_STUDIO_PASSWORD=adminadmin
-    command: label-studio --log-level DEBUG
+      - LABEL_STUDIO_USERNAME=admin@admin.com
+      - LABEL_STUDIO_PASSWORD=admin@admin.com
+    command: label-studio --log-level ${LOG_LEVEL}
+    networks:
+      - label-network
+  yolo-ml-backend:
+    container_name: yolo-ml-backend
+    image: humansignal/yolo:v0
+    build:
+      context: ./label-studio-ml-backend/
+    environment:
+      # specify these parameters if you want to use basic auth for the model server
+      - BASIC_AUTH_USER=
+      - BASIC_AUTH_PASS=
+      # set the log level for the model server
+      - LOG_LEVEL=${LOG_LEVEL}
+      # any other parameters that you want to pass to the model server
+      - ANY=PARAMETER
+      # specify the number of workers and threads for the model server
+      - WORKERS=1
+      - THREADS=8
+      # specify the model directory (likely you don't need to change this)
+      - MODEL_DIR=/data/models
+      - PYTHONPATH=/app
+
+      # Specify the Label Studio URL and API key to access
+      # uploaded, local storage and cloud storage files.
+      # Do not use 'localhost' or '127.0.0.1' as it does not work within Docker containers.
+      # Use prefix 'http://' or 'https://' for the URL always.
+      # Determine the actual IP using 'ifconfig' (Linux/Mac) or 'ipconfig' (Windows).
+      # or you can try http://host.docker.internal:<label-studio-port> if you run LS on the same machine
+      - LABEL_STUDIO_URL=http://label-studio:8080
+      - LABEL_STUDIO_API_KEY=${LABEL_STUDIO_API_KEY}
+
+      # YOLO parameters
+
+      # Allow to use custom `model_path` in labeling configurations
+      - ALLOW_CUSTOM_MODEL_PATH=true
+      # Show matplotlib debug plot for YOLO predictions
+      - DEBUG_PLOT=false
+      # Default score threshold, which is used to filter out low-confidence predictions,
+      # you can change it in the labeling configuration using `model_score_threshold` parameter in the control tags
+      - MODEL_SCORE_THRESHOLD=0.5
+      # Model root directory, where the YOLO model files are stored
+      - MODEL_ROOT=/app/models
+    ports:
+      - "9090:9090"
+    volumes:
+      - "./label-studio-ml-backend/data/server:/data"
+      - "./models:/app/models"
+      - "./label-studio-ml-backend/cache_dir:/app/cache_dir"
+    networks:
+      - label-network
+
+networks:
+  label-network:
+    driver: bridge
