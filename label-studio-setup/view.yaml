@@ -1,0 +1,22 @@
+<View>
+ 	<RectangleLabels name="kp-1_bbox" toName="img-1" model_skip="true">
+    <Label value="dart" />
+    <Label value="dartboard" />
+  </RectangleLabels>
+  <KeyPointLabels name="kp-1" snap="pixel" toName="img-1" model_point_threshold="0.5" model_path="v1/best.pt" model_score_threshold="0.75" model_add_bboxes="true">
+    
+    
+  	<Label value="Top" background="#ff3d33" predicted_values="dartboard" model_index="0"/>
+    <Label value="Right" background="#f500e0" predicted_values="dartboard" model_index="1"/>
+    <Label value="Bottom" background="#ffa82e" predicted_values="dartboard" model_index="2"/>
+    <Label value="Left" background="#AD8B00" predicted_values="dartboard" model_index="3"/>
+    
+    <View>
+    
+    <Label value="Dart" background="#00fffb" predicted_values="dart" model_index="0"/>
+    <Label value="Dart-Flight" background="#0062ff" predicted_values="dart" model_index="1"/>
+  	</View>
+  </KeyPointLabels>
+
+  <Image name="img-1" value="$img"/>
+</View>
