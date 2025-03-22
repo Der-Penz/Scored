@@ -1,3 +1,4 @@
+import argparse
 import os
 from label_studio_sdk import Client
 from dotenv import load_dotenv
@@ -7,9 +8,14 @@ load_dotenv(os.path.join(ROOT_DIR, ".env"))
 
 LABEL_STUDIO_URL = os.getenv("LABEL_STUDIO_URL")
 API_KEY = os.getenv("LABEL_STUDIO_API_KEY")
-PROJECT_NAME = "Scored"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 VIEW_FILE = os.path.join(SCRIPT_DIR, "view.yaml")
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--project', type=str, default='Scored', help='Name of the project')
+args = parser.parse_args()
+
+PROJECT_NAME = args.project
 
 if not LABEL_STUDIO_URL or not API_KEY:
     print("Error: Missing LABEL_STUDIO_URL or API_KEY in .env")

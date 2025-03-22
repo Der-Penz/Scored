@@ -1,5 +1,6 @@
 import os
 import httpx
+import argparse
 from label_studio_sdk import Client
 from label_studio_sdk.core import SyncClientWrapper
 from label_studio_sdk.ml.client import MlClient
@@ -10,14 +11,18 @@ load_dotenv(os.path.join(ROOT_DIR, ".env"))
 
 LABEL_STUDIO_URL = os.getenv("LABEL_STUDIO_URL")
 API_KEY = os.getenv("LABEL_STUDIO_API_KEY")
-PROJECT_NAME = "Scored" # Change the name if needed
-
 ML_BACKEND_URL = "http://yolo-ml-backend:9090"
 ML_BACKEND_TITLE = "YOLO ML Backend"
 
 if not LABEL_STUDIO_URL or not API_KEY:
     print("Error: Missing LABEL_STUDIO_URL or API_KEY in .env")
     exit(1)
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--project', type=str, default='Scored', help='Name of the project')
+args = parser.parse_args()
+
+PROJECT_NAME = args.project
 
 ls = Client(url=LABEL_STUDIO_URL, api_key=API_KEY)
 
