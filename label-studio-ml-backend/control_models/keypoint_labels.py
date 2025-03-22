@@ -170,4 +170,4 @@ class KeypointLabelsModel(ControlModel):
 
 
 # Pre-load and cache default model at startup
-KeypointLabelsModel.get_cached_model(KeypointLabelsModel.model_path)
+# KeypointLabelsModel.get_cached_model(KeypointLabelsModel.model_path)
