@@ -10,3 +10,7 @@ The project aims to detect dart scores by using a yolo v11 keypose model on a si
 After detecting the keypoints, the 4 dartboard keypoints are used to apply a perspective transform to warp the perspective in a top down view. With the warped points of the dart tips the score of the dart can easily be calculated by their distance to the center and their angle.
 
 ![image](images/warped_dartboard.png)
+
+## Training
+
+To see how to train your own model and how to prepare and create a dataset, refer to [Train Instructions](train.md)
