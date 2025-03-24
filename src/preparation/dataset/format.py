@@ -54,7 +54,6 @@ def generate_file_structure(
     annotation_data: List[LabelStudioAnnotation],
     classes_with_keypoints: Dict[str, List[str]],
     out: Path,
-    img_dir: Path,
     copy_image: bool = True,
     clear_existing: bool = False,
     **kwargs,
@@ -65,7 +64,6 @@ def generate_file_structure(
     :param annotation_data: The annotations
     :param classes_with_keypoints: A dictionary mapping class names to their list of keypoints
     :param out: The output directory
-    :param img_dir: The directory containing the images
     :param copy_image: Whether to copy the images to the output directory
     :param clear_existing: Whether to clear the existing output directory
     :param kwargs: Additional arguments for the get_annotation_in_yolo_format function
@@ -89,16 +87,15 @@ def generate_file_structure(
     max_keypoints = len(max(classes_with_keypoints.values(), key=lambda x: len(x)))
     for i, annotation in enumerate(annotation_data):
         loading_bar(i, total)
-        img_path = img_dir / annotation.img_name
 
-        if not img_path.exists():
-            print("missing image file" + str(img_path))
+        img_name = annotation.img_path.name
+
+        if not annotation.img_path.exists():
+            print("missing image file" + str(annotation.img_path))
         elif copy_image:
-            shutil.copy(img_path, img_out / annotation.img_name)
+            shutil.copy(annotation.img_path, img_out / img_name)
 
-        annotation_out_file = annotation_out / (
-            annotation.img_name.split(".")[0] + ".txt"
-        )
+        annotation_out_file = annotation_out / (img_name.split(".")[0] + ".txt")
 
         collected_lines = []
         for i, keypoints in enumerate(classes_with_keypoints.values()):

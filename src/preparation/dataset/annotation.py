@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
-from util import BBYolo, compute_bounding_box, loading_bar
+from src.util import BBYolo, compute_bounding_box, loading_bar
 
 
 @dataclass(frozen=True)
@@ -32,11 +32,11 @@ class LabelStudioRelation:
 class LabelStudioAnnotation:
     """
     Represents an annotation for an image in the Label Studio format.
-    Contains the image name, id, the keypoints and relations between them.
+    Contains the image path, id, the keypoints and relations between them.
     """
 
     id: int
-    img_name: str
+    img_path: Path
     keypoints: List[LabelStudioKeypoint]
     relations: List[LabelStudioRelation]
 
@@ -70,12 +70,13 @@ def extract_annotation_info(
 
 
 def extract_annotations(
-    annotations_path: Path, limit: int = 0
+    annotations_path: Path, data_dir: Path, limit: int = 0
 ) -> List[LabelStudioAnnotation]:
     """
     Reads the annotations from the given file and extracts the keypoints positions and relations.
 
     :param annotations_path: The path to the annotations file
+    :param data_dir: The directory containing the label studio upload files
     :param limit: The maximum number of annotations to read, 0 means no limit
     :return: A list of annotations
     """
@@ -91,13 +92,10 @@ def extract_annotations(
         if data is None:
             continue
 
-        img_path = data["data"]["img"]
+        img_path = data["data"]["img"].replace("/data/", "")
 
-        if "dartboard" in img_path:
-            img_name = "dartboard" + img_path.split("dartboard", 1)[-1]
-        else:
-            print("Img names must contain the string dartboard")
-            continue
+        img_path = data_dir / Path(img_path)
+
         try:
             loading_bar(i, total)
             keypoints, relations = extract_annotation_info(
@@ -105,7 +103,7 @@ def extract_annotations(
             )
 
             annotations.append(
-                LabelStudioAnnotation(data["id"], img_name, keypoints, relations)
+                LabelStudioAnnotation(data["id"], img_path, keypoints, relations)
             )
         except Exception as e:
             print(f"Error parsing entry {i + 1}. Entry id: {data['id']}")

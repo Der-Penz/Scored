@@ -39,8 +39,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--img-dir",
         type=is_valid_directory,
-        default="./",
-        help="The location of the image files relative to the annotation file (default: same directory)",
+        default="./label-studio/media/",
+        help="The location of the label studio data upload directory",
     )
     parser.add_argument(
         "--out",
@@ -135,14 +135,11 @@ if __name__ == "__main__":
     annotation_path = Path(args.annotation_file).resolve()
 
     print("Extract annotations:")
-    annotation_data = extract_annotations(annotation_path, args.limit)
+    annotation_data = extract_annotations(
+        annotation_path, Path(args.img_dir), args.limit
+    )
 
     print("Generating file structure:")
-
-    if args.img_dir == "./":
-        img_dir = annotation_path.parent
-    else:
-        img_dir = (annotation_path.parent / args.img_dir).resolve()
 
     out = Path(args.out)
     partitioned_dataset = split_data(
@@ -158,7 +155,6 @@ if __name__ == "__main__":
             data,
             classes,
             out / label,
-            img_dir,
             padding=args.padding,
             copy_image=not args.no_image,
             clear_existing=args.clear_existing,
