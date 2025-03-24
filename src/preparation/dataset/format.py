@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import shutil
+from PIL import Image, ImageOps
 from typing import Any, Dict, List, Sequence
 from src.preparation.dataset.annotation import (
     LabelStudioAnnotation,
@@ -56,6 +57,7 @@ def generate_file_structure(
     out: Path,
     copy_image: bool = True,
     clear_existing: bool = False,
+    imgsz: int = None,
     **kwargs,
 ):
     """
@@ -66,6 +68,7 @@ def generate_file_structure(
     :param out: The output directory
     :param copy_image: Whether to copy the images to the output directory
     :param clear_existing: Whether to clear the existing output directory
+    :param imgsz: The size on which the images should be resized
     :param kwargs: Additional arguments for the get_annotation_in_yolo_format function
     """
     if not os.path.exists(out):
@@ -93,7 +96,14 @@ def generate_file_structure(
         if not annotation.img_path.exists():
             print("missing image file" + str(annotation.img_path))
         elif copy_image:
-            shutil.copy(annotation.img_path, img_out / img_name)
+
+            if imgsz is not None:
+                img = Image.open(annotation.img_path)
+                img = ImageOps.exif_transpose(img)
+                img = img.resize((imgsz, imgsz), Image.Resampling.LANCZOS)
+                img.save(img_out / img_name)
+            else:
+                shutil.copy(annotation.img_path, img_out / img_name)
 
         annotation_out_file = annotation_out / (img_name.split(".")[0] + ".txt")
 

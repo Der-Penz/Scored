@@ -49,6 +49,11 @@ if __name__ == "__main__":
         help="The output directory where the files are saved",
     )
     parser.add_argument(
+        "--imgsz",
+        type=int,
+        help="The size the images will be resized to (square aspect ratio), if not provided the original size is used",
+    )
+    parser.add_argument(
         "--padding",
         type=int,
         default=0,
@@ -158,6 +163,7 @@ if __name__ == "__main__":
             padding=args.padding,
             copy_image=not args.no_image,
             clear_existing=args.clear_existing,
+            imgsz=args.imgsz,
         )
 
     print("Generating yaml config")
