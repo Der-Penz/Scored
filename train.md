@@ -10,9 +10,11 @@ This project uses the open source labeling software LabelStudio. Locally running
 This will spin up 2 Containers. One for running the Label studio software locally (default to `localhost:8080`) and one for an LabelStudio ml backend to run prediction for pre labeling new data.
 
 After running the docker compose you should be able to access the LS in your browser. First you need to sign in to an account. Either create an account with any email and password. No need to provide a functional email or use the default user with email and password : amin@admin.com.  
-After authenticating you can create a project manually or run `python label-studio-setup/create-project.py` to create a project with the necessary labeling config.
+After authenticating you can create a project manually or run `python label-studio-setup/project.py Scored` to create a project with the necessary labeling config, ml backend and local storage configuration.
 
 >For running the scripts in the `label-studio-setup` folder you need to define the env variables for the LS URL and an API Key which can retrieved by opening LS, navigating to your account settings, Access Token. 
+
+The folder that contains all of the collect images is by default located in `./dataset/`. You can change this by editing the env var `DATASET_PATH` to your desired location. All the images in this folder will be served with LS as long as the local Storage is correctly setup.
 
 ### LS ml backend
 
@@ -22,6 +24,13 @@ To uses this run `python label-studio-setup/connect-ml-backend.py` which will au
   
 By default the ml backend expects a model in the `models/` which it will use to make predictions. Which model it will use can be configured in the Projects Labeling interface. Change the `model_path` value to any model relative to the `models/` folder.
 
+> If the ML Backend container crashes with this error message:
+> ```
+> exec /app/start.sh : No such file or directory
+> exited with code 1
+> ```
+> Adjust your git config `git config --global core.autocrlf false` and clone the repo again.
+> See more about this error [here](https://github.com/HumanSignal/label-studio-ml-backend?tab=readme-ov-file#troubleshooting-docker-build-on-windows)
 
 ## Creating a Dataset
 
