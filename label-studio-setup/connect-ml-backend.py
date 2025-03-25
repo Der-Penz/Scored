@@ -17,7 +17,7 @@ if not LABEL_STUDIO_URL or not API_KEY:
     exit(1)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--project', type=str, default='Scored', help='Name of the project')
+parser.add_argument('project', type=str, required=True, help='Name of the project')
 args = parser.parse_args()
 
 PROJECT_NAME = args.project
