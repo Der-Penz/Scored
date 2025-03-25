@@ -7,8 +7,10 @@ Running these scripts will set up the project for local development, although ev
 
 ### Scripts:
 
-- `create-project`:  
-  Run this script to create a project with the appropriate view for the dart keypoint labeling.
+- `project.py`:  
+  Run this script to create a project thats correctly set up.
+  The Script will add the labeling interface, connect the ml backend and the local storage.  
+  Running the project with the `--sync` flag will sync all storage buckets with the latest updates
 
-- `connect-ml-backend`:  
+- `connect-ml-backend.py`:  
   Run this script to connect the YOLO ML backend to the given project.

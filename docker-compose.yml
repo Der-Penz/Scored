@@ -6,9 +6,12 @@ services:
       - "8080:8080"
     volumes:
       - ./label-studio:/label-studio/data
+      -  ${DATASET_PATH}:/home/user/dataset
     environment:
       - LABEL_STUDIO_USERNAME=admin@admin.com
       - LABEL_STUDIO_PASSWORD=admin@admin.com
+      - LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=true
+      - LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=/home/user
     command: label-studio --log-level ${LOG_LEVEL}
     networks:
       - label-network
