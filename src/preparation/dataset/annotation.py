@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import json
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 from src.util import BBYolo, compute_bounding_box, loading_bar
@@ -92,9 +93,14 @@ def extract_annotations(
         if data is None:
             continue
 
-        img_path = data["data"]["img"].replace("/data/", "")
+        storage_path = data["data"]["img"]
+        if not storage_path.startswith("/data/local-files/?d=dataset"):
+            raise Exception(f"Invalid storage path : {storage_path}")
 
-        img_path = data_dir / Path(img_path)
+        storage_path = storage_path.replace("/data/local-files/?d=dataset", ".")
+        basepath = Path(os.getenv("DATASET_PATH"))
+        
+        img_path = (basepath / storage_path).resolve()
 
         try:
             loading_bar(i, total)

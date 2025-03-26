@@ -3,6 +3,8 @@ from pathlib import Path
 from typing import Dict, List
 import argparse
 import shutil
+import dotenv
+dotenv.load_dotenv()
 
 from src.preparation.dataset.annotation import extract_annotations
 from src.preparation.dataset.format import generate_config, generate_file_structure
