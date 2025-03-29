@@ -1,6 +1,6 @@
-import os
 from pathlib import Path
 from typing import Dict, List
+from collections import defaultdict
 
 import yaml
 
@@ -22,7 +22,7 @@ def read_yolo_config(file_path):
 
     if not file_path.is_file():
         raise ValueError(f"Config file is not a file: {file_path}")
-    
+
     if file_path.suffix != ".yaml":
         raise ValueError(f"Config file is not a yaml file: {file_path}")
 
@@ -41,24 +41,25 @@ def read_yolo_config(file_path):
             classes[class_name] = raw_config["keypoint_names"][class_name]
         config["classes"] = classes
         return config
-    
+
+
 def read_yolo_annotation(
     annotations_path: Path,
     classes: List[str],
     keypoints_per_class: Dict[str, List[str]],
-) -> List[LabelStudioAnnotation]:
+) -> Dict[str, List[YoloAnnotation]]:
     """
     Read a yolo .txt keypoint annotation file and return a list of YoloAnnotation objects.
 
     :param annotations_path: The path to the annotations file
     :param classes: The list of class names
     :param keypoints_per_class: The dictionary containing the keypoints for each class
-    :return: A list of YoloAnnotation
+    :return: A dictionary containing the annotations for each class
     """
     with open(annotations_path, "r") as file:
         lines = file.readlines()
 
-    annotations: List[YoloAnnotation] = []
+    annotations: Dict[str, List[YoloAnnotation]] = defaultdict(list)
     for line in lines:
         data = line.split(" ")
         class_index = int(data[0])
@@ -70,5 +71,7 @@ def read_yolo_annotation(
         ):
             keypoints.append((float(data[i]), float(data[i + 1]), keypoint_label))
 
-        annotations.append(YoloAnnotation(class_index, class_name, bb, keypoints))
+        annotations[class_name].append(
+            YoloAnnotation(class_index, class_name, bb, keypoints)
+        )
     return annotations
