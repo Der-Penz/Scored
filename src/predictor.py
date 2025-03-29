@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import List, Tuple
-from board.dartboard import DartBoard, DartThrow, Position
+from src.board.dartboard import DartBoard, DartThrow, Position
 import numpy as np
-from perspective import compute_perspective, warp_point
+from src.perspective import compute_perspective, warp_point
 from ultralytics import YOLO
 import json
 
@@ -21,13 +21,44 @@ class KeypointObject:
         return [keypoint[1] for keypoint in self.keypoints]
 
 
+@dataclass(frozen=True)
+class DartPrediction:
+    scores: List[DartThrow]
+    matrix: np.ndarray
+    objects: List[KeypointObject]
+
+    def sum_score(self) -> int:
+        """
+        Returns the sum of all scores.
+        """
+        return sum([score.score() for score in self.scores])
+    
+    def get_dartboard(self) -> KeypointObject:
+        """
+        Returns the dartboard object.
+        """
+        for obj in self.objects:
+            if obj.name == "dartboard":
+                return obj
+        raise ValueError("No dartboard detected")
+    
+    def get_darts(self) -> List[KeypointObject]:
+        """
+        Returns the dart objects.
+        """
+        return [obj for obj in self.objects if obj.name == "dart"]
+
+
 class DartPredictor:
 
     def __init__(self, board: DartBoard, model_path: str, conf: float):
         self._board = board
         self._dest_points = DartPredictor._get_perspective_transform_points(board)
-        self.model = YOLO(model_path)
+        self.model: YOLO = YOLO(model_path)
         self.conf = conf
+
+    def model(self):
+        return self.model
 
     @staticmethod
     def _get_perspective_transform_points(board: DartBoard) -> List[Position]:
@@ -42,22 +73,27 @@ class DartPredictor:
         ]
         return points
 
-    def predict(self, image: np.ndarray) -> List[DartThrow]:
+    def predict(
+        self, image: np.ndarray, conf: float = None, **kwargs
+    ) -> DartPrediction:
         """
         Predicts the position of a dart throw based on the given image.
 
         :param image: The image of a dartboard which will be used for prediction.
+        :param conf: The confidence threshold for the model. If None, the default confidence threshold will be used.
+        :param kwargs: Additional arguments to be passed to the model.
         :return: The scores of each dart that was detected, the perspective transformation matrix and the detected objects.
         """
 
-        res = self.model.predict(image)[0]
+        res = self.model.predict(image, **kwargs)[0]
 
         res = json.loads(res.to_json())
         dartboard = None
 
         objects: List[KeypointObject] = []
         for a in res:
-            if a["confidence"] < self.conf:
+            t_conf = conf if conf is not None else self.conf
+            if a["confidence"] < t_conf:
                 continue
 
             keypoints = list(zip(a["keypoints"]["x"], a["keypoints"]["y"]))
@@ -89,4 +125,4 @@ class DartPredictor:
             score = self._board.score_dart(warped_point)
             scores.append(score)
 
-        return scores, matrix, objects
+        return DartPrediction(scores, matrix, objects)

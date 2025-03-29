@@ -55,7 +55,7 @@ def to_absolute_pixels(key_point: np.ndarray, shape: Tuple[int, int]) -> np.ndar
     return np.array([key_point[0] * shape[0], key_point[1] * shape[1]])
 
 
-def loading_bar(iteration: int, total: int, length: int = 30):
+def loading_bar(iteration: int, total: int, length: int = 30, newline: bool = False):
     """
     Prints a loading bar to the console.
 
@@ -66,6 +66,9 @@ def loading_bar(iteration: int, total: int, length: int = 30):
     percent = (iteration / total) * 100
     filled_length = int(length * iteration // total)
     bar = "█" * filled_length + "-" * (length - filled_length)
+    if newline:
+        sys.stdout.write(f"\r[{bar}] {percent:.1f}% ({iteration}/{total})\n")
+    else:
+        sys.stdout.write(f"\r[{bar}] {percent:.1f}%")
 
-    sys.stdout.write(f"\r[{bar}] {percent:.1f}%")
     sys.stdout.flush()
