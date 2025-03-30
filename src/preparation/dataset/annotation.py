@@ -71,13 +71,12 @@ def extract_annotation_info(
 
 
 def extract_annotations(
-    annotations_path: Path, data_dir: Path, limit: int = 0
+    annotations_path: Path, limit: int = 0
 ) -> List[LabelStudioAnnotation]:
     """
     Reads the annotations from the given file and extracts the keypoints positions and relations.
 
     :param annotations_path: The path to the annotations file
-    :param data_dir: The directory containing the label studio upload files
     :param limit: The maximum number of annotations to read, 0 means no limit
     :return: A list of annotations
     """
