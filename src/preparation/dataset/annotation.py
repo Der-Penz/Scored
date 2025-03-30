@@ -235,6 +235,12 @@ class YoloAnnotation:
     bb: BBYolo
     keypoints: List[Tuple[int, int, str]]
 
+    def keypoints_pos(self) -> List[Tuple[int, int]]:
+        """
+        Returns the keypoints positions.
+        """
+        return [(keypoint[0], keypoint[1]) for keypoint in self.keypoints]
+
 
 def read_yolo_annotation(
     annotations_path: Path,

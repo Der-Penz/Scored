@@ -53,7 +53,7 @@ class DartPredictor:
 
     def __init__(self, board: DartBoard, model_path: str, conf: float):
         self._board = board
-        self._dest_points = DartPredictor._get_perspective_transform_points(board)
+        self._dest_points = DartPredictor.get_perspective_transform_points(board)
         self.model: YOLO = YOLO(model_path)
         self.conf = conf
 
@@ -61,7 +61,7 @@ class DartPredictor:
         return self.model
 
     @staticmethod
-    def _get_perspective_transform_points(board: DartBoard) -> List[Position]:
+    def get_perspective_transform_points(board: DartBoard) -> List[Position]:
         half = board.get_size() // 2
         center = board.get_center()
 

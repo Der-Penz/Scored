@@ -79,13 +79,18 @@ class DartBoard:
 
         return rings
 
-    def score_dart(self, position: Position) -> DartThrow:
+    def score_dart(self, position: Position, relative=False) -> DartThrow:
         """
         Retrieves the score of a dart throw based on the position on the dartboard.
 
         :param position: The position of the dart throw.
+        :param relative: If True, the position is relative coordinates.
         :return: The score of the dart
         """
+        if relative:
+            position = (position[0] + self._size, position[1] + self._size)
+
+
         number = self._get_dart_number(position)
         multiplier = self._get_dart_multiplier(position)
         return DartThrow(number, multiplier)
