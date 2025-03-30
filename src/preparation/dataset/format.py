@@ -108,10 +108,10 @@ def generate_file_structure(
         annotation_out_file = annotation_out / (img_name.split(".")[0] + ".txt")
 
         collected_lines = []
-        for i, keypoints in enumerate(classes_with_keypoints.values()):
+        for i, (class_name, keypoints) in enumerate(classes_with_keypoints.items()):
             try:
                 yolo_data = get_yolo_annotation_for_class(
-                    i, keypoints, annotation, max_keypoints, **kwargs
+                    i, class_name, keypoints, annotation, max_keypoints
                 )
                 collected_lines.extend(yolo_data)
             except Exception as e:

@@ -9,65 +9,109 @@ from src.util import BBYolo, compute_bounding_box, loading_bar
 @dataclass(frozen=True)
 class LabelStudioKeypoint:
     """
-    Represents a keypoint in the Label Studio format.
-    Contains the position and the label of the keypoint and its id.
+    A keypoint in the Label Studio format.
+
+    Attributes:
+        pos (Tuple[int, int]): The position of the keypoint
+        label (str): The label of the keypoint
+        id (str): The id of the keypoint
+        parent_id (str): The id of the parent
     """
 
     pos: Tuple[int, int]
     label: str
     id: str
+    parent_id: str = None
 
 
 @dataclass(frozen=True)
-class LabelStudioRelation:
+class LabelStudioObject:
     """
-    Represents a relation between two keypoints in the Label Studio format.
-    Contains the ids of the from and to keypoints.
+    Represents an object in the Label Studio format.
+
+    Attributes:
+        label (str): The label of the object
+        id (str): The id of the object
+        bbox (BBYolo): The bounding box of the object
+        keypoints (List[LabelStudioKeypoint]): The list of keypoints in the object
     """
 
-    from_id: str
-    to_id: str
+    label: str
+    id: str
+    bbox: BBYolo
+    keypoints: List[LabelStudioKeypoint]
 
 
 @dataclass(frozen=True)
 class LabelStudioAnnotation:
     """
-    Represents an annotation for an image in the Label Studio format.
-    Contains the image path, id, the keypoints and relations between them.
+    Represents an annotation in the Label Studio format.
+
+    Attributes:
+        id (int): The id of the annotation
+        img_path (Path): The path to the image
+        objects (List[LabelStudioObject]): The list of objects in the annotation
     """
 
     id: int
     img_path: Path
-    keypoints: List[LabelStudioKeypoint]
-    relations: List[LabelStudioRelation]
+    objects: List[LabelStudioObject]
+
+    def get_objects_of(self, label: str) -> List[LabelStudioObject]:
+        """
+        Returns the objects of the given label.
+
+        :param label: The label to filter the objects by
+        :return: A list of LabelStudioObject
+        """
+        return [obj for obj in self.objects if obj.label == label]
 
 
 def extract_annotation_info(
     annotation_data: Dict[str, Any],
-) -> Tuple[List[LabelStudioKeypoint], List[LabelStudioRelation]]:
+) -> List[LabelStudioObject]:
     """
-    Extracts the keypoints and relations from the given annotation data.
+    Extracts the keypoints and relations from the annotation data.
 
-    :param annotation_data: The annotation data in the Label Studio json format
-    :return: A tuple containing the keypoints and relations
+    :param annotation_data: The annotation data from Label Studio
+    :return: A list of LabelStudioObject
     """
 
     keypoints: List[LabelStudioKeypoint] = []
-    relations: List[LabelStudioRelation] = []
+    rects: List[any] = []
 
     for item in annotation_data:
-        if item["type"] == "relation":
-            from_id = item["from_id"]
-            to_id = item["to_id"]
-            relations.append(LabelStudioRelation(from_id, to_id))
+        if item["type"] == "rectanglelabels":
+            rects.append(item)
 
         elif item["type"] == "keypointlabels":
             label = item["value"]["keypointlabels"][0]
             position = item["value"]["x"] / 100, item["value"]["y"] / 100
             id = item["id"]
-            keypoints.append(LabelStudioKeypoint(position, label.lower(), id))
+            parent = item["parentID"]
+            keypoints.append(
+                LabelStudioKeypoint(position, label.lower(), id, parent_id=parent)
+            )
 
-    return keypoints, relations
+    objects: List[LabelStudioObject] = []
+    for rect in rects:
+        label = rect["value"]["rectanglelabels"][0]
+        id = rect["id"]
+        x1 = rect["value"]["x"]
+        y1 = rect["value"]["y"]
+        width = rect["value"]["width"]
+        height = rect["value"]["height"]
+
+        center = (x1 + width / 2, y1 + height / 2)
+
+        bb = BBYolo(center, width, height)
+        associated_keypoints: List[LabelStudioKeypoint] = [
+            keypoint for keypoint in keypoints if keypoint.parent_id == id
+        ]
+
+        objects.append(LabelStudioObject(label.lower(), id, bb, associated_keypoints))
+
+    return objects
 
 
 def extract_annotations(
@@ -98,18 +142,14 @@ def extract_annotations(
 
         storage_path = storage_path.replace("/data/local-files/?d=dataset", ".")
         basepath = Path(os.getenv("DATASET_PATH"))
-        
+
         img_path = (basepath / storage_path).resolve()
 
         try:
             loading_bar(i, total)
-            keypoints, relations = extract_annotation_info(
-                data["annotations"][0]["result"]
-            )
+            objects = extract_annotation_info(data["annotations"][0]["result"])
 
-            annotations.append(
-                LabelStudioAnnotation(data["id"], img_path, keypoints, relations)
-            )
+            annotations.append(LabelStudioAnnotation(data["id"], img_path, objects))
         except Exception as e:
             print(f"Error parsing entry {i + 1}. Entry id: {data['id']}")
             print(e)
@@ -122,43 +162,29 @@ def extract_annotations(
 
 def get_yolo_annotation_for_class(
     class_index: int,
+    class_name: str,
     keypoints: List[str],
     annotation: LabelStudioAnnotation,
     max_keypoints: int,
     visible=True,
-    **kwargs,
-) -> List[List[Any]]:
+) -> List[List[str]]:
     """
     Generates the yolo annotation for the given annotation and class. If the keypoints are part of different objects, multiple entries are generated.
 
     :param class_index: The index of the class
-    :param keypoints: The list of keypoints
+    :param class_name: The name of the class
+    :param keypoints: The list of keypoints for the class
     :param annotation: The annotation
     :param max_keypoints: The maximum number of keypoints over all classes, if the current class has less keypoints, the remaining ones are filled with zeros
     :param visible: Whether the keypoints are visible, only supports all visible or all invisible keypoints
-    :param kwargs: Additional arguments for the compute_bounding_box function
     :return: A list of yolo annotations that can be written to a file
     """
-    selected_keypoints = [
-        keypoint for keypoint in annotation.keypoints if keypoint.label in keypoints
-    ]
+    objects_of_class = annotation.get_objects_of(class_name)
 
-    # if no keypoints are found, the class is not present in the annotation
-    if len(selected_keypoints) == 0:
+    if len(objects_of_class) == 0:
+        # if no objects are found, the class is not present in the annotation
         return []
 
-    if len(set([k.label for k in selected_keypoints])) != len(keypoints):
-        raise Exception(
-            f"Missing keypoints in annotation. Needed: {keypoints}, available: {[keypoint.label for keypoint in selected_keypoints]}"
-        )
-
-    selected_keypoint_ids = [keypoint.id for keypoint in selected_keypoints]
-    selected_relations = [
-        relation
-        for relation in annotation.relations
-        if relation.from_id in selected_keypoint_ids
-        or relation.to_id in selected_keypoint_ids
-    ]
     label_to_index = {label: index for index, label in enumerate(keypoints)}
 
     def get_annotation_line(bb: BBYolo, keypoints: List[LabelStudioKeypoint]):
@@ -178,32 +204,23 @@ def get_yolo_annotation_for_class(
 
         return line
 
-    # if no relations are found, all existing keypoints correspond to the same object
-    if len(selected_relations) == 0:
-        bb = compute_bounding_box([k.pos for k in selected_keypoints], **kwargs)
+    lines = []
+    for object in objects_of_class:
+        selected_keypoints = [
+            keypoint for keypoint in object.keypoints if keypoint.label in keypoints
+        ]
+
         ordered_keypoints = sorted(
             selected_keypoints, key=lambda keypoint: label_to_index[keypoint.label]
         )
 
-        return [get_annotation_line(bb, ordered_keypoints)]
+        if len(set([k.label for k in ordered_keypoints])) != len(keypoints):
+            raise Exception(
+                f"Missing keypoints in annotation. Needed: {keypoints}, available: {[keypoint.label for keypoint in ordered_keypoints]}"
+            )
 
-    lines = []
+        lines.append(get_annotation_line(object.bbox, ordered_keypoints))
 
-    # if relations are found, the keypoints are part of different objects so multiple entries are needed
-    for relation in selected_relations:
-        selected_keypoints_for_object = [
-            keypoint
-            for keypoint in selected_keypoints
-            if keypoint.id in [relation.from_id, relation.to_id]
-        ]
-        bb = compute_bounding_box(
-            [k.pos for k in selected_keypoints_for_object], **kwargs
-        )
-        ordered_keypoints = sorted(
-            selected_keypoints_for_object,
-            key=lambda keypoint: label_to_index[keypoint.label],
-        )
-        lines.append(get_annotation_line(bb, ordered_keypoints))
     return lines
 
 

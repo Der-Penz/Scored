@@ -39,12 +39,6 @@ if __name__ == "__main__":
         "annotation_file", type=is_valid_json, help="The json annotation file"
     )
     parser.add_argument(
-        "--img-dir",
-        type=is_valid_directory,
-        default="./label-studio/media/",
-        help="The location of the label studio data upload directory",
-    )
-    parser.add_argument(
         "--out",
         type=str,
         default="./train/data",
@@ -143,7 +137,7 @@ if __name__ == "__main__":
 
     print("Extract annotations:")
     annotation_data = extract_annotations(
-        annotation_path, Path(args.img_dir), args.limit
+        annotation_path, args.limit
     )
 
     print("Generating file structure:")
