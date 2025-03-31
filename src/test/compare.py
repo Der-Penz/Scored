@@ -1,7 +1,28 @@
-from src.board.dartboard import DartBoard
+from typing import List
+from src.board.dartboard import DartBoard, DartThrow
 from src.perspective import compute_perspective, warp_point
 from src.predictor import DartPrediction, DartPredictor
 from src.preparation.dataset.yolo import YoloAnnotations
+from collections import Counter
+
+def compare_scores(pred: List[DartThrow], truth: List[DartThrow]):
+    """
+    Compare two lists of throws
+
+    :param pred: the predicted throws
+    :param truth: the ground truth throws
+
+    :return: missing throws in the prediction and throws that are not in the ground truth
+    """
+    counter_pred = Counter(pred)
+    counter_truth = Counter(truth)
+
+    missing = counter_truth - counter_pred
+    to_much = counter_pred - counter_truth
+    missing = [key for key, value in missing.items() for _ in range(value)]
+    to_much = [key for key, value in to_much.items() for _ in range(value)]
+
+    return missing, to_much
 
 
 def eval_prediction(
