@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 import numpy as np
 from typing import Tuple
 
@@ -54,7 +55,7 @@ class DartBoard:
 
     def get_size(self) -> int:
         return self._size
-    
+
     def shape(self) -> Tuple[int, int]:
         return (self._size, self._size)
 
@@ -90,7 +91,6 @@ class DartBoard:
         if relative:
             position = (position[0] + self._size, position[1] + self._size)
 
-
         number = self._get_dart_number(position)
         multiplier = self._get_dart_multiplier(position)
         return DartThrow(number, multiplier)
@@ -103,7 +103,7 @@ class DartBoard:
 
         if angle < 0:
             angle += 2 * np.pi
-            
+
         segment_index = int(angle // segment_angle)
 
         return DARTBOARD_NUMBERS[segment_index]
@@ -133,14 +133,14 @@ class DartBoard:
             return 0
 
 
+@dataclass(frozen=True, eq=True)
 class DartThrow:
     """
     Represents a dart throw with a given number and multiplier.
     """
 
-    def __init__(self, number: int, multiplier: int):
-        self._number = number
-        self._multiplier = multiplier
+    _number: int
+    _multiplier: int
 
     def score(self) -> int:
         if self._multiplier == 0:

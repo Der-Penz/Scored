@@ -5,6 +5,7 @@ import time
 from typing import List, Tuple
 
 import cv2
+import numpy as np
 
 from src.preparation.dataset.yolo import (
     YoloAnnotations,
@@ -83,7 +84,7 @@ if __name__ == "__main__":
 
     total = len(files)
     print(f"Running inference on {total} files:")
-    inference_results: List[Tuple[YoloAnnotations, DartPrediction, float]] = []
+    inference_results: List[Tuple[YoloAnnotations, DartPrediction, float, str]] = []
     for i, image_path in enumerate(files):
         loading_bar(i, total)
 
@@ -104,26 +105,61 @@ if __name__ == "__main__":
         prediction = model.predict(image, verbose=False)
 
         took = time.time() - start_time
-        inference_results.append((ground_truth, prediction, took))
+        inference_results.append(
+            (ground_truth, prediction, took, image_path.split(".")[0])
+        )
 
     loading_bar(total, total, newline=True)
     print("Inference finished")
     print("-" * 30)
 
-    print(f"Total time: {sum([took for _, _, took in inference_results]):.2f} seconds")
     print(
-        f"Average time: {(sum([took for _, _, took in inference_results]) / len(inference_results)):.2f} seconds"
+        f"Total time: {sum([took for _, _, took, _ in inference_results]):.2f} seconds"
+    )
+    print(
+        f"Average time: {(sum([took for _, _, took, _ in inference_results]) / len(inference_results)):.2f} seconds"
     )
 
     eval = [eval_prediction(k[0], k[1], model._board) for k in inference_results]
 
     correct_count = 0
-    for i, (correct, predicted_scores, truth_scores) in enumerate(eval):
-        if correct:
+    for i, (result, (_, _, _, name)) in enumerate(zip(eval, inference_results)):
+        if result.correct():
             correct_count += 1
+            continue
         print(
-            f"Image {i} : {"Correct" if correct else "Incorrect"} f{predicted_scores} == {truth_scores}"
+            f"Image {name} : Incorrect cm: {result.confusion_matrix()} | (TP, FP, FN, TN)"
         )
 
     print("-" * 30)
-    print(f"Correctly predicted: {correct_count}/{len(eval)}")
+    print(
+        f"Accuracy: {correct_count / len(eval) * 100:.2f}% | Absolute: {correct_count}/{len(eval)}"
+    )
+
+    print("-" * 30)
+    print("Per dart stats:")
+
+    total_confusion_matrix = np.sum(
+        [k.confusion_matrix() + (k.num_truth_darts(),) for k in eval], axis=0
+    )
+
+    TP, FP, FN, TN, TOTAL = total_confusion_matrix
+
+    accuracy = (TP + TN) / TOTAL * 100 if TOTAL > 0 else 0
+    precision = TP / (TP + FP) * 100 if (TP + FP) > 0 else 0
+    recall = TP / (TP + FN) * 100 if (TP + FN) > 0 else 0
+    f1_score = (
+        (2 * precision * recall) / (precision + recall)
+        if (precision + recall) > 0
+        else 0
+    )
+
+    print(
+        f"Confusion Matrix: \nTP: {total_confusion_matrix[0]} | FP: {total_confusion_matrix[1]} \nFN: {total_confusion_matrix[2]} | TN: {total_confusion_matrix[3]}"
+    )
+
+    print(f"Total darts: {total_confusion_matrix[4]}")
+    print(f"Accuracy: {accuracy:.2f}%")
+    print(f"Precision: {precision:.2f}%")
+    print(f"Recall: {recall:.2f}%")
+    print(f"F1 Score: {f1_score:.2f}%")
