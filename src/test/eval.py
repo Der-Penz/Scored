@@ -44,6 +44,12 @@ if __name__ == "__main__":
         help="limit the number of images to evaluate on, -1 for no limit",
     )
 
+    parser.add_argument(
+        "--csv",
+        type=str,
+        help="save the results to a csv file at this path, if not provided no csv will be saved",
+    )
+
     args = parser.parse_args()
 
     model_path = Path(args.model)
@@ -163,3 +169,32 @@ if __name__ == "__main__":
     print(f"Precision: {precision:.2f}%")
     print(f"Recall: {recall:.2f}%")
     print(f"F1 Score: {f1_score:.2f}%")
+
+    if not args.csv:
+        exit(0)
+
+    import pandas as pd
+    from tqdm import tqdm
+
+    data = []
+
+    for res, (_, _, process_time, img_name) in tqdm(zip(eval, inference_results), total=len(eval)):
+        matrix = res.confusion_matrix()  # Should return a tuple (TP, FP, FN, TN)
+        ground_truth_darts = res.num_truth_darts()
+
+        data.append({
+            "img_name": img_name,
+            "TP": matrix[0],
+            "FP": matrix[1],
+            "FN": matrix[2],
+            "TN": matrix[3],
+            "num_darts": ground_truth_darts,
+            "p_num_darts" : len(res.pred),
+            "process_time": process_time, 
+        })
+
+    df = pd.DataFrame(data)
+
+    print(df.head(1))
+
+    df.to_csv(args.csv, index=False)
