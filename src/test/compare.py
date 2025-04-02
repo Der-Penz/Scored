@@ -1,3 +1,4 @@
+from dataclasses import dataclass, field
 from typing import List, Tuple
 from src.board.dartboard import DartBoard, DartThrow
 from src.perspective import compute_perspective, warp_point
@@ -5,16 +6,21 @@ from src.predictor import DartPrediction, DartPredictor
 from src.preparation.dataset.yolo import YoloAnnotations
 from collections import Counter
 
-
+@dataclass
 class ThrowComparison:
     """
     Class to hold the comparison of throws
     """
 
-    def __init__(self, pred: List[DartThrow], truth: List[DartThrow]):
-        self.pred = pred
-        self.truth = truth
-        self.cm = calculate_confusion_matrix(pred, truth)
+    pred: List[DartThrow]
+    truth: List[DartThrow]
+    cm: Tuple[int, int, int, int] = field(init=False)
+
+
+    def __post_init__(self):
+        self.cm = calculate_confusion_matrix(self.pred, self.truth)
+        print("here")
+        print(self.cm)
 
     def confusion_matrix(self) -> Tuple[int, int, int, int]:
         """
@@ -23,12 +29,14 @@ class ThrowComparison:
         """
         return self.cm
 
+    @property
     def correct(self) -> bool:
         """
         Check if the comparison is correct
         """
         return self.cm[0] == len(self.truth)
 
+    @property
     def off_by(self) -> int:
         """
         Check how many throws are off.
@@ -39,6 +47,7 @@ class ThrowComparison:
         """
         return len(self.missing) - len(self.additional)
     
+    @property
     def num_truth_darts(self) -> int:
         """
         Get the number of darts in the ground truth

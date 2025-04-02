@@ -3,7 +3,8 @@ import os
 from pathlib import Path
 import time
 from typing import List, Tuple
-
+import pandas as pd
+from tqdm import tqdm
 import cv2
 import numpy as np
 
@@ -130,7 +131,7 @@ if __name__ == "__main__":
 
     correct_count = 0
     for i, (result, (_, _, _, name)) in enumerate(zip(eval, inference_results)):
-        if result.correct():
+        if result.correct:
             correct_count += 1
             continue
         print(
@@ -146,7 +147,7 @@ if __name__ == "__main__":
     print("Per dart stats:")
 
     total_confusion_matrix = np.sum(
-        [k.confusion_matrix() + (k.num_truth_darts(),) for k in eval], axis=0
+        [k.confusion_matrix() + (k.num_truth_darts,) for k in eval], axis=0
     )
 
     TP, FP, FN, TN, TOTAL = total_confusion_matrix
@@ -173,28 +174,32 @@ if __name__ == "__main__":
     if not args.csv:
         exit(0)
 
-    import pandas as pd
-    from tqdm import tqdm
-
     data = []
 
-    for res, (_, _, process_time, img_name) in tqdm(zip(eval, inference_results), total=len(eval)):
-        matrix = res.confusion_matrix()  # Should return a tuple (TP, FP, FN, TN)
-        ground_truth_darts = res.num_truth_darts()
+    for res, (_, _, process_time, img_name) in tqdm(
+        zip(eval, inference_results), total=len(eval)
+    ):
+        matrix = res.confusion_matrix()
+        ground_truth_darts = res.num_truth_darts
 
-        data.append({
-            "img_name": img_name,
-            "TP": matrix[0],
-            "FP": matrix[1],
-            "FN": matrix[2],
-            "TN": matrix[3],
-            "num_darts": ground_truth_darts,
-            "p_num_darts" : len(res.pred),
-            "process_time": process_time, 
-        })
+        pred_positions = [dart.position for dart in res.pred]
+        truth_positions = [dart.position for dart in res.truth]
+
+        data.append(
+            {
+                "img_name": img_name,
+                "TP": matrix[0],
+                "FP": matrix[1],
+                "FN": matrix[2],
+                "TN": matrix[3],
+                "num_darts": ground_truth_darts,
+                "p_num_darts": len(res.pred),
+                "process_time": process_time,
+                "pred_positions": pred_positions,
+                "truth_positions": truth_positions,
+                "correct": res.correct,
+            }
+        )
 
     df = pd.DataFrame(data)
-
-    print(df.head(1))
-
     df.to_csv(args.csv, index=False)

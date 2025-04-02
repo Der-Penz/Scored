@@ -1,5 +1,6 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from enum import Enum
 import numpy as np
 from typing import Tuple
 
@@ -93,7 +94,7 @@ class DartBoard:
 
         number = self._get_dart_number(position)
         multiplier = self._get_dart_multiplier(position)
-        return DartThrow(number, multiplier)
+        return DartThrow(number, multiplier, position)
 
     def _get_dart_number(self, position: Position):
         segment_angle = (2 * np.pi) / 20
@@ -108,69 +109,111 @@ class DartBoard:
 
         return DARTBOARD_NUMBERS[segment_index]
 
-    def _get_dart_multiplier(self, position: Position) -> int:
+    def _get_dart_multiplier(self, position: Position) -> Multiplier:
         distance_from_center = np.linalg.norm(
             np.array(position) - np.array(self._center)
         )
 
         if distance_from_center <= self._rings["inner_bull"]:
-            return 1
+            return Multiplier.INNER_BULL
         elif distance_from_center <= self._rings["outer_bull"]:
-            return 2
+            return Multiplier.OUTER_BULL
         elif (
             distance_from_center <= self._rings["triple_outer"]
             and distance_from_center >= self._rings["triple_inner"]
         ):
-            return 5
+            return Multiplier.TRIPLE
         elif (
             distance_from_center <= self._rings["double_outer"]
             and distance_from_center >= self._rings["double_inner"]
         ):
-            return 4
+            return Multiplier.DOUBLE
         elif distance_from_center <= self._rings["double_outer"]:
-            return 3
+            return Multiplier.SINGLE
         else:
-            return 0
+            return Multiplier.MISS
+
+
+class Multiplier(Enum):
+    MISS = 0
+    SINGLE = 1
+    DOUBLE = 2
+    TRIPLE = 3
+    INNER_BULL = 4
+    OUTER_BULL = 5
 
 
 @dataclass(frozen=True, eq=True)
 class DartThrow:
     """
-    Represents a dart throw with a given number and multiplier.
+    Represents a dart throw on the dartboard.
+
+    Arguments:
+        number (int): The number of the segment hit by the dart.
+        multiplier (Multiplier): The multiplier for the score.
+        position (Position): The position of the dart on the dartboard.
     """
 
-    _number: int
-    _multiplier: int
+    number: int
+    multiplier: Multiplier
+    position: Position = field(compare=False)
 
+    @property
     def score(self) -> int:
-        if self._multiplier == 0:
+        if self.multiplier == Multiplier.MISS:
             return 0
-        if self._multiplier == 1:
+        if self.multiplier == Multiplier.INNER_BULL:
             return 50
-        if self._multiplier == 2:
+        if self.multiplier == Multiplier.OUTER_BULL:
             return 25
+        return self.number * self.multiplier.value
 
-        x = [1, 2, 3][self._multiplier - 3]
-        return self._number * x
+    @property
+    def is_bull(self) -> bool:
+        return self.multiplier in (Multiplier.INNER_BULL, Multiplier.OUTER_BULL)
 
+    @property
+    def is_double(self) -> bool:
+        return self.multiplier == Multiplier.DOUBLE
+
+    @property
+    def is_triple(self) -> bool:
+        return self.multiplier == Multiplier.TRIPLE
+
+    @property
+    def is_miss(self) -> bool:
+        return self.multiplier == Multiplier.MISS
+
+    @property
+    def is_single(self) -> bool:
+        return self.multiplier == Multiplier.SINGLE
+
+    @property
     def short_label(self) -> str:
-        if self._multiplier == 0:
+        if self.multiplier == Multiplier.MISS:
             return "X"
-        if self._multiplier == 1:
+        if self.multiplier == Multiplier.INNER_BULL:
             return "50"
-        if self._multiplier == 2:
+        if self.multiplier == Multiplier.OUTER_BULL:
             return "25"
+        if self.multiplier == Multiplier.SINGLE:
+            return str(self.number)
+        if self.multiplier == Multiplier.DOUBLE:
+            return "D" + str(self.number)
+        if self.multiplier == Multiplier.TRIPLE:
+            return "T" + str(self.number)
 
-        x = ["", "D", "T"][self._multiplier - 3]
-        return x + str(self._number)
-
+    @property
     def label(self) -> str:
-        if self._multiplier == 0:
+        if self.multiplier == Multiplier.MISS:
             return "MISS"
-        if self._multiplier == 1:
+        if self.multiplier == Multiplier.INNER_BULL:
             return "BULL"
-        if self._multiplier == 2:
+        if self.multiplier == Multiplier.OUTER_BULL:
             return "OUTER BULL"
-
-        x = ["Single", "Double", "Triple"][self._multiplier - 3]
-        return f"{x} {str(self._number)}"
+        if self.multiplier == Multiplier.SINGLE:
+            return "Single " + str(self.number)
+        if self.multiplier == Multiplier.DOUBLE:
+            return "Double " + str(self.number)
+        if self.multiplier == Multiplier.TRIPLE:
+            return "Triple" + str(self.number)
