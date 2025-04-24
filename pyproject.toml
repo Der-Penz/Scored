@@ -1,0 +1,24 @@
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta" 
+
+[project]
+name = "Scored"
+
+version = "1.0.0"
+
+description = "Automatic dart scoring system for singele camera setup"
+
+readme = "README.md"
+
+requires-python = ">=3.11"
+
+license = { file = "LICENSE" }
+
+keywords = ["cv", "dart", "scoring", "yolo"]
+
+authors = [{ name = "DerPenz"}]
+
+dependencies = []
+
+[tool.setuptools]
+package-data = { "sample" = ["*.dat"] }
