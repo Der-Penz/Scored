@@ -19,8 +19,6 @@ class ThrowComparison:
 
     def __post_init__(self):
         self.cm = calculate_confusion_matrix(self.pred, self.truth)
-        print("here")
-        print(self.cm)
 
     def confusion_matrix(self) -> Tuple[int, int, int, int]:
         """
