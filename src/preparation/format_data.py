@@ -6,9 +6,9 @@ import shutil
 import dotenv
 dotenv.load_dotenv()
 
-from src.preparation.dataset.annotation import extract_annotations
-from src.preparation.dataset.format import generate_config, generate_file_structure
-from src.preparation.dataset.split import split_data
+from preparation.dataset.annotation import extract_annotations
+from preparation.dataset.format import generate_config, generate_file_structure
+from preparation.dataset.split import split_data
 
 
 def is_valid_directory(path):

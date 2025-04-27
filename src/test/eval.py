@@ -8,15 +8,15 @@ from tqdm import tqdm
 import cv2
 import numpy as np
 
-from src.preparation.dataset.yolo import (
+from preparation.dataset.yolo import (
     YoloAnnotations,
     YoloConfig,
     read_yolo_annotation,
 )
-from src.board.dartboard import DartBoard
-from src.predictor import DartPrediction, DartPredictor
-from src.test.compare import eval_prediction
-from src.util import loading_bar
+from board.dartboard import DartBoard
+from predictor import DartPrediction, DartPredictor
+from compare import eval_prediction
+from util import loading_bar
 
 
 if __name__ == "__main__":

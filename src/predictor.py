@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import List, Tuple
-from src.board.dartboard import DartBoard, DartThrow, Position
+from board.dartboard import DartBoard, DartThrow, Position
 import numpy as np
-from src.perspective import compute_perspective, warp_point
+from perspective import compute_perspective, warp_point
 from ultralytics import YOLO
 import json
 

@@ -6,7 +6,7 @@ name = "Scored"
 
 version = "1.0.0"
 
-description = "Automatic dart scoring system for singele camera setup"
+description = "Automatic dart scoring system for single camera setup"
 
 readme = "README.md"
 

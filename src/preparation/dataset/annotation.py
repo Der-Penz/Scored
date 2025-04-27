@@ -3,7 +3,7 @@ import json
 import os
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
-from src.util import BBYolo, compute_bounding_box, loading_bar
+from util import BBYolo, compute_bounding_box, loading_bar
 
 
 @dataclass(frozen=True)

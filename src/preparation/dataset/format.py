@@ -3,11 +3,11 @@ from pathlib import Path
 import shutil
 from PIL import Image, ImageOps
 from typing import Any, Dict, List, Sequence
-from src.preparation.dataset.annotation import (
+from preparation.dataset.annotation import (
     LabelStudioAnnotation,
     get_yolo_annotation_for_class,
 )
-from src.util import loading_bar
+from util import loading_bar
 
 
 def generate_config(

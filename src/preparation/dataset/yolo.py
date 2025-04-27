@@ -6,8 +6,8 @@ from collections import defaultdict
 
 import yaml
 
-from src.preparation.dataset.annotation import YoloAnnotation
-from src.util import BBYolo
+from preparation.dataset.annotation import YoloAnnotation
+from util import BBYolo
 
 
 @dataclass(frozen=True)

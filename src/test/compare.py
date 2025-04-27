@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
 from typing import List, Tuple
-from src.board.dartboard import DartBoard, DartThrow
-from src.perspective import compute_perspective, warp_point
-from src.predictor import DartPrediction, DartPredictor
-from src.preparation.dataset.yolo import YoloAnnotations
+from board.dartboard import DartBoard, DartThrow
+from perspective import compute_perspective, warp_point
+from predictor import DartPrediction, DartPredictor
+from preparation.dataset.yolo import YoloAnnotations
 from collections import Counter
 
 @dataclass
