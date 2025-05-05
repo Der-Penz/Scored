@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
 from typing import List, Tuple
-from board.dartboard import DartBoard, DartThrow
-from perspective import compute_perspective, warp_point
-from predictor import DartPrediction, DartPredictor
-from preparation.dataset.yolo import YoloAnnotations
 from collections import Counter
+from scored.board.dartboard import DartBoard, DartThrow
+from scored.perspective import compute_perspective, warp_point
+from scored.predictor import DartPrediction, DartPredictor
+from scored.preparation.dataset.yolo import YoloAnnotations
 
 @dataclass
 class ThrowComparison:

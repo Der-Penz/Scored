@@ -8,16 +8,15 @@ from tqdm import tqdm
 import cv2
 import numpy as np
 
-from preparation.dataset.yolo import (
+from scored.preparation.dataset.yolo import (
     YoloAnnotations,
     YoloConfig,
     read_yolo_annotation,
 )
-from board.dartboard import DartBoard
-from predictor import DartPrediction, DartPredictor
-from compare import eval_prediction
-from util import loading_bar
-
+from scored.board.dartboard import DartBoard
+from scored.predictor import DartPrediction, DartPredictor
+from scored.test.compare import eval_prediction
+from scored.util import loading_bar
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="evaluate a model on a given dataset")

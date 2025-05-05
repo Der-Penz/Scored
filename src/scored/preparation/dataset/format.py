@@ -3,11 +3,11 @@ from pathlib import Path
 import shutil
 from PIL import Image, ImageOps
 from typing import Any, Dict, List, Sequence
-from preparation.dataset.annotation import (
+from scored.preparation.dataset.annotation import (
     LabelStudioAnnotation,
     get_yolo_annotation_for_class,
 )
-from util import loading_bar
+from scored.util import loading_bar
 
 
 def generate_config(
@@ -87,6 +87,10 @@ def generate_file_structure(
     os.makedirs(img_out, exist_ok=True)
     os.makedirs(annotation_out, exist_ok=True)
 
+    if total == 0:
+        print("No annotations found")
+        return
+    
     max_keypoints = len(max(classes_with_keypoints.values(), key=lambda x: len(x)))
     for i, annotation in enumerate(annotation_data):
         loading_bar(i, total)

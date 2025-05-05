@@ -11,6 +11,12 @@ After detecting the keypoints, the 4 dartboard keypoints are used to apply a per
 
 ![image](images/warped_dartboard.png)
 
+## How to use
+
+1. Preferably create a virtual environment with conda, poetry or whatever you use.
+2. Install the necessary requirements with `pip install -r requirements.txt`.
+3. Install the module locally `pip install -e .`
+
 ## Training
 
 To see how to train your own model and how to prepare and create a dataset, refer to [Train Instructions](train.md)

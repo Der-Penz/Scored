@@ -4,11 +4,12 @@ from typing import Dict, List
 import argparse
 import shutil
 import dotenv
+
 dotenv.load_dotenv()
 
-from preparation.dataset.annotation import extract_annotations
-from preparation.dataset.format import generate_config, generate_file_structure
-from preparation.dataset.split import split_data
+from scored.preparation.dataset.annotation import extract_annotations
+from scored.preparation.dataset.format import generate_config, generate_file_structure
+from scored.preparation.dataset.split import split_data
 
 
 def is_valid_directory(path):
@@ -136,9 +137,7 @@ if __name__ == "__main__":
     annotation_path = Path(args.annotation_file).resolve()
 
     print("Extract annotations:")
-    annotation_data = extract_annotations(
-        annotation_path, args.limit
-    )
+    annotation_data = extract_annotations(annotation_path, args.limit)
 
     print("Generating file structure:")
 
@@ -148,10 +147,6 @@ if __name__ == "__main__":
     )
 
     for label, data in partitioned_dataset.items():
-        if len(data) == 0:
-            print(f"No {label} folder")
-            continue
-
         generate_file_structure(
             data,
             classes,

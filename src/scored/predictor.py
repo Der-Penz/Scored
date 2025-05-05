@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 from typing import List, Tuple
-from board.dartboard import DartBoard, DartThrow, Position
 import numpy as np
-from perspective import compute_perspective, warp_point
+from scored.board.dartboard import DartBoard, DartThrow, Position
+from scored.perspective import compute_perspective, warp_point
 from ultralytics import YOLO
 import json
+
 
 
 @dataclass(frozen=True)
@@ -32,7 +33,7 @@ class DartPrediction:
         Returns the sum of all scores.
         """
         return sum([score.score() for score in self.scores])
-    
+
     def get_dartboard(self) -> KeypointObject:
         """
         Returns the dartboard object.
@@ -41,7 +42,7 @@ class DartPrediction:
             if obj.name == "dartboard":
                 return obj
         raise ValueError("No dartboard detected")
-    
+
     def get_darts(self) -> List[KeypointObject]:
         """
         Returns the dart objects.
