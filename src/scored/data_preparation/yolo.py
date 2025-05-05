@@ -6,7 +6,7 @@ from collections import defaultdict
 
 import yaml
 
-from scored.preparation.dataset.annotation import YoloAnnotation
+from scored.data_preparation.annotation import YoloAnnotation
 from scored.util import BBYolo
 
 

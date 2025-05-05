@@ -4,7 +4,7 @@ from collections import Counter
 from scored.board.dartboard import DartBoard, DartThrow
 from scored.perspective import compute_perspective, warp_point
 from scored.predictor import DartPrediction, DartPredictor
-from scored.preparation.dataset.yolo import YoloAnnotations
+from scored.data_preparation.yolo import YoloAnnotations
 
 @dataclass
 class ThrowComparison:

@@ -3,7 +3,7 @@ from pathlib import Path
 import shutil
 from PIL import Image, ImageOps
 from typing import Any, Dict, List, Sequence
-from scored.preparation.dataset.annotation import (
+from scored.data_preparation.annotation import (
     LabelStudioAnnotation,
     get_yolo_annotation_for_class,
 )

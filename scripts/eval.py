@@ -8,7 +8,7 @@ from tqdm import tqdm
 import cv2
 import numpy as np
 
-from scored.preparation.dataset.yolo import (
+from scored.data_preparation.yolo import (
     YoloAnnotations,
     YoloConfig,
     read_yolo_annotation,
