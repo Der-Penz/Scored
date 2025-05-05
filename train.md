@@ -54,4 +54,4 @@ This can be done by running the `dataset` script like this in the root directory
 
 Training the model on the dataset requires computational power.
 If you don't have a dedicated GPU it is recommended to use Google Colab to train your model, which provide a free tier for accessing GPU's.
-A dedicated [notebook](src/train/colab_train.ipynb) for the training on Google Colab can be used. Walk through the notebook to get more insights about the training process.
+A dedicated [notebook](notebooks/colab_train.ipynb) for the training on Google Colab can be used. Walk through the notebook to get more insights about the training process.
