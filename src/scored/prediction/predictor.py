@@ -2,10 +2,9 @@ from dataclasses import dataclass
 from typing import List, Tuple
 import numpy as np
 from scored.board.dartboard import DartBoard, DartThrow, Position
-from scored.perspective import compute_perspective, warp_point
+from scored.prediction.perspective import compute_perspective, warp_point
 from ultralytics import YOLO
 import json
-
 
 
 @dataclass(frozen=True)

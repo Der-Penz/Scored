@@ -14,7 +14,7 @@ from scored.data_preparation.yolo import (
     read_yolo_annotation,
 )
 from scored.board.dartboard import DartBoard
-from scored.predictor import DartPrediction, DartPredictor
+from scored.prediction.predictor import DartPrediction, DartPredictor
 from scored.test.compare import eval_prediction
 from scored.util import loading_bar
 
