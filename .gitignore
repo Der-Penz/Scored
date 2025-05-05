@@ -182,3 +182,4 @@ cython_debug/
 .pypirc
 .vscode/settings.json
 label-studio-ml-backend/data/
+models/
