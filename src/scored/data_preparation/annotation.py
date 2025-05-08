@@ -101,23 +101,17 @@ def extract_annotation_info(
         y1 = rect["value"]["y"]
         width = rect["value"]["width"]
         height = rect["value"]["height"]
-        original_width = rect["original_width"]
-        original_height = rect["original_height"]
 
-        x1_pixel = x1 / 100 * original_width
-        y1_pixel = y1 / 100 * original_height
-        w_pixel = width / 100 * original_width
-        h_pixel = height / 100 * original_height
+        x1 = x1 / 100
+        y1 = y1 / 100
+        width = width / 100
+        height = height / 100
 
-        x_center_pixel = x1_pixel + w_pixel / 2
-        y_center_pixel = y1_pixel + h_pixel / 2
+        x1 = x1 + width / 2
+        y1 = y1 + height / 2
 
-        x_center = x_center_pixel / original_width
-        y_center = y_center_pixel / original_height
-        w_norm = w_pixel / original_width
-        h_norm = h_pixel / original_height
-
-        bb = BBYolo((x_center, y_center), w_norm, h_norm)
+        center = (x1, y1)
+        bb = BBYolo(center, width, height)
         associated_keypoints: List[LabelStudioKeypoint] = [
             keypoint for keypoint in keypoints if keypoint.parent_id == id
         ]
