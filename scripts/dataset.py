@@ -113,6 +113,13 @@ if __name__ == "__main__":
         "if not passed everything will be appended or overwritten",
     )
 
+    parser.add_argument(
+        "--augmentations",
+        type=int,
+        default=0,
+        help="Number of augmentations to apply per image ( 1: 1 augmentation + 1 original image, 2: 2 augmentations + 1 original image, etc.)",
+    )
+
     parser.add_argument("--zip", action="store_true", help="zip the resulting dataset")
 
     args = parser.parse_args()
@@ -154,6 +161,7 @@ if __name__ == "__main__":
             padding=args.padding,
             copy_image=not args.no_image,
             clear_existing=args.clear_existing,
+            num_augmentations=args.augmentations,
             imgsz=args.imgsz,
         )
 
