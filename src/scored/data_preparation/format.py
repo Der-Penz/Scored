@@ -155,7 +155,6 @@ def generate_file_structure(
                         scale=(0.9, 1.1),
                     ),
                     iaa.GaussianBlur(sigma=1),
-                    iaa.LinearContrast((0.4, 1.6)),
                     iaa.Affine(shear=(-10, 10)),
                 ],
             )

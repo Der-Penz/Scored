@@ -161,7 +161,7 @@ if __name__ == "__main__":
             padding=args.padding,
             copy_image=not args.no_image,
             clear_existing=args.clear_existing,
-            num_augmentations=args.augmentations,
+            num_augmentations=args.augmentations if label == "train" else 0,
             imgsz=args.imgsz,
         )
 
