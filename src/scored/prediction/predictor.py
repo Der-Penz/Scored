@@ -6,12 +6,14 @@ from scored.prediction.perspective import compute_perspective, warp_point
 from ultralytics import YOLO
 import json
 
+from scored.util import BBYolo
+
 
 @dataclass(frozen=True)
 class KeypointObject:
     name: str
     keypoints: List[Tuple[float, float]]
-    bb: Tuple[Tuple[float, float], float, float]
+    bb: BBYolo
     conf: float
 
     def keypoints_x(self) -> List[float]:
@@ -31,7 +33,7 @@ class DartPrediction:
         """
         Returns the sum of all scores.
         """
-        return sum([score.score() for score in self.scores])
+        return sum([score.score for score in self.scores])
 
     def get_dartboard(self) -> KeypointObject:
         """
@@ -95,15 +97,27 @@ class DartPredictor:
             t_conf = conf if conf is not None else self.conf
             if a["confidence"] < t_conf:
                 continue
-
+            
             keypoints = list(zip(a["keypoints"]["x"], a["keypoints"]["y"]))
             top_left = a["box"]["x1"], a["box"]["y1"]
             width = a["box"]["x2"] - a["box"]["x1"]
             height = a["box"]["y2"] - a["box"]["y1"]
 
-            obj = KeypointObject(
-                a["name"], keypoints, (top_left, width, height), a["confidence"]
+            center = (
+                top_left[0] + width / 2,
+                top_left[1] + height / 2,
             )
+
+            bb = BBYolo(
+                center,
+                width,
+                height,
+            )
+
+            if a["name"] == "dart":
+                keypoints = keypoints[:2]
+
+            obj = KeypointObject(a["name"], keypoints, bb, a["confidence"])
             objects.append(obj)
 
             if obj.name == "dartboard":
