@@ -24,11 +24,13 @@ filelock==3.18.0
 fonttools==4.56.0
 fsspec==2025.3.0
 genson==1.3.0
-h11==0.16.0
+h11==0.14.0
 httpcore==1.0.7
 httpx==0.28.1
 idna==3.10
 ijson==3.3.0
+imageio==2.37.0
+imgaug==0.4.0
 inflect==5.6.2
 ipykernel==6.29.5
 ipython==9.0.1
@@ -44,6 +46,7 @@ jupyter_client==8.6.3
 jupyter_core==5.7.2
 kiwisolver==1.4.8
 label-studio-sdk==1.0.11
+lazy_loader==0.4
 lxml==5.3.1
 MarkupSafe==3.0.2
 matplotlib==3.10.1
@@ -82,14 +85,18 @@ requests==2.32.3
 requests-mock==1.12.1
 rpds-py==0.23.1
 rstr==3.2.2
+scikit-image==0.25.2
 scipy==1.15.2
+-e git+https://github.com/Der-Penz/Scored.git@a2f47545559f018e5698064c3382b71f79d793b3#egg=Scored
 seaborn==0.13.2
 setuptools==75.8.2
+shapely==2.1.0
 six==1.17.0
 smart-open==7.1.0
 sniffio==1.3.1
 stack-data==0.6.3
 sympy==1.13.1
+tifffile==2025.3.30
 torch==2.6.0
 torchvision==0.21.0
 tornado==6.4.2

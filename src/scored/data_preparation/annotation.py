@@ -41,6 +41,15 @@ class LabelStudioObject:
     bbox: BBYolo
     keypoints: List[LabelStudioKeypoint]
 
+    @property
+    def xy_keypoints(self) -> List[Tuple[int, int]]:
+        """
+        Returns the keypoints positions.
+
+        :return: A list of keypoints positions
+        """
+        return [keypoint.pos for keypoint in self.keypoints]
+
 
 @dataclass(frozen=True)
 class LabelStudioAnnotation:
@@ -247,35 +256,3 @@ class YoloAnnotation:
         Returns the keypoints positions.
         """
         return [(keypoint[0], keypoint[1]) for keypoint in self.keypoints]
-
-
-def read_yolo_annotation(
-    annotations_path: Path,
-    classes: List[str],
-    keypoints_per_class: Dict[str, List[str]],
-) -> List[LabelStudioAnnotation]:
-    """
-    Read a yolo .txt keypoint annotation file and return a list of YoloAnnotation objects.
-
-    :param annotations_path: The path to the annotations file
-    :param classes: The list of class names
-    :param keypoints_per_class: The dictionary containing the keypoints for each class
-    :return: A list of YoloAnnotation
-    """
-    with open(annotations_path, "r") as file:
-        lines = file.readlines()
-
-    annotations: List[YoloAnnotation] = []
-    for line in lines:
-        data = line.split(" ")
-        class_index = int(data[0])
-        class_name = classes[class_index]
-        bb = BBYolo((float(data[1]), float(data[2])), float(data[3]), float(data[4]))
-        keypoints = []
-        for i, keypoint_label in zip(
-            range(5, len(data), 3), keypoints_per_class[class_name]
-        ):
-            keypoints.append((float(data[i]), float(data[i + 1]), keypoint_label))
-
-        annotations.append(YoloAnnotation(class_index, class_name, bb, keypoints))
-    return annotations
