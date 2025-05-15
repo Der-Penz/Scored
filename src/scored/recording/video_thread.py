@@ -1,6 +1,7 @@
 import tkinter as tk
 import cv2
 import threading
+from threading import Lock
 from PIL import Image, ImageTk
 
 
@@ -9,12 +10,23 @@ class VideoThread(threading.Thread):
         super().__init__()
         self.video_url = source
         self.video_label = video_label
-        self.cap = cv2.VideoCapture(source)
+        self.source = source
+        self.cap = None
         self.root = root
         self.running = True
         self.frame : Image = None
+        self.frame_lock = Lock()
 
     def run(self):
+        self.video_label.configure(text="Loading video stream...")
+        
+        self.cap = cv2.VideoCapture(self.source)
+
+        if not self.cap.isOpened():
+            print(f"Failed to open video source: {self.source}")
+            self.video_label.configure(text="Unable to open video stream.")
+            return
+        
         while self.running and self.cap.isOpened():
             ret, frame = self.cap.read()
 
@@ -38,14 +50,16 @@ class VideoThread(threading.Thread):
         self.video_label.imgtk = imgtk
         self.video_label.configure(image=imgtk)
 
-        self.frame = frame
+        with self.frame_lock:
+            self.frame = frame
 
     def is_running(self):
         return self.running
     
     @property
     def current_frame(self):
-        return self.frame
+        with self.frame_lock:
+            return self.frame.copy() if self.frame is not None else None
 
     def stop(self):
         print("Stopping video thread...")
