@@ -89,7 +89,7 @@ scikit-image==0.25.2
 scipy==1.15.2
 -e git+https://github.com/Der-Penz/Scored.git@a2f47545559f018e5698064c3382b71f79d793b3#egg=Scored
 seaborn==0.13.2
-setuptools==75.8.2
+setuptools==78.1.1
 shapely==2.1.0
 six==1.17.0
 smart-open==7.1.0
