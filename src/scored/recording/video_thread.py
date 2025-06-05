@@ -27,20 +27,23 @@ class VideoThread(threading.Thread):
             self.video_label.configure(text="Unable to open video stream.")
             return
         
-        while self.running and self.cap.isOpened():
-            ret, frame = self.cap.read()
+        try:
+            while self.running and self.cap.isOpened():
+                ret, frame = self.cap.read()
 
-            if not self.cap.isOpened():
-                print("Failed to open video stream.")
-                break
+                if not self.cap.isOpened():
+                    print("Failed to open video stream.")
+                    break
 
-            if not ret:
-                print("Failed to capture frame from video stream.")
-                break
+                if not ret:
+                    print("Failed to capture frame from video stream.")
+                    break
             
             self.root.after(0, self.update_image, frame)
+        except Exception as e:
+            pass
 
-        if self.cap.isOpened():
+        if self.cap is not None and self.cap.isOpened():
             self.cap.release()
 
     def update_image(self, frame):
@@ -64,4 +67,6 @@ class VideoThread(threading.Thread):
     def stop(self):
         print("Stopping video thread...")
         self.running = False
-        self.cap.release()
+
+        if self.cap is not None:
+            self.cap.release()
