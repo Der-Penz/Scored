@@ -22,3 +22,7 @@ dotenv = "^0.9.9"
 
 [[tool.poetry.packages]]
 include = "ml"
+
+[tool.poetry.scripts]
+eval = "ml.scripts.eval:main"
+dataset = "ml.scripts.dataset:main"

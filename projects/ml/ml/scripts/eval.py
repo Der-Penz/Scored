@@ -18,7 +18,7 @@ from ml.prediction.predictor import DartPrediction, DartPredictor
 from ml.test.compare import eval_prediction
 from ml.util import loading_bar
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(description="evaluate a model on a given dataset")
 
     parser.add_argument(
@@ -99,7 +99,7 @@ if __name__ == "__main__":
         if not image_path.endswith(".jpg"):
             print(f"skipping non-image file {image_path}")
             continue
-        image = cv2.imread(test_path_images / image_path)
+        image = cv2.imread(str(test_path_images / image_path))
 
         if image is None:
             print(f"could not read image at {image_path}")
@@ -190,3 +190,6 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(data)
     df.to_csv(args.csv, index=False)
+
+if __name__ == "__main__":
+    main()

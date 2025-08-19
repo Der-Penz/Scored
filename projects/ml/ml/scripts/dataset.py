@@ -25,20 +25,16 @@ def is_valid_json(path):
         raise argparse.ArgumentTypeError(f"File does not exist: {path}")
 
     if not path.lower().endswith(".json"):
-        raise argparse.ArgumentTypeError(
-            f"Invalid file type: {path} (expected a .json file)"
-        )
+        raise argparse.ArgumentTypeError(f"Invalid file type: {path} (expected a .json file)")
 
     return path
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description="convert label studio json data annotation format into yolo format"
     )
-    parser.add_argument(
-        "annotation_file", type=is_valid_json, help="The json annotation file"
-    )
+    parser.add_argument("annotation_file", type=is_valid_json, help="The json annotation file")
     parser.add_argument(
         "--out",
         type=str,
@@ -174,3 +170,7 @@ if __name__ == "__main__":
     if args.zip:
         shutil.make_archive("dataset", "zip", out / "..")
         print("Zipped dataset")
+
+
+if __name__ == "__main__":
+    main()
