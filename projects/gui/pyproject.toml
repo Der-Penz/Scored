@@ -1,0 +1,24 @@
+[build-system]
+requires = ["poetry-core>=2.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "scored-gui"
+version = "0.0.0"
+description = "Simple GUI for Scored, an automatic dart scoring system for single camera setup"
+authors = ["DerPenz"]
+license = "MIT"
+readme = "README.md"
+keywords = ["cv", "dart", "scoring", "yolo", "gui"]
+
+[tool.poetry.dependencies]
+python = ">=3.11"
+dearpygui = "^2.1.0"
+scored-lib = {path = "../lib", develop = true}
+
+[[tool.poetry.packages]]
+include = "gui"
+
+[tools.pyright]
+reportMissingTypeArgument = true
+strictListInference = true
