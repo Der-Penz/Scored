@@ -1,10 +1,10 @@
 from typing import List
 import numpy as np
-from scored.data_preparation.annotation import LabelStudioAnnotation, LabelStudioKeypoint, LabelStudioObject
+from ml.data_preparation.annotation import LabelStudioAnnotation, LabelStudioKeypoint, LabelStudioObject
 import imgaug.augmentables.kps as ia_kps
 import imgaug.augmenters as iaa
 
-from scored.util import compute_bounding_box
+from ml.util import compute_bounding_box
 
 
 def augment_image(image : np.ndarray, annotation: LabelStudioAnnotation, augmentations : iaa.Augmenter):

@@ -8,15 +8,15 @@ from tqdm import tqdm
 import cv2
 import numpy as np
 
-from scored.data_preparation.yolo import (
+from ml.data_preparation.yolo import (
     YoloAnnotations,
     YoloConfig,
     read_yolo_annotation,
 )
-from scored.board.dartboard import DartBoard
-from scored.prediction.predictor import DartPrediction, DartPredictor
-from scored.test.compare import eval_prediction
-from scored.util import loading_bar
+from ml.board.dartboard import DartBoard
+from ml.prediction.predictor import DartPrediction, DartPredictor
+from ml.test.compare import eval_prediction
+from ml.util import loading_bar
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="evaluate a model on a given dataset")
@@ -111,17 +111,13 @@ if __name__ == "__main__":
         prediction = model.predict(image, verbose=False)
 
         took = time.time() - start_time
-        inference_results.append(
-            (ground_truth, prediction, took, image_path.split(".")[0])
-        )
+        inference_results.append((ground_truth, prediction, took, image_path.split(".")[0]))
 
     loading_bar(total, total, newline=True)
     print("Inference finished")
     print("-" * 30)
 
-    print(
-        f"Total time: {sum([took for _, _, took, _ in inference_results]):.2f} seconds"
-    )
+    print(f"Total time: {sum([took for _, _, took, _ in inference_results]):.2f} seconds")
     print(
         f"Average time: {(sum([took for _, _, took, _ in inference_results]) / len(inference_results)):.2f} seconds"
     )
@@ -133,9 +129,7 @@ if __name__ == "__main__":
         if result.correct:
             correct_count += 1
             continue
-        print(
-            f"Image {name} : Incorrect cm: {result.confusion_matrix()} | (TP, FP, FN, TN)"
-        )
+        print(f"Image {name} : Incorrect cm: {result.confusion_matrix()} | (TP, FP, FN, TN)")
 
     print("-" * 30)
     print(
@@ -154,11 +148,7 @@ if __name__ == "__main__":
     accuracy = (TP + TN) / TOTAL * 100 if TOTAL > 0 else 0
     precision = TP / (TP + FP) * 100 if (TP + FP) > 0 else 0
     recall = TP / (TP + FN) * 100 if (TP + FN) > 0 else 0
-    f1_score = (
-        (2 * precision * recall) / (precision + recall)
-        if (precision + recall) > 0
-        else 0
-    )
+    f1_score = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
 
     print(
         f"Confusion Matrix: \nTP: {total_confusion_matrix[0]} | FP: {total_confusion_matrix[1]} \nFN: {total_confusion_matrix[2]} | TN: {total_confusion_matrix[3]}"
@@ -175,9 +165,7 @@ if __name__ == "__main__":
 
     data = []
 
-    for res, (_, _, process_time, img_name) in tqdm(
-        zip(eval, inference_results), total=len(eval)
-    ):
+    for res, (_, _, process_time, img_name) in tqdm(zip(eval, inference_results), total=len(eval)):
         matrix = res.confusion_matrix()
         ground_truth_darts = res.num_truth_darts
 

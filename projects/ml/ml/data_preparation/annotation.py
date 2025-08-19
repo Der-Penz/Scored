@@ -3,7 +3,7 @@ import json
 import os
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
-from scored.util import BBYolo, loading_bar
+from ml.util import BBYolo, loading_bar
 
 
 @dataclass(frozen=True)

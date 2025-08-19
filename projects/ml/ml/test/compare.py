@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
 from typing import List, Tuple
 from collections import Counter
-from scored.board.dartboard import DartBoard, DartThrow
-from scored.prediction.perspective import compute_perspective, warp_point
-from scored.prediction.predictor import DartPrediction, DartPredictor
-from scored.data_preparation.yolo import YoloAnnotations
 
+from ml.board.dartboard import DartBoard, DartThrow
+from ml.prediction.perspective import compute_perspective, warp_point
+from ml.prediction.predictor import DartPrediction, DartPredictor
+from ml.data_preparation.yolo import YoloAnnotations
 
 @dataclass
 class ThrowComparison:
@@ -67,10 +67,7 @@ def calculate_confusion_matrix(pred: List[DartThrow], truth: List[DartThrow]):
     counter_truth = Counter(truth)
 
     # True Positives: intersection of predicted and ground truth
-    tp = sum(
-        min(counter_pred[key], counter_truth[key])
-        for key in counter_pred & counter_truth
-    )
+    tp = sum(min(counter_pred[key], counter_truth[key]) for key in counter_pred & counter_truth)
 
     # False Positives: items in predicted but not in ground truth
     fp = sum(counter_pred[key] for key in counter_pred - counter_truth)

@@ -1,8 +1,8 @@
 from typing import Any, List, Optional, Tuple
 from matplotlib import pyplot as plt
 
-from scored.prediction.predictor import DartPrediction
-from scored.util import BBYolo
+from ml.prediction.predictor import DartPrediction
+from ml.util import BBYolo
 
 
 def draw_bb(

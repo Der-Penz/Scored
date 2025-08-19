@@ -9,12 +9,12 @@ import numpy as np
 # add bool to numpy since iaa expects numpy to have bool defined
 np.bool = np.bool_
 
-from scored.data_preparation.annotation import (
+from ml.data_preparation.annotation import (
     LabelStudioAnnotation,
     get_yolo_annotation_for_class,
 )
-from scored.data_preparation.augmentation import augment_image
-from scored.util import loading_bar
+from ml.data_preparation.augmentation import augment_image
+from ml.util import loading_bar
 
 
 def generate_config(
