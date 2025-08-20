@@ -13,9 +13,33 @@ After detecting the keypoints, the 4 dartboard keypoints are used to apply a per
 
 ## How to use
 
-1. Preferably create a virtual environment with conda, poetry or whatever you use.
-2. Install the necessary requirements with `pip install -r requirements.txt`.
-3. Install the module locally `pip install -e .`
+This project uses a **Poetry monorepo setup**. Each project has its own `pyproject.toml` inside the respective `projects/<project_name>` folder.
+
+1. Install Poetry if you don’t have it yet:
+
+   ```bash
+   pip install poetry
+   ```
+
+1. From the top-level project folder, install each package environment:
+
+   ```bash
+   poetry install --directory projects/<package_name>
+   ```
+
+1. To run scripts defined in pyproject.toml (e.g. evaluation):
+
+   ```bash
+   poetry run --directory projects/ml eval <model_path> <dataset_path>
+   ```
+
+   Paths are given relative to the top-level folder (recommended) or as absolute paths.
+
+1. To open a shell in the a environment:
+
+    ```bash
+    poetry shell --directory projects/<package_name>
+    ```
 
 ## Training
 
