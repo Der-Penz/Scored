@@ -1,5 +1,6 @@
 from math import ceil
-from typing import Any, Literal, Sequence, Tuple, Dict
+from typing import Any, Dict, Literal, Sequence, Tuple
+
 import numpy as np
 
 

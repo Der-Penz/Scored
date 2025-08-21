@@ -1,13 +1,20 @@
 from typing import List
-import numpy as np
-from ml.data_preparation.annotation import LabelStudioAnnotation, LabelStudioKeypoint, LabelStudioObject
+
 import imgaug.augmentables.kps as ia_kps
 import imgaug.augmenters as iaa
+import numpy as np
 
+from ml.data_preparation.annotation import (
+    LabelStudioAnnotation,
+    LabelStudioKeypoint,
+    LabelStudioObject,
+)
 from ml.util import compute_bounding_box
 
 
-def augment_image(image : np.ndarray, annotation: LabelStudioAnnotation, augmentations : iaa.Augmenter):
+def augment_image(
+    image: np.ndarray, annotation: LabelStudioAnnotation, augmentations: iaa.Augmenter
+):
     """
     Apply a series of augmentations to an image.
 
@@ -25,7 +32,10 @@ def augment_image(image : np.ndarray, annotation: LabelStudioAnnotation, augment
 
     for obj in annotation.objects:
         if obj.keypoints:
-            obj_keypoints = [ia_kps.Keypoint(x=kp.pos[0] * image.shape[0], y=kp.pos[1] * image.shape[1]) for kp in obj.keypoints]
+            obj_keypoints = [
+                ia_kps.Keypoint(x=kp.pos[0] * image.shape[0], y=kp.pos[1] * image.shape[1])
+                for kp in obj.keypoints
+            ]
             keypoints_by_object.append(obj_keypoints)
             all_keypoints.extend(obj_keypoints)
         else:
@@ -35,14 +45,13 @@ def augment_image(image : np.ndarray, annotation: LabelStudioAnnotation, augment
 
     image_aug, kps_aug = augmentations(image=image, keypoints=kps_on_image)
 
-
     augmented_objects = []
 
     start_idx = 0
     for obj in annotation.objects:
         if obj.keypoints:
-            augmented_keypoints : List[LabelStudioKeypoint] = []
-            for i, key in enumerate(kps_aug.keypoints[start_idx:start_idx + len(obj.keypoints)]):
+            augmented_keypoints: List[LabelStudioKeypoint] = []
+            for i, key in enumerate(kps_aug.keypoints[start_idx : start_idx + len(obj.keypoints)]):
                 augmented_keypoints.append(
                     LabelStudioKeypoint(
                         pos=(key.x / image_aug.shape[0], key.y / image_aug.shape[1]),
@@ -56,15 +65,17 @@ def augment_image(image : np.ndarray, annotation: LabelStudioAnnotation, augment
                 key_points=[(key.pos[0], key.pos[1]) for key in augmented_keypoints]
             )
 
-            augmented_objects.append(LabelStudioObject(
-                label=obj.label,
-                id=obj.id,
-                bbox=bb,
-                keypoints=augmented_keypoints,
-            ))
+            augmented_objects.append(
+                LabelStudioObject(
+                    label=obj.label,
+                    id=obj.id,
+                    bbox=bb,
+                    keypoints=augmented_keypoints,
+                )
+            )
 
             start_idx += len(obj.keypoints)
-            
+
         else:
             augmented_objects.append(obj)
 

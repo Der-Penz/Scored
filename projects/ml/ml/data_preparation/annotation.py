@@ -1,8 +1,9 @@
-from dataclasses import dataclass
 import json
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
+
 from ml.util import BBYolo, loading_bar
 
 
@@ -98,9 +99,7 @@ def extract_annotation_info(
             position = item["value"]["x"] / 100, item["value"]["y"] / 100
             id = item["id"]
             parent = item["parentID"]
-            keypoints.append(
-                LabelStudioKeypoint(position, label.lower(), id, parent_id=parent)
-            )
+            keypoints.append(LabelStudioKeypoint(position, label.lower(), id, parent_id=parent))
 
     objects: List[LabelStudioObject] = []
     for rect in rects:
@@ -130,9 +129,7 @@ def extract_annotation_info(
     return objects
 
 
-def extract_annotations(
-    annotations_path: Path, limit: int = 0
-) -> List[LabelStudioAnnotation]:
+def extract_annotations(annotations_path: Path, limit: int = 0) -> List[LabelStudioAnnotation]:
     """
     Reads the annotations from the given file and extracts the keypoints positions and relations.
 

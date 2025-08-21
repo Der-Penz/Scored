@@ -1,12 +1,13 @@
+from collections import Counter
 from dataclasses import dataclass, field
 from typing import List, Tuple
-from collections import Counter
 
-from scored.darts.DartThrow import DartThrow
-from scored.darts.Dartboard import DartBoard
+from ml.data_preparation.yolo import YoloAnnotations
 from ml.prediction.perspective import compute_perspective, warp_point
 from ml.prediction.predictor import DartPrediction, DartPredictor
-from ml.data_preparation.yolo import YoloAnnotations
+from scored.darts.Dartboard import DartBoard
+from scored.darts.DartThrow import DartThrow
+
 
 @dataclass
 class ThrowComparison:

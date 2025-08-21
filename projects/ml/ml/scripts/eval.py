@@ -1,13 +1,13 @@
 import argparse
 import os
-from pathlib import Path
 import time
+from pathlib import Path
 from typing import List, Tuple
-import pandas as pd
-from scored.darts.Dartboard import DartBoard
-from tqdm import tqdm
+
 import cv2
 import numpy as np
+import pandas as pd
+from tqdm import tqdm
 
 from ml.data_preparation.yolo import (
     YoloAnnotations,
@@ -17,6 +17,8 @@ from ml.data_preparation.yolo import (
 from ml.prediction.predictor import DartPrediction, DartPredictor
 from ml.test.compare import eval_prediction
 from ml.util import loading_bar
+from scored.darts.Dartboard import DartBoard
+
 
 def main():
     parser = argparse.ArgumentParser(description="evaluate a model on a given dataset")
@@ -190,6 +192,7 @@ def main():
 
     df = pd.DataFrame(data)
     df.to_csv(args.csv, index=False)
+
 
 if __name__ == "__main__":
     main()

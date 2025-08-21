@@ -1,13 +1,14 @@
+import json
 from dataclasses import dataclass
 from typing import List, Tuple
-import numpy as np
-from ml.prediction.perspective import compute_perspective, warp_point
-from scored.darts.DartThrow import DartThrow
-from scored.darts.Dartboard import DartBoard, Position
-from ultralytics import YOLO
-import json
 
+import numpy as np
+from ultralytics import YOLO
+
+from ml.prediction.perspective import compute_perspective, warp_point
 from ml.util import BBYolo
+from scored.darts.Dartboard import DartBoard, Position
+from scored.darts.DartThrow import DartThrow
 
 
 @dataclass(frozen=True)
@@ -76,9 +77,7 @@ class DartPredictor:
         ]
         return points
 
-    def predict(
-        self, image: np.ndarray, conf: float = None, **kwargs
-    ) -> DartPrediction:
+    def predict(self, image: np.ndarray, conf: float = None, **kwargs) -> DartPrediction:
         """
         Predicts the position of a dart throw based on the given image.
 
@@ -98,7 +97,7 @@ class DartPredictor:
             t_conf = conf if conf is not None else self.conf
             if a["confidence"] < t_conf:
                 continue
-            
+
             keypoints = list(zip(a["keypoints"]["x"], a["keypoints"]["y"]))
             top_left = a["box"]["x1"], a["box"]["y1"]
             width = a["box"]["x2"] - a["box"]["x1"]

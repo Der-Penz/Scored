@@ -1,6 +1,7 @@
-from typing import Tuple, Sequence
-import numpy as np
+from typing import Sequence, Tuple
+
 import cv2
+import numpy as np
 
 
 def compute_perspective(

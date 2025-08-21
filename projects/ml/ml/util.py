@@ -1,6 +1,7 @@
-from dataclasses import dataclass
 import sys
+from dataclasses import dataclass
 from typing import Sequence, Tuple
+
 import numpy as np
 
 
@@ -15,9 +16,7 @@ class BBYolo:
     height: float
 
 
-def compute_bounding_box(
-    key_points: Sequence[Tuple[float, float]], padding: float = 0
-) -> BBYolo:
+def compute_bounding_box(key_points: Sequence[Tuple[float, float]], padding: float = 0) -> BBYolo:
     """
     Computes a bounding box around the given keypoints with padding.
 
@@ -30,9 +29,7 @@ def compute_bounding_box(
         raise ValueError("No keypoints provided")
 
     if len(key_points) == 1:
-        print(
-            "Only one keypoint provided, returning a bounding box with width and height 0."
-        )
+        print("Only one keypoint provided, returning a bounding box with width and height 0.")
         return BBYolo(key_points[0], 0.01, 0.01)
 
     x, y = np.stack(key_points).T

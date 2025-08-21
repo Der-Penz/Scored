@@ -1,10 +1,11 @@
 import os
-from pathlib import Path
 import shutil
-from PIL import Image, ImageOps
+from pathlib import Path
 from typing import Any, Dict, List, Sequence
+
 import imgaug.augmenters as iaa
 import numpy as np
+from PIL import Image, ImageOps
 
 # add bool to numpy since iaa expects numpy to have bool defined
 np.bool = np.bool_
@@ -165,9 +166,7 @@ def generate_file_structure(
                 aug_img = Image.fromarray(aug_img)
                 aug_img.save(aug_img_out_file)
 
-            aug_annotation_out_file = annotation_out / (
-                img_name.split(".")[0] + f"_aug_{j}.txt"
-            )
+            aug_annotation_out_file = annotation_out / (img_name.split(".")[0] + f"_aug_{j}.txt")
             write_annotation(
                 aug_annotation,
                 classes_with_keypoints,

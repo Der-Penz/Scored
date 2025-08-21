@@ -1,8 +1,9 @@
 from __future__ import annotations
+
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List
-from collections import defaultdict
 
 import yaml
 
@@ -51,13 +52,9 @@ class YoloConfig:
         """
         Convert the paths to absolute paths.
         """
-        object.__setattr__(
-            self, "train", self.base_dir / self.train if self.train else None
-        )
+        object.__setattr__(self, "train", self.base_dir / self.train if self.train else None)
         object.__setattr__(self, "val", self.base_dir / self.val if self.val else None)
-        object.__setattr__(
-            self, "test", self.base_dir / self.test if self.test else None
-        )
+        object.__setattr__(self, "test", self.base_dir / self.test if self.test else None)
 
     @staticmethod
     def from_yaml(file_path: str | Path) -> YoloConfig:
@@ -130,7 +127,5 @@ def read_yolo_annotation(
         for i, keypoint_label in zip(range(5, len(data), 3), classes[class_name]):
             keypoints.append((float(data[i]), float(data[i + 1]), keypoint_label))
 
-        annotations[class_name].append(
-            YoloAnnotation(class_index, class_name, bb, keypoints)
-        )
+        annotations[class_name].append(YoloAnnotation(class_index, class_name, bb, keypoints))
     return YoloAnnotations(annotations)
