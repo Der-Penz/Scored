@@ -4,6 +4,7 @@ from pathlib import Path
 import time
 from typing import List, Tuple
 import pandas as pd
+from scored.darts.Dartboard import DartBoard
 from tqdm import tqdm
 import cv2
 import numpy as np
@@ -13,7 +14,6 @@ from ml.data_preparation.yolo import (
     YoloConfig,
     read_yolo_annotation,
 )
-from ml.board.dartboard import DartBoard
 from ml.prediction.predictor import DartPrediction, DartPredictor
 from ml.test.compare import eval_prediction
 from ml.util import loading_bar

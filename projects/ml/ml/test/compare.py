@@ -2,7 +2,8 @@ from dataclasses import dataclass, field
 from typing import List, Tuple
 from collections import Counter
 
-from ml.board.dartboard import DartBoard, DartThrow
+from scored.darts.DartThrow import DartThrow
+from scored.darts.Dartboard import DartBoard
 from ml.prediction.perspective import compute_perspective, warp_point
 from ml.prediction.predictor import DartPrediction, DartPredictor
 from ml.data_preparation.yolo import YoloAnnotations

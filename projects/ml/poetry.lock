@@ -1841,6 +1841,23 @@ doc = ["intersphinx_registry", "jupyterlite-pyodide-kernel", "jupyterlite-sphinx
 test = ["Cython", "array-api-strict (>=2.3.1)", "asv", "gmpy2", "hypothesis (>=6.30)", "meson", "mpmath", "ninja ; sys_platform != \"emscripten\"", "pooch", "pytest", "pytest-cov", "pytest-timeout", "pytest-xdist", "scikit-umfpack", "threadpoolctl"]
 
 [[package]]
+name = "scored-lib"
+version = "0.0.0"
+description = "Shared library for Scored projects"
+optional = false
+python-versions = ">=3.11"
+groups = ["main"]
+files = []
+develop = true
+
+[package.dependencies]
+numpy = "^2.3.2"
+
+[package.source]
+type = "directory"
+url = "../lib"
+
+[[package]]
 name = "setuptools"
 version = "80.9.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
@@ -2359,4 +2376,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11"
-content-hash = "a689ff6067b2028dd4704ba6ad68f8e23577c5c22a3a11630cd5065034981d6e"
+content-hash = "3c783525c91eb4b463879c001213dfc77eecee996a1d3c85626d0ed50a1cb306"

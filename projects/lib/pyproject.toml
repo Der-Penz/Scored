@@ -13,6 +13,7 @@ keywords = ["scored"]
 
 [tool.poetry.dependencies]
 python = ">=3.11"
+numpy = "^2.3.2"
 
 [[tool.poetry.packages]]
 include = "scored"

@@ -19,6 +19,7 @@ matplotlib = "^3.10.5"
 ultralytics = "^8.3.181"
 pandas = "^2.3.1"
 dotenv = "^0.9.9"
+scored-lib = {path = "../lib", develop = true}
 
 [[tool.poetry.packages]]
 include = "ml"
