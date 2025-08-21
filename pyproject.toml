@@ -10,17 +10,22 @@ python = ">=3.11"
 [tool.poetry.group.dev.dependencies]
 black = "25.1.0"
 isort = "6.0.1"
-pyright = "1.1.403"
+poethepoet = "^0.37.0"
 
 [tool.black]
 line-length = 100
 target-version = ['py311']
+include = '\.pyi?$'
 
 [tool.isort]
 profile = "black"
 known_first_party = ["scored", "gui", "ml"]
 
-[tool.poetry.scripts]
-lint = "pyright"
-format = "black"
+[tool.pylint.format]
+max-line-length = "100"
+
+[tool.poe.tasks]
+format_gui = "black projects/gui/gui/*"
+format_lib = "black projects/lib/scored/*"
+format_ml = "black projects/ml/ml/*"
 sort = "isort"
