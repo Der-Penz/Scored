@@ -1,33 +1,28 @@
-[tool.poetry]
-name = "monorepo-dev"
-version = "0.0.0"
-description = "Dev dependencies for the scored monorepo"
-package-mode = false
+[project]
+name = "scored"
+version = "0.1.0"
+description = "Single camera dart scoring system"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
 
-[tool.poetry.dependencies]
-python = ">=3.11"
+[tool.uv.workspace]
+members = [
+    "scored-lib",
+    "gui",
+    "nn",
+]
 
-[tool.poetry.group.dev.dependencies]
-black = "25.1.0"
-isort = "6.0.1"
-poethepoet = "^0.37.0"
+[dependency-groups]
+dev = [
+    "black>=26.3.1",
+    "isort>=8.0.1",
+]
 
 [tool.black]
 line-length = 100
-target-version = ['py311']
-include = '\.pyi?$'
+target-version = ['py313']
 
 [tool.isort]
 profile = "black"
-known_first_party = ["scored", "gui", "ml"]
-
-[tool.pylint.format]
-max-line-length = "100"
-
-[tool.poe.tasks]
-format_gui = "black projects/gui/"
-format_lib = "black projects/lib/"
-format_ml = "black projects/ml/"
-sort_gui = "isort projects/gui/"
-sort_lib = "isort projects/lib/"
-sort_ml = "isort projects/ml/"
+line_length = 100
