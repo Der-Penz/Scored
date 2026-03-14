@@ -1,49 +1,8 @@
-from __future__ import annotations
-
-from typing import Tuple
-
 import numpy as np
-from lib.scored.darts.DartThrow import DartThrow
-from lib.scored.darts.Multiplier import Multiplier
 
-RING_SIZE = 8
-BOARD_RADIUS_NORMALIZED = 451 / 2
-
-# Normalized dimensions
-RING_DIMENSIONS = {
-    "inner_bull": (12.7 / 2) / BOARD_RADIUS_NORMALIZED,
-    "outer_bull": (32 / 2) / BOARD_RADIUS_NORMALIZED,
-    "triple_inner": (214 / 2 - 8) / BOARD_RADIUS_NORMALIZED,
-    "triple_outer": (214 / 2) / BOARD_RADIUS_NORMALIZED,
-    "double_inner": (340 / 2 - 8) / BOARD_RADIUS_NORMALIZED,
-    "double_outer": (340 / 2) / BOARD_RADIUS_NORMALIZED,
-}
-
-DARTBOARD_NUMBERS = [
-    6,
-    10,
-    15,
-    2,
-    17,
-    3,
-    19,
-    7,
-    16,
-    8,
-    11,
-    14,
-    9,
-    12,
-    5,
-    20,
-    1,
-    18,
-    4,
-    13,
-]
-
-type Position = Tuple[int, int]
-type ScoredDart = Tuple[int, int]
+from scored_lib.dart.constants import DARTBOARD_NUMBERS, RING_DIMENSIONS, Position
+from scored_lib.dart.dart_throw import DartThrow
+from scored_lib.dart.multiplier import Multiplier
 
 
 class DartBoard:
@@ -52,14 +11,18 @@ class DartBoard:
     (0.5, 0.5) is the center, outer circle has radius 0.5.
     """
 
-    def __init__(self):
-        self._rings = RING_DIMENSIONS.copy()
+    def __init__(self, ring_dimensions: dict[str, float] | None = None):
+        if ring_dimensions is not None:
+            self._rings = ring_dimensions.copy()
+        else:
+            self._rings = RING_DIMENSIONS.copy()
 
-    def get_center(self) -> Position:
+    @property
+    def center(self) -> Position:
         return (0.5, 0.5)
 
     def get_rings(self) -> dict[str, float]:
-        """Return normalized radii for all scoring regions."""
+        """Return normalized radius for all scoring regions."""
         return self._rings
 
     def score_dart(self, position: Position) -> DartThrow:
