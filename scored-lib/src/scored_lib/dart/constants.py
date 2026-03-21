@@ -4,7 +4,9 @@ type PolarPosition = tuple[float, float]
 RING_SIZE = 8
 BOARD_RADIUS_NORMALIZED = 451 / 2
 
-# Normalized dimensions
+SLICE_ANGLE_DEGREES = 360 / 20
+
+# Normalized ring radius values based on the official dartboard dimensions
 RING_DIMENSIONS = {
     "inner_bull": (12.7 / 2) / BOARD_RADIUS_NORMALIZED,
     "outer_bull": (32 / 2) / BOARD_RADIUS_NORMALIZED,
@@ -14,7 +16,11 @@ RING_DIMENSIONS = {
     "double_outer": (340 / 2) / BOARD_RADIUS_NORMALIZED,
 }
 
-DARTBOARD_NUMBERS = [
+DARTBOARD_NUMBERS: list[int] = [
+    1,
+    18,
+    4,
+    13,
     6,
     10,
     15,
@@ -31,8 +37,4 @@ DARTBOARD_NUMBERS = [
     12,
     5,
     20,
-    1,
-    18,
-    4,
-    13,
 ]

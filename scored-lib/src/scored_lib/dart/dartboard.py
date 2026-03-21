@@ -1,8 +1,16 @@
+import math
+
 import numpy as np
 
-from scored_lib.dart.constants import DARTBOARD_NUMBERS, RING_DIMENSIONS, Position
+from scored_lib.dart.constants import (
+    DARTBOARD_NUMBERS,
+    RING_DIMENSIONS,
+    SLICE_ANGLE_DEGREES,
+    Position,
+)
 from scored_lib.dart.dart_throw import DartThrow
 from scored_lib.dart.multiplier import Multiplier
+from scored_lib.util.angle import get_clockwise_angle
 
 
 class DartBoard:
@@ -37,16 +45,16 @@ class DartBoard:
         return DartThrow(number, multiplier, position)
 
     def _get_dart_number(self, position: Position):
-        dx, dy = position[0] - 0.5, position[1] - 0.5
-        angle = np.arctan2(dy, dx)
+        angle = get_clockwise_angle(position)
 
-        if angle < 0:
-            angle += 2 * np.pi
+        angle = (
+            angle + SLICE_ANGLE_DEGREES / 2
+        ) % 360  # shift by 8 degrees so it matches the boundary
 
-        segment_angle = (2 * np.pi) / 20
-        segment_index = int(angle // segment_angle)
+        offset = 4  # Offset to align with the numbers
+        index = int(angle // SLICE_ANGLE_DEGREES) + offset
 
-        return DARTBOARD_NUMBERS[segment_index]
+        return DARTBOARD_NUMBERS[index % len(DARTBOARD_NUMBERS)]
 
     def _get_dart_multiplier(self, position: Position) -> Multiplier:
         dx, dy = position[0] - 0.5, position[1] - 0.5
@@ -60,7 +68,7 @@ class DartBoard:
             return Multiplier.TRIPLE
         elif self._rings["double_inner"] <= distance <= self._rings["double_outer"]:
             return Multiplier.DOUBLE
-        elif distance <= 1.0:
+        elif distance <= self._rings["double_inner"]:
             return Multiplier.SINGLE
         else:
             return Multiplier.MISS
