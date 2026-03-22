@@ -11,7 +11,7 @@ class DartThrow:
 
     Arguments:
         number (int): The number of the segment hit by the dart.
-        multiplier (Multiplier): The multiplier for the score.
+        multiplier (Multiplier): The normalized xy-coordinate relative to the center.
         position (Position): The position of the dart on the dartboard in normalized coordinates.
     """
 
@@ -77,7 +77,7 @@ class DartThrow:
         if self.multiplier == Multiplier.DOUBLE:
             return "Double " + str(self.number)
         if self.multiplier == Multiplier.TRIPLE:
-            return "Triple" + str(self.number)
+            return "Triple " + str(self.number)
 
     @property
     def polar(self) -> PolarPosition:

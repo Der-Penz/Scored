@@ -1,19 +1,20 @@
 type Position = tuple[int, int]
 type PolarPosition = tuple[float, float]
 
-RING_SIZE = 8
-BOARD_RADIUS_NORMALIZED = 451 / 2
+RING_SIZE_MM = 8
+BOARD_RADIUS_MM = 451 / 2
 
-SLICE_ANGLE_DEGREES = 360 / 20
+BED_ANGLE_DEGREES = 360 / 20
 
 # Normalized ring radius values based on the official dartboard dimensions
-RING_DIMENSIONS = {
-    "inner_bull": (12.7 / 2) / BOARD_RADIUS_NORMALIZED,
-    "outer_bull": (32 / 2) / BOARD_RADIUS_NORMALIZED,
-    "triple_inner": (214 / 2 - 8) / BOARD_RADIUS_NORMALIZED,
-    "triple_outer": (214 / 2) / BOARD_RADIUS_NORMALIZED,
-    "double_inner": (340 / 2 - 8) / BOARD_RADIUS_NORMALIZED,
-    "double_outer": (340 / 2) / BOARD_RADIUS_NORMALIZED,
+RING_RADIUS_NORMALIZED = {
+    "inner_bull": (12.7 / 2) / BOARD_RADIUS_MM,
+    "outer_bull": (32 / 2) / BOARD_RADIUS_MM,
+    "triple_inner": (214 / 2 - 8) / BOARD_RADIUS_MM,
+    "triple_outer": (214 / 2) / BOARD_RADIUS_MM,
+    "double_inner": (340 / 2 - 8) / BOARD_RADIUS_MM,
+    "double_outer": (340 / 2) / BOARD_RADIUS_MM,
+    "edge": BOARD_RADIUS_MM / BOARD_RADIUS_MM,
 }
 
 DARTBOARD_NUMBERS: list[int] = [

@@ -1,6 +1,6 @@
 import math
 
-from scored_lib.dart.constants import DARTBOARD_NUMBERS, RING_DIMENSIONS, SLICE_ANGLE_DEGREES
+from scored_lib.dart.constants import DARTBOARD_NUMBERS, RING_RADIUS_NORMALIZED, BED_ANGLE_DEGREES
 import tkinter as tk
 
 
@@ -80,7 +80,7 @@ def draw_arc(
     )
 
 
-def draw_dartboard(canvas: tk.Canvas) -> None:
+def draw_dartboard(canvas: tk.Canvas, size: float) -> None:
     """
     Draws a dartboard with correct segment fields and colors.
 
@@ -88,34 +88,35 @@ def draw_dartboard(canvas: tk.Canvas) -> None:
     ----------
     canvas : tk.Canvas
         The Tkinter canvas widget to draw the dartboard on.
+    size : float
+        The size (diameter) of the dartboard in pixels to draw.
     """
 
     width = canvas.winfo_width()
     height = canvas.winfo_height()
 
-    scale = min(width, height)
     center_x = width / 2
     center_y = height / 2
 
-    r_do = RING_DIMENSIONS["double_outer"] * scale / 2
-    r_di = RING_DIMENSIONS["double_inner"] * scale / 2
-    r_to = RING_DIMENSIONS["triple_outer"] * scale / 2
-    r_ti = RING_DIMENSIONS["triple_inner"] * scale / 2
-    r_bo = RING_DIMENSIONS["outer_bull"] * scale / 2
-    r_bi = RING_DIMENSIONS["inner_bull"] * scale / 2
+    r_do = RING_RADIUS_NORMALIZED["double_outer"] * size / 2
+    r_di = RING_RADIUS_NORMALIZED["double_inner"] * size / 2
+    r_to = RING_RADIUS_NORMALIZED["triple_outer"] * size / 2
+    r_ti = RING_RADIUS_NORMALIZED["triple_inner"] * size / 2
+    r_bo = RING_RADIUS_NORMALIZED["outer_bull"] * size / 2
+    r_bi = RING_RADIUS_NORMALIZED["inner_bull"] * size / 2
+    r_edge = RING_RADIUS_NORMALIZED["edge"] * size / 2
+    r_text = r_edge * 0.9  # Position text slightly inside the edge for better visibility
 
-    r_text = r_do * 1.1
-    r_background = r_do * 1.2
-    draw_circle(canvas, center_x, center_y, r_background, "black")  # Background
+    draw_circle(canvas, center_x, center_y, r_edge, "black")
 
     offset = 4  # Offset to align with the defined numbers since degrees start at number 6 but the numbers at 1
     for i, number in enumerate(DARTBOARD_NUMBERS):
         # Calculate the center of the segment
-        center_angle_logic = (i - offset) * SLICE_ANGLE_DEGREES
+        center_angle_logic = (i - offset) * BED_ANGLE_DEGREES
         center_angle_trig = -center_angle_logic
 
         # center angle by adding half the slice angle
-        arc_start = center_angle_trig - (SLICE_ANGLE_DEGREES / 2)
+        arc_start = center_angle_trig - (BED_ANGLE_DEGREES / 2)
 
         # * Text placement uses the center angle
         text_rotation = center_angle_trig - 90
@@ -129,7 +130,7 @@ def draw_dartboard(canvas: tk.Canvas) -> None:
             text=str(number),
             fill="white",
             angle=text_rotation,
-            font=("Arial", int(scale * 0.03), "bold"),
+            font=("Arial", int(size * 0.04), "bold"),
         )
 
         if i % 2 == 0:
@@ -140,13 +141,13 @@ def draw_dartboard(canvas: tk.Canvas) -> None:
             color_double_triple = ODD_COLOR_MULTIPLIER
 
         draw_arc(
-            canvas, center_x, center_y, r_do, arc_start, SLICE_ANGLE_DEGREES, color_double_triple
+            canvas, center_x, center_y, r_do, arc_start, BED_ANGLE_DEGREES, color_double_triple
         )
-        draw_arc(canvas, center_x, center_y, r_di, arc_start, SLICE_ANGLE_DEGREES, color_single)
+        draw_arc(canvas, center_x, center_y, r_di, arc_start, BED_ANGLE_DEGREES, color_single)
         draw_arc(
-            canvas, center_x, center_y, r_to, arc_start, SLICE_ANGLE_DEGREES, color_double_triple
+            canvas, center_x, center_y, r_to, arc_start, BED_ANGLE_DEGREES, color_double_triple
         )
-        draw_arc(canvas, center_x, center_y, r_ti, arc_start, SLICE_ANGLE_DEGREES, color_single)
+        draw_arc(canvas, center_x, center_y, r_ti, arc_start, BED_ANGLE_DEGREES, color_single)
 
     draw_circle(canvas, center_x, center_y, r_bo, EVEN_COLOR_MULTIPLIER)  # Outer bulls
     draw_circle(canvas, center_x, center_y, r_bi, ODD_COLOR_MULTIPLIER)  # Inner bulls
