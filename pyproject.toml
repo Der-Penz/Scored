@@ -4,14 +4,20 @@ version = "0.1.0"
 description = "Single camera dart scoring system"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "gui",
+    "opencv-python>=4.13.0.92",
+]
 
 [tool.uv.workspace]
 members = [
-    "scored-lib",
+    "scored_lib",
     "gui",
     "nn",
 ]
+
+[tool.uv.sources]
+gui = { workspace = true }
 
 [dependency-groups]
 dev = [

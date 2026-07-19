@@ -12,3 +12,7 @@ build-backend = "uv_build"
 
 [tool.uv.sources]
 scored-lib = { workspace = true }
+
+
+[project.scripts]
+scored = "gui.main:main"
