@@ -15,4 +15,4 @@ scored-lib = { workspace = true }
 
 
 [project.scripts]
-scored = "gui.main:main"
+scored-gui = "gui.main:main"

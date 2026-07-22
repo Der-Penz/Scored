@@ -1,6 +1,6 @@
 import tkinter as tk
 from math import ceil, sqrt
-from gui.widgets.board_view import BoardView
+from gui.view.widgets.board_view import BoardView
 
 
 class BoardViewsContainer(tk.Frame):
