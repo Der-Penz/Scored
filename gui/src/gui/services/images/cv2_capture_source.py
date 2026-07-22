@@ -1,5 +1,4 @@
 from abc import ABC
-from queue import Queue
 
 import cv2
 from gui.services.images.source import ImageSource
@@ -11,33 +10,39 @@ class CV2CaptureSource(ImageSource, ABC):
     A stream source that uses OpenCV to capture frames from a video source (e.g. webcam, video file)
     """
 
-    def __init__(self, output_queue: Queue, source: int | str):
+    def __init__(self, source: int | str):
         """
         Init the CV2CaptureSource
 
         Parameters
         ----------
-        output_queue : Queue
-            The queue to put the frames into
         source : int | str
             The video source (e.g. webcam index or video file path)
         """
-        super().__init__(output_queue)
+        super().__init__()
         self.source = source
         self.cap: cv2.VideoCapture = None
 
-    def _open(self):
+    def open(self):
         self.cap = cv2.VideoCapture(self.source)
 
-    def _read_frame(self) -> np.ndarray:
+    def read_frame(self) -> np.ndarray:
+        if self.cap is None or not self.cap.isOpened():
+            return None
+
         ret, frame = self.cap.read()
         if not ret:
-            raise RuntimeError(f"Failed to read frame from source {self.source}")
+            return None
+
         return frame
 
-    def _close(self):
-        if self.cap:
-            self.cap.release()
+    def close(self):
+        if self.cap is None:
+            return
+
+        cap_to_close = self.cap
+        self.cap = None
+        cap_to_close.release()
 
     def process_frame(self, frame: np.ndarray) -> np.ndarray:
-        return frame
+        return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)

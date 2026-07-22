@@ -1,6 +1,4 @@
 from abc import ABC, abstractmethod
-from multiprocessing import Queue
-import time
 
 import numpy as np
 
@@ -8,50 +6,12 @@ import numpy as np
 class ImageSource(ABC):
     """
     A base class for streaming frames to the application from different sources
-    The stream source will run in a separate thread and put frames into the output queue for processing by the application.
     """
 
-    def __init__(self, output_queue: Queue):
+    def __init__(self):
         """
         Init the stream source
-
-        Parameters
-        ----------
-        output_queue : Queue
-            queue to put the frames into
         """
-        self.output_queue = output_queue
-        self._running: bool = False
-
-    def run(self) -> None:
-        """
-        Starts the blocking capture loop.
-        """
-        self._running = True
-        self._open()
-        
-        try:
-            while self._running:
-                frame = self._read_frame()
-                
-                if frame is None:
-                    break
-                    
-                processed_frame = self.process_frame(frame)
-                
-                if processed_frame is not None:
-                    self.output_queue.put(processed_frame)
-                    
-                # Yield a tiny amount of time to prevent maxing out the CPU core
-                time.sleep(1 / 30)  # Assuming a target of 30 FPS
-        finally:
-            self._close()
-
-    def stop(self):
-        """
-        stops the stream source
-        """
-        self._running = False
 
     @classmethod
     def get_name(cls) -> str:
@@ -66,14 +26,14 @@ class ImageSource(ABC):
         return cls.__name__
     
     @abstractmethod
-    def _open(self):
+    def open(self):
         """
         open the stream source
         """
         pass
 
     @abstractmethod
-    def _read_frame(self) -> np.ndarray:
+    def read_frame(self) -> np.ndarray:
         """
         Read a frame from the source
 
@@ -101,7 +61,7 @@ class ImageSource(ABC):
         pass
 
     @abstractmethod
-    def _close(self):
+    def close(self):
         """
         close up any resources
         """
