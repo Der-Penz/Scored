@@ -86,6 +86,8 @@ class AppController:
             self.source_manager.set_source(None)
 
     def start(self):
+        if self.config.source is not None:
+            self.source_manager.set_source_by_value(self.config.source)
         self.view.after(UPDATE_INTERVAL_MS, self._render)
         self.view.mainloop()
 

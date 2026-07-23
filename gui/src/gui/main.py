@@ -1,7 +1,7 @@
 import argparse
 import tkinter as tk
+from simple_parsing import ArgumentParser
 
-import multiprocessing as mp
 import tkinter as tk
 
 from gui.controller.app_controller import AppController
@@ -35,14 +35,15 @@ def get_args() -> AppConfig:
 
 
 def main() -> None:
-    mp.set_start_method("spawn")
-    args = get_args()
+    parser = ArgumentParser()
+    parser.add_arguments(AppConfig, dest="config")
+    args = parser.parse_args()
 
     model = AppModel()
     root = tk.Tk()
     view = AppView(root)
 
-    controller = AppController(model, view, args)
+    controller = AppController(model, view, args.config)
     controller.start()
 
 

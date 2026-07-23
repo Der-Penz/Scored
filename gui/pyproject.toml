@@ -4,7 +4,10 @@ version = "0.1.0"
 description = "a gui for the scored project to visualize the results and interact with the system"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = ["scored-lib"]
+dependencies = [
+    "scored-lib",
+    "simple-parsing>=0.1.8",
+]
 
 [build-system]
 requires = ["uv_build>=0.10.9,<0.11.0"]

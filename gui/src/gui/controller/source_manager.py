@@ -16,6 +16,17 @@ class SourceManager:
         self._thread = None
         self._current_source: ImageSource | None = None
 
+    def set_source_by_value(self, value: str):
+        # check for int or http or path
+        if value.isdigit():
+            source = WebCamSource(int(value))
+        elif value.startswith("http"):
+            source = HTTPCaptureSource(value)
+        else:
+            source = VideoSource(value)
+            
+        self.set_source(source)
+
     def set_source(self, source: ImageSource) -> None:
         """
         Stops the current stream and starts a new one with the given source.

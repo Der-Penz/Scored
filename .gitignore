@@ -183,3 +183,4 @@ cython_debug/
 .vscode/settings.json
 label-studio-ml-backend/data/
 models/
+.vscode/tasks.json
