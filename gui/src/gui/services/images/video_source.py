@@ -44,6 +44,7 @@ class VideoSource(CV2CaptureSource):
             self.fps = detected_fps
 
         self.frame_delay = 1.0 / self.fps
+        print(self.frame_delay)
         self.last_frame_time = time.perf_counter()
         
     def read_frame(self) -> np.ndarray | None:
@@ -58,10 +59,10 @@ class VideoSource(CV2CaptureSource):
         if self.cap is None or not self.cap.isOpened():
             return None
 
-        # Sleep for remaining time to maintain real-time playback rate
         elapsed = time.perf_counter() - self.last_frame_time
         sleep_time = self.frame_delay - elapsed
         if sleep_time > 0:
-            time.sleep(sleep_time)
-
+            time.sleep(sleep_time * 0.9)  # Sleep for 90% of the remaining time to avoid overshooting
+            
+        self.last_frame_time = time.perf_counter()
         return super().read_frame()
