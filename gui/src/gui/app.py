@@ -29,27 +29,28 @@ class App:
         self.root.grid_columnconfigure(0, weight=1)
         self.root.grid_columnconfigure(1, weight=1)
         self.root.grid_rowconfigure(0, weight=1)
-        
+
         # Left frame
         self.left_frame = tk.Frame(self.root, bg="grey")
         self.left_frame.grid(row=0, column=0, sticky="nsew")
-        
+
         # Right frame
         self.right_frame = tk.Frame(self.root, bg="grey")
         self.right_frame.grid(row=0, column=1, sticky="nsew")
-        
+
         self.menu_bar = tk.Menu(self.root)
         self.root.config(menu=self.menu_bar)
-        
+
     def _add_game_menu(self):
         pass
-    
+
     def _add_settings_menu(self):
         # add option to switch camera from local to remote to image
         self.settings_menu = tk.Menu(self.menu_bar, tearoff=0)
-        self.settings_menu.add_command(label="Camera source", command=self._switch_camera)        
-        
-        
+        self.settings_menu.add_command(
+            label="Camera source", command=self._switch_camera
+        )
+
     def run(self):
         self.root.mainloop()
 

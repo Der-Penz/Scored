@@ -6,8 +6,8 @@ class AppView(tk.Frame):
     """
     The main application view that contains all other views.
     """
-    
-    def __init__(self, master : tk.Tk):
+
+    def __init__(self, master: tk.Tk):
         super().__init__(master)
         self.master = master
         self.pack(fill="both", expand=True)
@@ -27,7 +27,7 @@ class AppView(tk.Frame):
         self.image_label = tk.Label(self.right_frame)
         self.image_label.pack(fill="both", expand=True)
         self._photo_image = None
-        
+
     def create_menu(self):
         self.menu_bar = tk.Menu(self.master)
         self.master.config(menu=self.menu_bar)

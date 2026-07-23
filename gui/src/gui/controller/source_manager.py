@@ -7,6 +7,7 @@ from gui.services.images.video_source import VideoSource
 from gui.services.images.webcam_source import WebCamSource
 import numpy as np
 
+
 class SourceManager:
     def __init__(self):
         self._latest_frame = None
@@ -37,24 +38,24 @@ class SourceManager:
 
         if self._thread is not None and self._thread.is_alive():
             self._thread.join(timeout=1.0)
-            
+
         self._thread = None
 
     def _update(self) -> None:
         """Reads frames continuously from the capture device."""
-        
+
         if self._current_source is None:
             return
-        
+
         self._current_source.open()
         self._running = True
         try:
             while self._running:
                 frame = self._current_source.read_frame()
-                
+
                 if frame is None or not self._running:
                     break
-                
+
                 processed_frame = self._current_source.process_frame(frame)
                 if processed_frame is not None:
                     with self._lock:
@@ -68,7 +69,7 @@ class SourceManager:
             if self._current_source is not None:
                 self._current_source.close()
             self._running = False
-                
+
     def get_frame(self) -> np.ndarray | None:
         """
         Retrieves the most recently captured frame safely.
@@ -82,7 +83,7 @@ class SourceManager:
             if self._latest_frame is not None:
                 return self._latest_frame.copy()
             return None
-    
+
     def get_sources(self) -> list[type[ImageSource]]:
         """
         Returns a list of available image sources.

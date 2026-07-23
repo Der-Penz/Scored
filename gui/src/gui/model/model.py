@@ -1,3 +1,2 @@
-class AppModel():
+class AppModel:
     pass
-    

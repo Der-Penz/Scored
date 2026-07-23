@@ -12,17 +12,19 @@ from PIL import Image
 
 UPDATE_INTERVAL_MS = int((1 / 30) * 1000)  # Update interval for the UI in milliseconds
 
-class AppController():
+
+class AppController:
     """
     Coordinates the application state, user interface, and background processes.
     """
-    def __init__(self, model : AppModel, view : AppView, config: AppConfig):
+
+    def __init__(self, model: AppModel, view: AppView, config: AppConfig):
         self.model = model
         self.view = view
         self.config = config
         self.source_manager = SourceManager()
         self._bind_events()
-        
+
     def _bind_events(self) -> None:
         """
         Bind UI callbacks to controller methods.
@@ -30,11 +32,13 @@ class AppController():
         for source in self.source_manager.get_sources():
             self.view.source_menu.add_command(
                 label=source.get_name(),
-                command=lambda src=source.get_name(): self._on_select_source(src)
+                command=lambda src=source.get_name(): self._on_select_source(src),
             )
 
         self.view.source_menu.add_separator()
-        self.view.source_menu.add_command(label="Stop Stream", command=self.source_manager.stop)
+        self.view.source_menu.add_command(
+            label="Stop Stream", command=self.source_manager.stop
+        )
 
     def _on_select_source(self, source_name: str) -> None:
         """
@@ -49,13 +53,17 @@ class AppController():
                 source = VideoSource(path)
 
             elif source_name == WebCamSource.get_name():
-                idx = simpledialog.askinteger("Camera index", "Enter camera index (0,1,...):", minvalue=0)
+                idx = simpledialog.askinteger(
+                    "Camera index", "Enter camera index (0,1,...):", minvalue=0
+                )
                 if idx is None:
                     return
                 source = WebCamSource(idx)
 
             elif source_name == HTTPCaptureSource.get_name():
-                url = simpledialog.askstring("Stream URL", "Enter HTTP stream URL:", initialvalue="http://")
+                url = simpledialog.askstring(
+                    "Stream URL", "Enter HTTP stream URL:", initialvalue="http://"
+                )
                 if not url:
                     return
                 source = HTTPCaptureSource(url)
@@ -73,6 +81,7 @@ class AppController():
         except Exception as exc:
             # print the exception to the console for debugging
             import traceback
+
             traceback.print_exc()
             self.source_manager.set_source(None)
 
@@ -81,11 +90,10 @@ class AppController():
         self.view.mainloop()
 
     def _render(self) -> None:
-        
         frame = self.source_manager.get_frame()
         if frame is not None:
             pil = Image.fromarray(frame)
             if pil is not None:
                 self.view.display_image(pil)
-                
+
         self.view.after(UPDATE_INTERVAL_MS, self._render)

@@ -18,7 +18,9 @@ class BoardViewsContainer(tk.Frame):
         self.tabs_frame = tk.Frame(self.top_bar)
         self.tabs_frame.pack(side="left", fill="x", expand=True)
 
-        self.toggle_button = tk.Button(self.top_bar, text="Grid View", command=self.toggleMode)
+        self.toggle_button = tk.Button(
+            self.top_bar, text="Grid View", command=self.toggleMode
+        )
         self.toggle_button.pack(side="right")
 
         # Content area
@@ -70,4 +72,11 @@ class BoardViewsContainer(tk.Frame):
                 for idx, view in enumerate(self.board_views):
                     if idx == self.current_view:
                         continue
-                    view.pack(in_=row_frame, side="left", expand=True, fill="both", padx=5, pady=5)
+                    view.pack(
+                        in_=row_frame,
+                        side="left",
+                        expand=True,
+                        fill="both",
+                        padx=5,
+                        pady=5,
+                    )

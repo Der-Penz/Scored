@@ -24,7 +24,7 @@ class ImageSource(ABC):
             The name of the class.
         """
         return cls.__name__
-    
+
     @abstractmethod
     def open(self):
         """
