@@ -7,7 +7,6 @@ requires-python = ">=3.13"
 dependencies = [
     "gui",
     "opencv-python>=4.13.0.92",
-    "pillow>=12.3.0",
 ]
 
 [tool.uv.workspace]

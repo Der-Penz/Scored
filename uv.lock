@@ -72,12 +72,14 @@ name = "gui"
 version = "0.1.0"
 source = { editable = "gui" }
 dependencies = [
+    { name = "pillow" },
     { name = "scored-lib" },
     { name = "simple-parsing" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "pillow", specifier = ">=12.3.0" },
     { name = "scored-lib", editable = "scored_lib" },
     { name = "simple-parsing", specifier = ">=0.1.8" },
 ]
@@ -299,7 +301,6 @@ source = { virtual = "." }
 dependencies = [
     { name = "gui" },
     { name = "opencv-python" },
-    { name = "pillow" },
 ]
 
 [package.dev-dependencies]
@@ -312,7 +313,6 @@ dev = [
 requires-dist = [
     { name = "gui", editable = "gui" },
     { name = "opencv-python", specifier = ">=4.13.0.92" },
-    { name = "pillow", specifier = ">=12.3.0" },
 ]
 
 [package.metadata.requires-dev]

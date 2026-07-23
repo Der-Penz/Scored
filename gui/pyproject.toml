@@ -5,6 +5,7 @@ description = "a gui for the scored project to visualize the results and interac
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "pillow>=12.3.0",
     "scored-lib",
     "simple-parsing>=0.1.8",
 ]

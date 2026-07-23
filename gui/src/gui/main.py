@@ -43,7 +43,7 @@ def main() -> None:
     root = tk.Tk()
     view = AppView(root)
 
-    controller = AppController(model, view, args.config)
+    controller = AppController(view, model, args.config)
     controller.start()
 
 

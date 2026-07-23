@@ -8,6 +8,18 @@
             "type": "shell",
             "command": "uv run scored-gui",
             "problemMatcher": []
+        },
+        {
+            "label": "GUI Video",
+            "type": "shell",
+            "command": "uv run scored-gui --source 'C:\\Users\\mike2\\Videos\\Blender\\Light Cube\\0000-0250.mp4'",
+            "problemMatcher": []
+        },
+         {
+            "label": "GUI HTTP",
+            "type": "shell",
+            "command": "uv run scored-gui --source 'http://192.168.178.105:8080'",
+            "problemMatcher": []
         }
     ]
 }
