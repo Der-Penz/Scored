@@ -22,7 +22,7 @@ class AppView(tk.Frame):
         )
         self.main_paned_window.pack(fill="both", expand=True)
 
-        self.left_frame = tk.Frame(self.main_paned_window, bg="green")
+        self.left_frame = tk.Frame(self.main_paned_window, bg="black")
 
         self._dartboard_visible = True
         self._image_visible = True

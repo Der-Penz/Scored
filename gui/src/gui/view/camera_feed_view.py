@@ -2,10 +2,11 @@ import tkinter as tk
 
 from PIL import Image, ImageTk
 
+from gui.view.dartboard_protocol import DartboardProtocol
 from scored_lib.dart.dart_throw import DartThrow
 
 
-class CameraFeedView(tk.Frame):
+class CameraFeedView(tk.Frame, DartboardProtocol):
     """View for the live camera or source feed."""
 
     def __init__(self, master: tk.Misc):
@@ -14,7 +15,7 @@ class CameraFeedView(tk.Frame):
         self.image_label.pack(fill="both", expand=True)
         self._photo_image = None
 
-    def addDartThrow(self, _dart_throw: DartThrow) -> None:
+    def addDartThrow(self, dart_throw: DartThrow) -> None:
         pass
 
     def resetDartThrow(self) -> None:
