@@ -44,7 +44,7 @@ class SourceController(ControllerProtocol):
         pass
 
     def start(self):
-        self._view.after(UPDATE_INTERVAL_MS, self._rerender_images)
+        pass
 
     def set_source_by_value(self, value: str):
         # check for int or http or path
@@ -166,12 +166,3 @@ class SourceController(ControllerProtocol):
 
         except Exception as _:
             self.set_source(None)
-
-    def _rerender_images(self) -> None:
-        frame = self.get_frame()
-        if frame is not None:
-            pil = Image.fromarray(frame)
-            if pil is not None:
-                self._view.display_image(pil)
-
-        self._view.after(UPDATE_INTERVAL_MS, self._rerender_images)

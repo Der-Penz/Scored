@@ -21,7 +21,9 @@ class AppController(ControllerProtocol):
 
         self.source_controller = SourceController(view, model)
         self.dartboard_controller = DartboardController(view, model)
-        self.camera_feed_controller = CameraFeedController(view, model)
+        self.camera_feed_controller = CameraFeedController(
+            view, model, self.source_controller
+        )
 
         menu_bar = tk.Menu(self.view.master)
         self.bind_menu(menu_bar)

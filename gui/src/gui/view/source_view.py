@@ -6,7 +6,7 @@ from gui.protocols.dartboard_protocol import DartboardProtocol
 from scored_lib.dart.dart_throw import DartThrow
 
 
-class CameraFeedView(tk.Frame, DartboardProtocol):
+class SourceView(tk.Frame, DartboardProtocol):
     """View for the live camera or source feed."""
 
     def __init__(self, master: tk.Misc):

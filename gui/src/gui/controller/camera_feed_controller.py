@@ -3,6 +3,7 @@ import time
 import tkinter as tk
 from tkinter import filedialog, simpledialog
 
+from gui.controller.source_controller import SourceController
 import numpy as np
 from PIL import Image
 
@@ -20,10 +21,14 @@ UPDATE_INTERVAL_MS = int((1 / 30) * 1000)
 
 
 class CameraFeedController(ControllerProtocol):
-    def __init__(self, view: AppView, model: AppModel):
+    def __init__(
+        self, view: AppView, model: AppModel, source_controller: SourceController
+    ):
         super().__init__(view, model)
         self._view = view
         self._model = model
+        self._source_view = view.source_view
+        self._source_controller = source_controller
 
     def bind_menu(self, menu_bar: tk.Menu) -> None:
         self._feed_visible = tk.BooleanVar(value=True)
@@ -37,7 +42,16 @@ class CameraFeedController(ControllerProtocol):
         pass
 
     def start(self) -> None:
-        pass
+        self._source_view.after(UPDATE_INTERVAL_MS, self._render_image)
 
     def _toggle_feed_visibility(self) -> None:
-        self._view.set_image_visible(self._feed_visible.get())
+        self._view.set_source_visible(self._feed_visible.get())
+
+    def _render_image(self) -> None:
+        frame = self._source_controller.get_frame()
+        if frame is not None:
+            pil = Image.fromarray(frame)
+            if pil is not None:
+                self._source_view.display_image(pil)
+
+        self._source_view.after(UPDATE_INTERVAL_MS, self._render_image)
