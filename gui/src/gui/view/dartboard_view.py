@@ -1,5 +1,7 @@
 import tkinter as tk
 
+from scored_lib.dart.dart_throw import DartThrow
+
 from gui.view.drawing.dartboard import draw_dartboard
 
 
@@ -27,3 +29,9 @@ class DartboardView(tk.Frame):
 
         self.canvas.delete("all")
         draw_dartboard(self.canvas, size)
+
+    def addDartThrow(self, _dart_throw: DartThrow) -> None:
+        pass
+
+    def resetDartThrow(self) -> None:
+        pass
