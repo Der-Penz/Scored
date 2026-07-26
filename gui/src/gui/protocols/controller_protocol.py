@@ -5,7 +5,7 @@ from gui.model.model import AppModel
 from gui.view.app_view import AppView
 
 
-class Controller(Protocol):
+class ControllerProtocol(Protocol):
     def __init__(self, view: AppView, model: AppModel) -> None:
         """
         Initialize the controller with the given view and model.

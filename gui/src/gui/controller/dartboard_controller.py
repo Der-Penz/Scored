@@ -1,11 +1,11 @@
 import tkinter as tk
 
-from gui.controller.controller import Controller
+from gui.protocols.controller_protocol import ControllerProtocol
 from gui.model.model import AppModel
 from gui.view.app_view import AppView
 
 
-class DartboardController(Controller):
+class DartboardController(ControllerProtocol):
     def __init__(self, view: AppView, model: AppModel):
         super().__init__(view, model)
         self._view = view

@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from gui.view.dartboard_protocol import DartboardProtocol
+from gui.protocols.dartboard_protocol import DartboardProtocol
 from scored_lib.dart.dart_throw import DartThrow
 
 from gui.view.drawing.dartboard import draw_dartboard

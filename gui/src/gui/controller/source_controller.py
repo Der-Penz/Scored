@@ -4,7 +4,7 @@ from tkinter import filedialog, simpledialog
 import tkinter as tk
 
 from PIL import Image
-from gui.controller.controller import Controller
+from gui.protocols.controller_protocol import ControllerProtocol
 from gui.model.model import AppModel
 from gui.services.images.http_source import HTTPCaptureSource
 from gui.services.images.source import ImageSource
@@ -17,7 +17,7 @@ SOURCES = [WebCamSource, VideoSource, HTTPCaptureSource]
 UPDATE_INTERVAL_MS = int((1 / 30) * 1000)  # Update interval for the UI in milliseconds
 
 
-class SourceController(Controller):
+class SourceController(ControllerProtocol):
     def __init__(self, view: AppView, model: AppModel):
         super().__init__(view, model)
         self._view = view

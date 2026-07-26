@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from gui.controller.controller import Controller
+from gui.protocols.controller_protocol import ControllerProtocol
 from gui.controller.camera_feed_controller import CameraFeedController
 from gui.controller.dartboard_controller import DartboardController
 from gui.controller.source_controller import SourceController
@@ -9,7 +9,7 @@ from gui.view.app_view import AppView
 from gui.model.args import AppConfig
 
 
-class AppController(Controller):
+class AppController(ControllerProtocol):
     """
     Coordinates the application state, user interface, and background processes.
     """

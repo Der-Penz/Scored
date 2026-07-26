@@ -2,7 +2,7 @@ import tkinter as tk
 
 from PIL import Image, ImageTk
 
-from gui.view.dartboard_protocol import DartboardProtocol
+from gui.protocols.dartboard_protocol import DartboardProtocol
 from scored_lib.dart.dart_throw import DartThrow
 
 
