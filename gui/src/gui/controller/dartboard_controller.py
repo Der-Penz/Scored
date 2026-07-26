@@ -6,15 +6,14 @@ from gui.view.app_view import AppView
 
 
 class DartboardController(Controller):
-    def __init__(self, view: AppView, model: AppModel, view_menu):
+    def __init__(self, view: AppView, model: AppModel):
         super().__init__(view, model)
         self._view = view
         self._model = model
-        self._view_menu = view_menu
 
-    def bind_menu(self) -> None:
+    def bind_menu(self, menu_bar: tk.Menu) -> None:
         self._dartboard_visible = tk.BooleanVar(value=True)
-        self._view_menu.add_checkbutton(
+        menu_bar.add_checkbutton(
             label="Show Dartboard",
             variable=self._dartboard_visible,
             command=self._toggle_dartboard_visibility,
@@ -28,9 +27,3 @@ class DartboardController(Controller):
 
     def _toggle_dartboard_visibility(self) -> None:
         self._view.set_dartboard_visible(self._dartboard_visible.get())
-
-    def addDartThrow(self, _dart_throw) -> None:
-        pass
-
-    def resetDartThrow(self) -> None:
-        pass

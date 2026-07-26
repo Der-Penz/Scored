@@ -35,8 +35,8 @@ def arg_parser():
         type=str,
         default="tasks.json",
         help="Path to tasks JSON file with list of ids or task datas. Example: tasks.json\n"
-             "String with ids separated by comma: if you provide task ids, "
-             "task data will be downloaded automatically from the Label Studio instance. Example: 1,2,3",
+        "String with ids separated by comma: if you provide task ids, "
+        "task data will be downloaded automatically from the Label Studio instance. Example: 1,2,3",
     )
     return parser.parse_args()
 

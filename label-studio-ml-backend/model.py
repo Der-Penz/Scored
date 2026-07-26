@@ -104,7 +104,6 @@ class YOLO(LabelStudioMLBase):
 
         predictions = []
         for task in tasks:
-
             regions = []
             for model in control_models:
                 path = model.get_path(task)

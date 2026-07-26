@@ -86,7 +86,7 @@ class BaseNN(nn.Module):
         # ultralytics yolo11 patches torch.save to use dill,
         # however it leads to serialization errors,
         # so let's check for use_dill and disable it
-        if 'use_dill' in torch.save.__code__.co_varnames:
+        if "use_dill" in torch.save.__code__.co_varnames:
             torch.save(self, path, use_dill=False)
         else:
             torch.save(self, path)
@@ -116,7 +116,6 @@ class BaseNN(nn.Module):
 
 
 class MultiLabelLSTM(BaseNN):
-
     def __init__(
         self,
         input_size,

@@ -1,6 +1,7 @@
 import threading
 import time
 from tkinter import filedialog, simpledialog
+import tkinter as tk
 
 from PIL import Image
 from gui.controller.controller import Controller
@@ -16,7 +17,7 @@ SOURCES = [WebCamSource, VideoSource, HTTPCaptureSource]
 UPDATE_INTERVAL_MS = int((1 / 30) * 1000)  # Update interval for the UI in milliseconds
 
 
-class SourceManager(Controller):
+class SourceController(Controller):
     def __init__(self, view: AppView, model: AppModel):
         super().__init__(view, model)
         self._view = view
@@ -27,15 +28,17 @@ class SourceManager(Controller):
         self._thread = None
         self._current_source: ImageSource | None = None
 
-    def bind_menu(self):
+    def bind_menu(self, menu_bar: tk.Menu) -> None:
+        source_menu = tk.Menu(menu_bar, tearoff=0)
+        menu_bar.add_cascade(label="Source", menu=source_menu)
         for source in SOURCES:
-            self._view.source_menu.add_command(
+            source_menu.add_command(
                 label=source.get_name(),
                 command=lambda src=source.get_name(): self.on_select_source(src),
             )
 
-        self._view.source_menu.add_separator()
-        self._view.source_menu.add_command(label="Stop Stream", command=self.stop)
+        source_menu.add_separator()
+        source_menu.add_command(label="Stop Stream", command=self.stop)
 
     def bind_components(self):
         pass

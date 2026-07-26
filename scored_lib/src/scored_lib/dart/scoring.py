@@ -57,11 +57,15 @@ def get_scored_multiplier(rel_pos: Position) -> Multiplier:
     elif distance <= RING_RADIUS_NORMALIZED["outer_bull"]:
         return Multiplier.OUTER_BULL
     elif (
-        RING_RADIUS_NORMALIZED["triple_inner"] < distance <= RING_RADIUS_NORMALIZED["triple_outer"]
+        RING_RADIUS_NORMALIZED["triple_inner"]
+        < distance
+        <= RING_RADIUS_NORMALIZED["triple_outer"]
     ):
         return Multiplier.TRIPLE
     elif (
-        RING_RADIUS_NORMALIZED["double_inner"] < distance <= RING_RADIUS_NORMALIZED["double_outer"]
+        RING_RADIUS_NORMALIZED["double_inner"]
+        < distance
+        <= RING_RADIUS_NORMALIZED["double_outer"]
     ):
         return Multiplier.DOUBLE
     else:

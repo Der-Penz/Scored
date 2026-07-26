@@ -114,7 +114,7 @@ class TimelineLabelsModel(ControlModel):
     def fit(self, event, data, **kwargs):
         if not self.trainable:
             logger.debug(
-                'TimelineLabels model is in not trainable mode. '
+                "TimelineLabels model is in not trainable mode. "
                 'Use model_trainable="true" to enable training.'
             )
             return
