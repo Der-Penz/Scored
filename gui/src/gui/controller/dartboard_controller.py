@@ -10,6 +10,7 @@ class DartboardController(ControllerProtocol):
         super().__init__(view, model)
         self._view = view
         self._model = model
+        self._left_view = view.left_view
 
     def bind_menu(self, menu_bar: tk.Menu) -> None:
         self._dartboard_visible = tk.BooleanVar(value=True)
@@ -26,4 +27,5 @@ class DartboardController(ControllerProtocol):
         pass
 
     def _toggle_dartboard_visibility(self) -> None:
-        self._view.set_dartboard_visible(self._dartboard_visible.get())
+        self._left_view.set_dartboard_visible(self._dartboard_visible.get())
+        self._view.refresh_left_panes()

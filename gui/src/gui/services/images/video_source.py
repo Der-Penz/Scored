@@ -45,7 +45,6 @@ class VideoSource(CV2CaptureSource):
             self.fps = detected_fps
 
         self.frame_delay = 1.0 / self.fps
-        print(self.frame_delay)
         self.last_frame_time = time.perf_counter()
 
     def read_frame(self) -> np.ndarray | None:

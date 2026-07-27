@@ -27,7 +27,8 @@ class CameraFeedController(ControllerProtocol):
         super().__init__(view, model)
         self._view = view
         self._model = model
-        self._source_view = view.source_view
+        self._left_view = view.left_view
+        self._source_view = view.left_view.source_view
         self._source_controller = source_controller
 
     def bind_menu(self, menu_bar: tk.Menu) -> None:
@@ -45,7 +46,8 @@ class CameraFeedController(ControllerProtocol):
         self._source_view.after(UPDATE_INTERVAL_MS, self._render_image)
 
     def _toggle_feed_visibility(self) -> None:
-        self._view.set_source_visible(self._feed_visible.get())
+        self._left_view.set_source_visible(self._feed_visible.get())
+        self._view.refresh_left_panes()
 
     def _render_image(self) -> None:
         frame = self._source_controller.get_frame()
