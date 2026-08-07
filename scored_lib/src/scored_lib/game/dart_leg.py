@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 
 from scored_lib.dart.dart_throw import DartThrow
@@ -28,7 +26,7 @@ class DartLeg:
     start_rule: StartRule = StartRule.ANY
     finish_rule: FinishRule = FinishRule.DOUBLE
     _results: list[list[ThrowResult | None]] = field(
-        init=False, repr=False, default_factory=list
+        init=False, repr=False, default_factory=lambda: [[]]
     )
     _is_open: bool = field(init=False, repr=False, default=False)
     _finished: tuple[int, int] = field(init=False, repr=False, default=(-1, -1))
@@ -94,7 +92,7 @@ class DartLeg:
 
         last_throws = self._results[-1]
         if len(last_throws) == 0:
-            if len(self._results) == 1:
+            if len(self._results) >= 2:
                 last_throws = self._results[-2]
 
         if len(last_throws) == 0:
@@ -116,24 +114,20 @@ class DartLeg:
         int
             The number of throws left in the current turn (1 to 3).
         """
-        if len(self._results) == 0:
-            return 3
         last_turn = self._results[-1]
-        if len(last_turn) == 3:
-            return 3
         return 3 - len(last_turn)
 
     @property
-    def turns(self) -> tuple[tuple[DartThrow, ...], ...]:
+    def rounds(self) -> tuple[tuple[ThrowResult, ...], ...]:
         """
-        Get all throws grouped into turns.
+        Get all throws grouped into rounds.
 
         Returns
         -------
-        tuple of tuple of DartThrow
-            A tuple containing turns, where each turn is a tuple of at most three throws.
+        tuple of tuple of ThrowResult
+            A tuple containing rounds, where each round is a tuple of at most three throws.
         """
-        return tuple(tuple(turn) for turn in self._results)
+        return tuple(tuple(round) for round in self._results)
 
     @property
     def is_finished(self) -> bool:
@@ -150,27 +144,27 @@ class DartLeg:
         """
         return self._is_open
 
-    def get_throw(self, turn: int, throw: int) -> ThrowResult | None:
+    def get_throw(self, round: int, throw: int) -> ThrowResult | None:
         """
-        Get result of throw by a given turn and throw
+        Get result of throw by a given round and throw
 
         Parameters
         ----------
-        turn : int
-                zero-based index of the turn
+        round : int
+                zero-based index of the round
         throw : int
-                zero-based index of the throw within the turn
+                zero-based index of the throw within the round
 
         Returns
         -------
         ThrowResult or None
-                the result of the throw at the specified turn and throw index, or None if a throw is after a bust
+                the result of the throw at the specified round and throw index, or None if a throw is after a bust
         """
-        if turn < 0 or turn >= len(self._results):
-            raise IndexError("turn index out of range")
-        if throw < 0 or throw >= len(self._results[turn]):
+        if round < 0 or round >= len(self._results):
+            raise IndexError("round index out of range")
+        if throw < 0 or throw >= len(self._results[round]):
             raise IndexError("throw index out of range")
-        return self._results[turn][throw]
+        return self._results[round][throw]
 
     def get_best_checkout_path(self) -> tuple[DartThrow, ...] | None:
         """
@@ -213,7 +207,6 @@ class DartLeg:
                 self._is_open = True
             else:
                 bust = True
-                score_after = score_before  # No change in score if not opened
 
         if self.is_open:
             if score_after < 0 or (
@@ -222,7 +215,6 @@ class DartLeg:
                 in [FinishRule.DOUBLE, FinishRule.DOUBLE_OR_BULL, FinishRule.TRIPLE]
             ):
                 bust = True
-                score_after = score_before
             elif score_after == 0:
                 if self._matches_finish_rule(dart_throw):
                     finished = True
@@ -232,7 +224,13 @@ class DartLeg:
                     )
                 else:
                     bust = True
-                    score_after = score_before  # No change in score on bust
+
+        if bust:
+            first_throw_in_turn = True if self.throws_left == 3 else False
+            if first_throw_in_turn:
+                score_after = score_before
+            else:
+                score_after = self._results[-1][0].score_before
 
         throw_result = ThrowResult(
             dart_throw=dart_throw,
@@ -242,19 +240,17 @@ class DartLeg:
             bust=bust,
             finished=finished,
         )
-
-        if self.throws_left == 3:
-            self._results.append([])
-
         self._results[-1].append(throw_result)
-
         if bust:
             left = self.throws_left
             for _ in range(left):
                 self._results[-1].append(None)
 
-        new_round = bust or self.throws_left == 3
-        return throw_result, new_round
+        if next_round := self.throws_left == 0 and not finished:
+            self._results.append([])
+
+        next_round |= bust
+        return throw_result, next_round
 
     def _matches_start_rule(self, dart_throw: DartThrow) -> bool:
         """
@@ -312,16 +308,16 @@ class DartLeg:
         return False
 
     def __repr__(self) -> str:
-        """Generate a structured visual log of the game turns and score state."""
+        """Generate a structured visual log of the game rounds and score state."""
         lines = [
             f"DartLeg(Starting: {self.starting_score}, Rules: In-{self.start_rule.name}/Out-{self.finish_rule.name})"
         ]
-        for i, turn in enumerate(self._results):
+        for i, round in enumerate(self._results):
             throw_strings = []
             final_turn_score = self.starting_score
 
             score = 0
-            for tr in turn:
+            for tr in round:
                 if tr is None:
                     throw_strings.append("-")
                 else:
