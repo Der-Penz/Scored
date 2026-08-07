@@ -9,15 +9,19 @@ class DartThrow:
     """
     Represents a dart throw on the dartboard.
 
-    Arguments:
-        number (int): The number of the segment hit by the dart.
-        multiplier (Multiplier): The normalized xy-coordinate relative to the center.
-        position (Position): The position of the dart on the dartboard in normalized coordinates.
+    Parameters
+    ----------
+    number : int
+        The number of the segment hit by the dart.
+    multiplier : Multiplier
+        The multiplier of the segment hit by the dart.
+    position : Position | None
+        The position of the dart on the dartboard in normalized coordinates where (0,0) is the center if available.
     """
 
     number: int
     multiplier: Multiplier
-    position: Position = field(compare=False)
+    position: Position | None = field(compare=False, default=None)
 
     @property
     def score(self) -> int:
@@ -90,6 +94,9 @@ class DartThrow:
 
         :return: A tuple containing the polar coordinates (r, theta).
         """
+        if self.position is None:
+            raise ValueError("Position is not set for this DartThrow.")
+
         x, y = self.position
         dx, dy = x - 0.5, y - 0.5
         r = math.sqrt(dx * dx + dy * dy) / 0.5
