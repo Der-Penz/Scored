@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 
 from PIL import Image, ImageTk
 
@@ -6,11 +7,11 @@ from gui.protocols.dartboard_protocol import DartboardProtocol
 from scored_lib.dart.dart_throw import DartThrow
 
 
-class SourceView(tk.Frame, DartboardProtocol):
+class SourceView(ttk.Frame, DartboardProtocol):
     """View for the live camera or source feed."""
 
     def __init__(self, master: tk.Misc):
-        super().__init__(master, bg="red")
+        super().__init__(master)
         self.image_label = tk.Label(self)
         self.image_label.pack(fill="both", expand=True)
         self._photo_image = None

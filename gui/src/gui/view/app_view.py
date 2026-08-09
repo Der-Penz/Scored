@@ -1,10 +1,11 @@
 import tkinter as tk
-from PIL import Image
+from tkinter import ttk
 
+from gui.view.dartgame_view import DartGameView
 from gui.view.left_view import LeftView
 
 
-class AppView(tk.Frame):
+class AppView(ttk.Frame):
     """
     The main application view that contains all other views.
     """
@@ -17,7 +18,7 @@ class AppView(tk.Frame):
 
     def create_widgets(self):
         self.main_paned_window = tk.PanedWindow(
-            self, orient=tk.HORIZONTAL, sashrelief=tk.RAISED, sashwidth=6
+            self, orient=tk.HORIZONTAL
         )
         self.main_paned_window.pack(fill="both", expand=True)
 
@@ -25,7 +26,7 @@ class AppView(tk.Frame):
 
         self._pane_ratio = 0.5
 
-        self.right_frame = tk.Frame(self.main_paned_window, bg="red")
+        self.game_view = DartGameView(self.main_paned_window)
 
         self.main_paned_window.bind("<ButtonRelease-1>", self._store_pane_ratio)
         self.main_paned_window.bind("<Configure>", self._on_paned_window_configure)
@@ -35,13 +36,13 @@ class AppView(tk.Frame):
         """Refresh the left-side pane layout after visibility changes."""
         if self.left_view.winfo_manager():
             self.main_paned_window.forget(self.left_view)
-        if self.right_frame.winfo_manager():
-            self.main_paned_window.forget(self.right_frame)
+        if self.game_view.winfo_manager():
+            self.main_paned_window.forget(self.game_view)
 
         left_visible = self.left_view.is_visible()
         if left_visible:
             self.main_paned_window.add(self.left_view)
-        self.main_paned_window.add(self.right_frame)
+        self.main_paned_window.add(self.game_view)
 
         if not left_visible:
             self.update_idletasks()

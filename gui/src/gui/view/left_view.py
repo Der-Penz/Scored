@@ -42,7 +42,3 @@ class LeftView(tk.Frame):
 
     def is_visible(self) -> bool:
         return self._dartboard_visible or self._source_visible
-
-    def display_image(self, pil_image: Image.Image) -> None:
-        """Display a PIL image in the left-side feed view."""
-        self.source_view.display_image(pil_image)

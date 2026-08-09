@@ -1,8 +1,11 @@
 import tkinter as tk
+import tkinter.ttk as ttk
 
+from gui.controller.scorepad_controller import ScorepadController
 from gui.protocols.controller_protocol import ControllerProtocol
 from gui.controller.camera_feed_controller import CameraFeedController
 from gui.controller.dartboard_controller import DartboardController
+from gui.controller.dartgame_controller import DartGameController
 from gui.controller.source_controller import SourceController
 from gui.model.model import AppModel
 from gui.view.app_view import AppView
@@ -21,9 +24,11 @@ class AppController(ControllerProtocol):
 
         self.source_controller = SourceController(view, model)
         self.dartboard_controller = DartboardController(view, model)
+        self.dartgame_controller = DartGameController(view, model)
         self.camera_feed_controller = CameraFeedController(
             view, model, self.source_controller
         )
+        self.scorepad_controller = ScorepadController(view, model)
 
         menu_bar = tk.Menu(self.view.master)
         self.bind_menu(menu_bar)
@@ -39,11 +44,15 @@ class AppController(ControllerProtocol):
 
         self.dartboard_controller.bind_menu(view_menu)
         self.camera_feed_controller.bind_menu(view_menu)
+        self.dartgame_controller.bind_menu(menu_bar)
+        self.scorepad_controller.bind_menu(menu_bar)
 
     def bind_components(self) -> None:
         self.source_controller.bind_components()
         self.dartboard_controller.bind_components()
         self.camera_feed_controller.bind_components()
+        self.dartgame_controller.bind_components()
+        self.scorepad_controller.bind_components()
 
     def start(self):
         if self.config.source is not None:
@@ -52,6 +61,8 @@ class AppController(ControllerProtocol):
         self.source_controller.start()
         self.dartboard_controller.start()
         self.camera_feed_controller.start()
+        self.dartgame_controller.start()
+        self.scorepad_controller.start()
 
         # start the main loop of the Tkinter application
         self.view.mainloop()
