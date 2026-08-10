@@ -1,5 +1,5 @@
 import tkinter as tk
-import tkinter.ttk as ttk
+import ttkbootstrap as ttk
 
 from gui.controller.scorepad_controller import ScorepadController
 from gui.protocols.controller_protocol import ControllerProtocol
@@ -30,7 +30,7 @@ class AppController(ControllerProtocol):
         )
         self.scorepad_controller = ScorepadController(view, model)
 
-        menu_bar = tk.Menu(self.view.master)
+        menu_bar = ttk.Menu(self.view.master)
         self.bind_menu(menu_bar)
         self.bind_components()
 
@@ -39,7 +39,7 @@ class AppController(ControllerProtocol):
 
         self.source_controller.bind_menu(menu_bar)
 
-        view_menu = tk.Menu(menu_bar, tearoff=0)
+        view_menu = ttk.Menu(menu_bar)
         menu_bar.add_cascade(label="View", menu=view_menu)
 
         self.dartboard_controller.bind_menu(view_menu)

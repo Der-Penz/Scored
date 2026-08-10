@@ -1,6 +1,7 @@
 import tkinter as tk
 import ttkbootstrap as ttk
 
+
 class PlayerView(ttk.Frame):
     """Player view with scores"""
 

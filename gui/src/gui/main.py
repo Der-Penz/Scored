@@ -31,6 +31,7 @@ def get_args() -> AppConfig:
 
     return AppConfig(**vars(args))
 
+
 def main() -> None:
     parser = ArgumentParser()
     parser.add_arguments(AppConfig, dest="config")
@@ -39,11 +40,12 @@ def main() -> None:
     model = AppModel()
     root = ttk.Window(
         title="Scored GUI",
+        minsize=(600, 500),
         theme=f"bootstrap-{'dark' if darkdetect.isDark() else 'light'}",
     )
-    
+
     view = AppView(root)
-    
+
     controller = AppController(view, model, args.config)
     controller.start()
 

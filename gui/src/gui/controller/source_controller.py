@@ -1,9 +1,8 @@
 import threading
 import time
 from tkinter import filedialog, simpledialog
-import tkinter as tk
+import ttkbootstrap as ttk
 
-from PIL import Image
 from gui.protocols.controller_protocol import ControllerProtocol
 from gui.model.model import AppModel
 from gui.services.images.http_source import HTTPCaptureSource
@@ -28,8 +27,8 @@ class SourceController(ControllerProtocol):
         self._thread = None
         self._current_source: ImageSource | None = None
 
-    def bind_menu(self, menu_bar: tk.Menu) -> None:
-        source_menu = tk.Menu(menu_bar, tearoff=0)
+    def bind_menu(self, menu_bar: ttk.Menu) -> None:
+        source_menu = ttk.Menu(menu_bar, tearoff=0)
         menu_bar.add_cascade(label="Source", menu=source_menu)
         for source in SOURCES:
             source_menu.add_command(

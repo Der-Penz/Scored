@@ -1,5 +1,5 @@
 from typing import Protocol
-import tkinter as tk
+import ttkbootstrap as ttk
 
 from gui.model.model import AppModel
 from gui.view.app_view import AppView
@@ -19,7 +19,7 @@ class ControllerProtocol(Protocol):
         """
         ...
 
-    def bind_menu(self, menu_bar: tk.Menu) -> None:
+    def bind_menu(self, menu_bar: ttk.Menu) -> None:
         """Bind menu events for the controller."""
         ...
 

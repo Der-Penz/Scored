@@ -1,16 +1,11 @@
-import threading
-import time
 import tkinter as tk
-from tkinter import filedialog, simpledialog
 
 from gui.controller.source_controller import SourceController
-import numpy as np
 from PIL import Image
 
 from gui.protocols.controller_protocol import ControllerProtocol
 from gui.model.model import AppModel
 from gui.services.images.http_source import HTTPCaptureSource
-from gui.services.images.source import ImageSource
 from gui.services.images.video_source import VideoSource
 from gui.services.images.webcam_source import WebCamSource
 from gui.view.app_view import AppView

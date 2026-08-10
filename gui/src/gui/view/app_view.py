@@ -17,9 +17,7 @@ class AppView(ttk.Frame):
         self.create_widgets()
 
     def create_widgets(self):
-        self.main_paned_window = tk.PanedWindow(
-            self, orient=tk.HORIZONTAL
-        )
+        self.main_paned_window = tk.PanedWindow(self, orient=tk.HORIZONTAL)
         self.main_paned_window.pack(fill="both", expand=True)
 
         self.left_view = LeftView(self.main_paned_window)

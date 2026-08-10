@@ -1,12 +1,11 @@
 import tkinter as tk
+import ttkbootstrap as ttk
 from tkinter import simpledialog, messagebox
 from typing import Dict, List
 
 from gui.protocols.controller_protocol import ControllerProtocol
 from gui.model.model import AppModel
 from gui.view.app_view import AppView
-from gui.view.dartgame_view import DartGameView
-from gui.controller.scorepad_controller import ScorepadController
 
 from scored_lib.game.player import Player
 from scored_lib.game.dart_leg import DartLeg
@@ -25,10 +24,9 @@ class DartGameController(ControllerProtocol):
         self._players: List[Player] = []
         self._legs: Dict[str, DartLeg] = {}
         self._current_index = 0
-        
 
-    def bind_menu(self, menu_bar: tk.Menu) -> None:
-        game_menu = tk.Menu(menu_bar, tearoff=0)
+    def bind_menu(self, menu_bar: ttk.Menu) -> None:
+        game_menu = ttk.Menu(menu_bar, tearoff=0)
         menu_bar.add_cascade(label="Game", menu=game_menu)
         game_menu.add_command(label="Add Player", command=self._add_player)
         game_menu.add_command(label="Remove Player", command=self._remove_player)
@@ -43,7 +41,9 @@ class DartGameController(ControllerProtocol):
         pass
 
     def _add_player(self) -> None:
-        name = simpledialog.askstring("Add Player", "Player name:", parent=self._app_view)
+        name = simpledialog.askstring(
+            "Add Player", "Player name:", parent=self._app_view
+        )
         if not name:
             return
         p = Player(name=name)
@@ -62,7 +62,9 @@ class DartGameController(ControllerProtocol):
 
     def _start_game(self) -> None:
         if not self._players:
-            messagebox.showinfo("Start Game", "Add at least one player before starting.")
+            messagebox.showinfo(
+                "Start Game", "Add at least one player before starting."
+            )
             return
 
         settings = self._ask_game_settings()
@@ -71,7 +73,10 @@ class DartGameController(ControllerProtocol):
         starting_score, start_rule, finish_rule = settings
 
         # initialize legs
-        self._legs = {p.id: DartLeg(starting_score, start_rule, finish_rule) for p in self._players}
+        self._legs = {
+            p.id: DartLeg(starting_score, start_rule, finish_rule)
+            for p in self._players
+        }
         self._current_index = 0
         self._update_view_players()
         self._update_current_player()
@@ -182,4 +187,6 @@ class DartGameController(ControllerProtocol):
                 self.view.set_turn_slots((None, None, None))
 
             # show overlay for 900ms
-            self.view.show_turn_overlay(tuple(texts[:3]), duration=900, on_hidden=_after_overlay)
+            self.view.show_turn_overlay(
+                tuple(texts[:3]), duration=900, on_hidden=_after_overlay
+            )
