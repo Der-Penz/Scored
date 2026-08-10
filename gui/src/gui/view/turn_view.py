@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+import ttkbootstrap as ttk
 
 class TurnView(ttk.Frame):
     """Turn view with dart throws"""
