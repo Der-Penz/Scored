@@ -12,7 +12,11 @@ from gui.services.images.webcam_source import WebCamSource
 from gui.view.app_view import AppView
 import numpy as np
 
-SOURCES = [WebCamSource, VideoSource, HTTPCaptureSource]
+SOURCES = [
+    (WebCamSource, "Ctrl+W"),
+    (VideoSource, "Ctrl+V"),
+    (HTTPCaptureSource, "Ctrl+H"),
+]
 UPDATE_INTERVAL_MS = int((1 / 30) * 1000)  # Update interval for the UI in milliseconds
 
 
@@ -27,20 +31,28 @@ class SourceController(ControllerProtocol):
         self._thread = None
         self._current_source: ImageSource | None = None
 
-    def bind_menu(self, menu_bar: ttk.Menu) -> None:
-        source_menu = ttk.Menu(menu_bar, tearoff=0)
-        menu_bar.add_cascade(label="Source", menu=source_menu)
-        for source in SOURCES:
-            source_menu.add_command(
+    def bind_menu(self, menu: ttk.Menu) -> None:
+        for source, accel in SOURCES:
+            menu.add_command(
                 label=source.get_name(),
                 command=lambda src=source.get_name(): self.on_select_source(src),
+                accelerator=accel,
             )
 
-        source_menu.add_separator()
-        source_menu.add_command(label="Stop Stream", command=self.stop)
+        menu.add_separator()
+        menu.add_command(label="Stop Stream", command=self.stop)
 
     def bind_components(self):
-        pass
+        self._view.master.bind_all(
+            "<Control-w>", lambda event: self.on_select_source(WebCamSource.get_name())
+        )
+        self._view.master.bind_all(
+            "<Control-h>",
+            lambda event: self.on_select_source(HTTPCaptureSource.get_name()),
+        )
+        self._view.master.bind_all(
+            "<Control-v>", lambda event: self.on_select_source(VideoSource.get_name())
+        )
 
     def start(self):
         pass

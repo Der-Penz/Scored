@@ -1,4 +1,5 @@
 import argparse
+import sys
 import ttkbootstrap as ttk
 import darkdetect
 from simple_parsing import ArgumentParser
@@ -43,6 +44,28 @@ def main() -> None:
         minsize=(600, 500),
         theme=f"bootstrap-{'dark' if darkdetect.isDark() else 'light'}",
     )
+    is_dark = darkdetect.isDark()
+    # Force dark title bar frame directly on the window handle
+    if sys.platform.startswith("win") and is_dark:
+        import ctypes
+
+        try:
+            # Force Tkinter to fully initialize the window frame manager first
+            root.update_idletasks()
+
+            # With ttkbootstrap, the root winfo_id maps directly to the target window handle
+            hwnd = ctypes.windll.user32.GetParent(root.winfo_id())
+            if not hwnd:
+                hwnd = root.winfo_id()
+
+            # DWMWA_USE_IMMERSIVE_DARK_MODE attribute code
+            # 20 is standard for Windows 11 / recent Win 10 builds
+            value = ctypes.c_int(1)
+            ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                hwnd, 20, ctypes.byref(value), ctypes.sizeof(value)
+            )
+        except Exception:
+            pass
 
     view = AppView(root)
 

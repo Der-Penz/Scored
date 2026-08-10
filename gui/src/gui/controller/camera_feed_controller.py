@@ -26,9 +26,9 @@ class CameraFeedController(ControllerProtocol):
         self._source_view = view.left_view.source_view
         self._source_controller = source_controller
 
-    def bind_menu(self, menu_bar: tk.Menu) -> None:
+    def bind_menu(self, menu: tk.Menu) -> None:
         self._feed_visible = tk.BooleanVar(value=True)
-        menu_bar.add_checkbutton(
+        menu.add_checkbutton(
             label="Show Camera Feed",
             variable=self._feed_visible,
             command=self._toggle_feed_visibility,

@@ -13,6 +13,10 @@ class AppView(ttk.Frame):
     def __init__(self, master: tk.Tk):
         super().__init__(master)
         self.master = master
+
+        self.menu_frame = ttk.Frame(self.master, bootstyle="neutral")
+        self.menu_frame.pack(fill="x", side="top")
+
         self.pack(fill="both", expand=True)
         self.create_widgets()
 

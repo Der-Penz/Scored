@@ -18,23 +18,25 @@ class DartGameController(ControllerProtocol):
         super().__init__(view, model)
         self._app_view = view
         self._model = model
-        # create the game view inside the right frame
         self.view = self._app_view.game_view
 
         self._players: List[Player] = []
         self._legs: Dict[str, DartLeg] = {}
         self._current_index = 0
 
-    def bind_menu(self, menu_bar: ttk.Menu) -> None:
-        game_menu = ttk.Menu(menu_bar, tearoff=0)
-        menu_bar.add_cascade(label="Game", menu=game_menu)
-        game_menu.add_command(label="Add Player", command=self._add_player)
-        game_menu.add_command(label="Remove Player", command=self._remove_player)
-        game_menu.add_separator()
-        game_menu.add_command(label="Start Game", command=self._start_game)
+    def bind_menu(self, menu: ttk.Menu) -> None:
+        menu.add_command(
+            label="Add Player", command=self._add_player, accelerator="Ctrl+P"
+        )
+        menu.add_command(label="Remove Player", command=self._remove_player)
+        menu.add_separator()
+        menu.add_command(
+            label="Start Game", command=self._start_game, accelerator="Ctrl+G"
+        )
 
     def bind_components(self) -> None:
-        pass
+        self._app_view.master.bind_all("<Control-p>", lambda event: self._add_player())
+        self._app_view.master.bind_all("<Control-g>", lambda event: self._start_game())
 
     def start(self) -> None:
         # nothing to start background-wise

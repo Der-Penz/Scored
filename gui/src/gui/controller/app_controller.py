@@ -1,4 +1,3 @@
-import tkinter as tk
 import ttkbootstrap as ttk
 
 from gui.controller.scorepad_controller import ScorepadController
@@ -30,22 +29,35 @@ class AppController(ControllerProtocol):
         )
         self.scorepad_controller = ScorepadController(view, model)
 
-        menu_bar = ttk.Menu(self.view.master)
-        self.bind_menu(menu_bar)
+        self.bind_menu(None)
         self.bind_components()
 
-    def bind_menu(self, menu_bar: tk.Menu) -> None:
-        self.view.master.config(menu=menu_bar)
+    def bind_menu(self, menu: ttk.Menu) -> None:
+        source_btn = ttk.Menubutton(self.view.menu_frame, text="Source")
+        source_btn.pack(side="left", padx=2)
+        source_menu = ttk.Menu(source_btn, tearoff=False)
+        source_btn["menu"] = source_menu
 
-        self.source_controller.bind_menu(menu_bar)
+        self.source_controller.bind_menu(source_menu)
 
-        view_menu = ttk.Menu(menu_bar)
-        menu_bar.add_cascade(label="View", menu=view_menu)
+        view_btn = ttk.Menubutton(self.view.menu_frame, text="View")
+        view_btn.pack(side="left", padx=2)
+        view_menu = ttk.Menu(view_btn, tearoff=False)
+        view_btn["menu"] = view_menu
 
         self.dartboard_controller.bind_menu(view_menu)
         self.camera_feed_controller.bind_menu(view_menu)
-        self.dartgame_controller.bind_menu(menu_bar)
-        self.scorepad_controller.bind_menu(menu_bar)
+
+        game_btn = ttk.Menubutton(self.view.menu_frame, text="Game")
+        game_btn.pack(side="left", padx=2)
+        game_menu = ttk.Menu(game_btn, tearoff=False)
+        game_btn["menu"] = game_menu
+
+        self.dartgame_controller.bind_menu(game_menu)
+
+        # --- Scorepad Menu ---
+        # If Scorepad hooks onto its own cascade, attach it here as well
+        self.scorepad_controller.bind_menu(game_menu)
 
     def bind_components(self) -> None:
         self.source_controller.bind_components()

@@ -19,8 +19,15 @@ class ControllerProtocol(Protocol):
         """
         ...
 
-    def bind_menu(self, menu_bar: ttk.Menu) -> None:
-        """Bind menu events for the controller."""
+    def bind_menu(self, menu: ttk.Menu) -> None:
+        """
+        Bind menu commands to the given Menu
+
+        Parameters
+        ----------
+        menu : ttk.Menu
+            The parent Menu to which the menu commands will be bound.
+        """
         ...
 
     def bind_components(self) -> None:

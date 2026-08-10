@@ -17,7 +17,7 @@ class ScorepadController(ControllerProtocol):
 
         self.multiplier = Multiplier.SINGLE
 
-    def bind_menu(self, menu_bar: tk.Menu) -> None:
+    def bind_menu(self, menu: tk.Menu) -> None:
         pass
 
     def bind_components(self) -> None:
