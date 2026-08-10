@@ -1,9 +1,5 @@
 import argparse
-import sys
-import tkinter as tk
-from tkinter import ttk
-import pywinstyles
-import sv_ttk
+import ttkbootstrap as ttk
 import darkdetect
 from simple_parsing import ArgumentParser
 
@@ -35,40 +31,16 @@ def get_args() -> AppConfig:
 
     return AppConfig(**vars(args))
 
-def apply_theme_to_titlebar(root):
-    # check if running on windows
-    if sys.platform != "win32":
-        return
-    
-    version = sys.getwindowsversion()
-
-    if version.major == 10 and version.build >= 22000:
-        pywinstyles.change_header_color(root, "#1c1c1c" if sv_ttk.get_theme() == "dark" else "#fafafa")
-    elif version.major == 10:
-        pywinstyles.apply_style(root, "dark" if sv_ttk.get_theme() == "dark" else "normal")
-
-        root.wm_attributes("-alpha", 0.99)
-        root.wm_attributes("-alpha", 1)
-        
-    import ctypes
-
-    try:
-        # Forces sharp, native pixel rendering on Windows 10/11
-        ctypes.windll.shcore.SetProcessDpiAwareness(1)
-    except AttributeError:
-        # Fallback for older Windows environments
-        ctypes.windll.user32.SetProcessDPIAware()
-
 def main() -> None:
     parser = ArgumentParser()
     parser.add_arguments(AppConfig, dest="config")
     args = parser.parse_args()
 
     model = AppModel()
-    root = tk.Tk()
-    
-    sv_ttk.set_theme(darkdetect.theme())
-    apply_theme_to_titlebar(root)
+    root = ttk.Window(
+        title="Scored GUI",
+        theme=f"bootstrap-{'dark' if darkdetect.isDark() else 'light'}",
+    )
     
     view = AppView(root)
     

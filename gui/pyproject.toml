@@ -7,10 +7,9 @@ requires-python = ">=3.13"
 dependencies = [
     "darkdetect>=0.8.0",
     "pillow>=12.3.0",
-    "pywinstyles>=1.8",
     "scored-lib",
     "simple-parsing>=0.1.8",
-    "sv-ttk>=2.6.1",
+    "ttkbootstrap>=2.2.0",
 ]
 
 [build-system]

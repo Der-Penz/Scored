@@ -83,20 +83,18 @@ source = { editable = "gui" }
 dependencies = [
     { name = "darkdetect" },
     { name = "pillow" },
-    { name = "pywinstyles" },
     { name = "scored-lib" },
     { name = "simple-parsing" },
-    { name = "sv-ttk" },
+    { name = "ttkbootstrap" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "darkdetect", specifier = ">=0.8.0" },
     { name = "pillow", specifier = ">=12.3.0" },
-    { name = "pywinstyles", specifier = ">=1.8" },
     { name = "scored-lib", editable = "scored_lib" },
     { name = "simple-parsing", specifier = ">=0.1.8" },
-    { name = "sv-ttk", specifier = ">=2.6.1" },
+    { name = "ttkbootstrap", specifier = ">=2.2.0" },
 ]
 
 [[package]]
@@ -310,15 +308,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pywinstyles"
-version = "1.8"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/09/5b/c3356335b7f60a940c3e9c1aa6f3b6407af10b26c763739933c500937dbe/pywinstyles-1.8.tar.gz", hash = "sha256:7a087b1f45ef8d572b440712817dbbef8ae90793ab7fcc51b060851d2d6f301c", size = 10514, upload-time = "2024-04-22T06:18:18.065Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/99/37/be473b2d3bde387ef39e57b3ebabadfaaf0627333814e0c3813dac686f5e/pywinstyles-1.8-py3-none-any.whl", hash = "sha256:17d89c6bc91569b676b71c00400ec958548302809858966c4cf447bb16a7e407", size = 10535, upload-time = "2024-04-22T06:18:15.816Z" },
-]
-
-[[package]]
 name = "scored"
 version = "0.1.0"
 source = { virtual = "." }
@@ -370,12 +359,15 @@ wheels = [
 ]
 
 [[package]]
-name = "sv-ttk"
-version = "2.6.1"
+name = "ttkbootstrap"
+version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/4e/ca/9625914e7a7e58ce9f0d8d6a5eb29975bab077ce58a36cf86f863d188cd3/sv_ttk-2.6.1.tar.gz", hash = "sha256:47589d5e20398cf404e8362f24f3ed48f3830cd0ace056d83354fa25d8e4fe48", size = 49640, upload-time = "2025-06-08T16:14:21.333Z" }
+dependencies = [
+    { name = "pillow" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d1/43/ce6e42ba60211097a9fe4125f2c43943a9f1d586fc650355aa98c1716461/ttkbootstrap-2.2.0.tar.gz", hash = "sha256:3751bb4c5439025408387df11fd5c8599680284b44beb2fd985ba3fdd3ae60cb", size = 603405, upload-time = "2026-08-06T11:26:43.488Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5b/36/32629d8bab9bccd54a36716a960ba1148fca4c1fd453370dba0b42d712ea/sv_ttk-2.6.1-py3-none-any.whl", hash = "sha256:8ca5944f95431a911986b00c54e7f44608f3f811382cd985fd14bb3e65f95d97", size = 50076, upload-time = "2025-06-08T16:14:20.402Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/33/4032969d165bb8e6f599bc4fa9cbc6f309b349dfd9f17eed6a3c62e76cf1/ttkbootstrap-2.2.0-py3-none-any.whl", hash = "sha256:c4a41f8800591f4ab3b8c3ad7dd41eaa51bfc937b49ebb31ae499ce115e37072", size = 553834, upload-time = "2026-08-06T11:26:42.189Z" },
 ]
 
 [[package]]
