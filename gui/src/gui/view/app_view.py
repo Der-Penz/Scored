@@ -11,17 +11,21 @@ class AppView(ttk.Frame):
     """
 
     def __init__(self, master: tk.Tk):
-        super().__init__(master)
+        super().__init__(master, style="Card.TFrame", padding=0)
         self.master = master
 
-        self.menu_frame = ttk.Frame(self.master, bootstyle="neutral")
-        self.menu_frame.pack(fill="x", side="top")
-
-        self.pack(fill="both", expand=True)
         self.create_widgets()
 
     def create_widgets(self):
-        self.main_paned_window = tk.PanedWindow(self, orient=tk.HORIZONTAL)
+        self.menu_frame = ttk.Frame(self.master, bootstyle="neutral")
+        self.menu_frame.pack(fill="x", side="top")
+        
+        self.menu_separator = ttk.Separator(self.master, orient="horizontal")
+        self.menu_separator.pack(fill="x", side="top")
+
+        self.pack(fill="both", expand=True)
+        
+        self.main_paned_window = ttk.Panedwindow(self, orient=tk.HORIZONTAL)
         self.main_paned_window.pack(fill="both", expand=True)
 
         self.left_view = LeftView(self.main_paned_window)
@@ -36,9 +40,11 @@ class AppView(ttk.Frame):
 
     def refresh_left_panes(self) -> None:
         """Refresh the left-side pane layout after visibility changes."""
-        if self.left_view.winfo_manager():
+        current_panes = self.main_paned_window.panes()
+        
+        if str(self.left_view) in current_panes:
             self.main_paned_window.forget(self.left_view)
-        if self.game_view.winfo_manager():
+        if str(self.game_view) in current_panes:
             self.main_paned_window.forget(self.game_view)
 
         left_visible = self.left_view.is_visible()

@@ -12,7 +12,7 @@ class SourceView(ttk.Frame, DartboardProtocol):
 
     def __init__(self, master: tk.Misc):
         super().__init__(master)
-        self.image_label = tk.Label(self)
+        self.image_label = ttk.Label(self)
         self.image_label.pack(fill="both", expand=True)
         self._photo_image = None
 

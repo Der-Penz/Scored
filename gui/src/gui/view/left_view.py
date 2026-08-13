@@ -1,20 +1,19 @@
 import tkinter as tk
-
-from PIL import Image
+import ttkbootstrap as ttk
 
 from gui.view.dartboard_view import DartboardView
 from gui.view.source_view import SourceView
 
 
-class LeftView(tk.Frame):
+class LeftView(ttk.Frame):
     """Container view for the left-side panes."""
 
     def __init__(self, master: tk.Misc):
-        super().__init__(master, bg="black")
+        super().__init__(master, style="Card.TFrame", padding=5)
         self._dartboard_visible = True
         self._source_visible = True
 
-        self.dartboard_frame = tk.Frame(self, bg="black")
+        self.dartboard_frame = ttk.Frame(self)
         self.dartboard_view = DartboardView(self.dartboard_frame)
         self.dartboard_view.pack(fill="both", expand=True)
 

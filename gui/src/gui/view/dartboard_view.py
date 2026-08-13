@@ -1,4 +1,5 @@
 import tkinter as tk
+import ttkbootstrap as ttk
 
 from gui.protocols.dartboard_protocol import DartboardProtocol
 from scored_lib.dart.dart_throw import DartThrow
@@ -11,7 +12,7 @@ class DartboardView(tk.Frame, DartboardProtocol):
 
     def __init__(self, master: tk.Misc):
         super().__init__(master, bg="black")
-        self.canvas = tk.Canvas(self, highlightthickness=0, bg="black")
+        self.canvas = ttk.Canvas(self, highlightthickness=0, bg="black")
         self.canvas.pack(fill="both", expand=True)
         self.canvas.bind("<Configure>", self._on_canvas_resize)
         self.after_idle(self.redraw)
