@@ -22,13 +22,11 @@ class ScorepadView(ttk.Frame):
 
         numbers = list(range(1, 21))
 
-        style = {"sticky": "nsew", "padx": 4, "pady": 4}
+        style = {"sticky": "nsew", "padx": 2, "pady": 2}
 
         self.number_buttons = {}
         for i, n in enumerate(numbers):
-            btn = ttk.Button(
-                self, text=str(n), command=lambda v=n: self._press_number(v)
-            )
+            btn = ttk.Button(self, text=str(n), width=3)
             row = i // cols
             col = i % cols
             btn.grid(row=row, column=col, **style)
@@ -52,7 +50,6 @@ class ScorepadView(ttk.Frame):
 
     def highlight_multiplier(self, multiplier: Multiplier) -> None:
         if multiplier == Multiplier.SINGLE:
-            # change styling
             self.double_btn.config(bootstyle="ghost")
             self.triple_btn.config(bootstyle="ghost")
             self._prefix_number_btns("")
