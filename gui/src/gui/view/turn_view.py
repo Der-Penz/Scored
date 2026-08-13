@@ -7,6 +7,7 @@ from typing import Callable, Sequence
 
 EMPTY_THROW = "➜"
 
+
 class TurnView(ttk.Frame):
     """Turn view with dart throws"""
 
@@ -50,18 +51,22 @@ class TurnView(ttk.Frame):
         for label in self._throw_value_labels:
             label.config(text=EMPTY_THROW)
         self.highlight_throw(1)
-    
+
     def set_throw(self, throw_number: int, score_value: str) -> None:
         self._throw_value_labels[throw_number - 1].config(text=score_value)
-        
+
         if throw_number < 3:
             self.highlight_throw(throw_number + 1)
-        else: 
+        else:
             self.highlight_throw(None)
 
-    def set_ghostpath(self, path : tuple[DartThrow, ...]) -> None:
+    def set_ghostpath(self, path: tuple[DartThrow, ...]) -> None:
         for label, throw in zip(self._throw_value_labels, path):
-            label.config(text=throw.short_label, font=tkfont.Font(size=16, weight="normal", slant="italic"), foreground="#464b44")
+            label.config(
+                text=throw.short_label,
+                font=tkfont.Font(size=16, weight="normal", slant="italic"),
+                foreground="#464b44",
+            )
 
     def highlight_throw(self, throw_number: int | None) -> None:
         for idx, slot in enumerate(self._throw_slots):
