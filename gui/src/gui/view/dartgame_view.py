@@ -24,4 +24,4 @@ class DartGameView(ttk.Frame):
         self.turn_view.pack(side="top", fill="x")
 
         self.scorepad_view = ScorepadView(self)
-        self.scorepad_view.pack(side="left", fill="both", expand=True)
+        self.scorepad_view.pack(side="bottom", fill="both", expand=True)

@@ -1,9 +1,7 @@
 import tkinter as tk
 from scored_lib.dart.dart_throw import DartThrow
-from scored_lib.dart.multiplier import Multiplier
 import ttkbootstrap as ttk
 from tkinter import font as tkfont
-from typing import Callable, Sequence
 
 EMPTY_THROW = "➜"
 

@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from uuid import uuid4
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, eq=True)
 class Player:
     """
     Represents a player participating in one or more dart matches.

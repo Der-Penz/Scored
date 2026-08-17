@@ -17,7 +17,7 @@ class AppView(ttk.Frame):
         self.create_widgets()
 
     def create_widgets(self):
-        self.menu_frame = ttk.Frame(self.master, bootstyle="neutral")
+        self.menu_frame = ttk.Frame(self.master)
         self.menu_frame.pack(fill="x", side="top")
 
         self.menu_separator = ttk.Separator(self.master, orient="horizontal")
@@ -68,7 +68,7 @@ class AppView(ttk.Frame):
             return
 
         sash = int(total_width * self._pane_ratio)
-        self.main_paned_window.sash_place(0, sash, 0)
+        self.main_paned_window.sashpos(0, sash)
 
     def _store_pane_ratio(self, _event: tk.Event | None = None) -> None:
         total_width = self.main_paned_window.winfo_width()
