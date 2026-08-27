@@ -1,10 +1,11 @@
 import tkinter as tk
 
-from gui.controller.source_controller import SourceController
 from PIL import Image
 
-from gui.protocols.controller_protocol import ControllerProtocol
+from gui.events.event_channel import EventChannel
+from gui.events.event_types import FrameCapturedEvent
 from gui.model.model import AppModel
+from gui.protocols.controller import BaseController
 from gui.services.images.http_source import HTTPCaptureSource
 from gui.services.images.video_source import VideoSource
 from gui.services.images.webcam_source import WebCamSource
@@ -15,16 +16,12 @@ SOURCES = [WebCamSource, VideoSource, HTTPCaptureSource]
 UPDATE_INTERVAL_MS = int((1 / 30) * 1000)
 
 
-class CameraFeedController(ControllerProtocol):
-    def __init__(
-        self, view: AppView, model: AppModel, source_controller: SourceController
-    ):
-        super().__init__(view, model)
-        self._view = view
-        self._model = model
+class CameraFeedController(BaseController):
+    def __init__(self, view: AppView, model: AppModel, event_channel: EventChannel):
+        super().__init__(view, model, event_channel)
         self._left_view = view.left_view
         self._source_view = view.left_view.source_view
-        self._source_controller = source_controller
+        self._latest_frame = None
 
     def bind_menu(self, menu: tk.Menu) -> None:
         self._feed_visible = tk.BooleanVar(value=True)
@@ -35,7 +32,10 @@ class CameraFeedController(ControllerProtocol):
         )
 
     def bind_components(self) -> None:
-        pass
+        self._event_channel.subscribe(FrameCapturedEvent, self._on_frame_captured)
+
+    def _on_frame_captured(self, event: FrameCapturedEvent) -> None:
+        self._latest_frame = event.frame
 
     def start(self) -> None:
         self._source_view.after(UPDATE_INTERVAL_MS, self._render_image)
@@ -45,9 +45,8 @@ class CameraFeedController(ControllerProtocol):
         self._view.refresh_left_panes()
 
     def _render_image(self) -> None:
-        frame = self._source_controller.get_frame()
-        if frame is not None:
-            pil = Image.fromarray(frame)
+        if self._latest_frame is not None:
+            pil = Image.fromarray(self._latest_frame)
             if pil is not None:
                 self._source_view.display_image(pil)
 

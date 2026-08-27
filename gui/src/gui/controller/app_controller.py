@@ -1,38 +1,34 @@
 import ttkbootstrap as ttk
 
-from gui.controller.scorepad_controller import ScorepadController
-from gui.protocols.controller_protocol import ControllerProtocol
 from gui.controller.camera_feed_controller import CameraFeedController
 from gui.controller.dartboard_controller import DartboardController
 from gui.controller.dartgame_controller import DartGameController
+from gui.controller.scorepad_controller import ScorepadController
 from gui.controller.source_controller import SourceController
+from gui.events.event_channel import EventChannel
+from gui.model.args import AppConfig
 from gui.model.model import AppModel
 from gui.view.app_view import AppView
-from gui.model.args import AppConfig
 
 
-class AppController(ControllerProtocol):
+class AppController():
     """
     Coordinates the application state, user interface, and background processes.
     """
 
     def __init__(self, view: AppView, model: AppModel, config: AppConfig):
-        self.model = model
-        self.view = view
-        self.config = config
+        self.event_channel = EventChannel()
 
-        self.source_controller = SourceController(view, model)
-        self.dartboard_controller = DartboardController(view, model)
-        self.dartgame_controller = DartGameController(view, model)
-        self.camera_feed_controller = CameraFeedController(
-            view, model, self.source_controller
-        )
-        self.scorepad_controller = ScorepadController(view, model)
+        self.source_controller = SourceController(view, model, self.event_channel)
+        self.dartboard_controller = DartboardController(view, model, self.event_channel)
+        self.dartgame_controller = DartGameController(view, model, self.event_channel)
+        self.camera_feed_controller = CameraFeedController(view, model, self.event_channel)
+        self.scorepad_controller = ScorepadController(view, model, self.event_channel)
 
-        self.bind_menu(None)
+        self.bind_menu()
         self.bind_components()
 
-    def bind_menu(self, menu: ttk.Menu) -> None:
+    def bind_menu(self) -> None:
         source_btn = ttk.Menubutton(self.view.menu_frame, text="Source")
         source_btn.pack(side="left", padx=2)
         source_menu = ttk.Menu(source_btn, tearoff=False)
@@ -55,8 +51,6 @@ class AppController(ControllerProtocol):
 
         self.dartgame_controller.bind_menu(game_menu)
 
-        # --- Scorepad Menu ---
-        # If Scorepad hooks onto its own cascade, attach it here as well
         self.scorepad_controller.bind_menu(game_menu)
 
     def bind_components(self) -> None:

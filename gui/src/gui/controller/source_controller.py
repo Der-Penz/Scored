@@ -1,16 +1,18 @@
 import threading
 import time
 from tkinter import filedialog, simpledialog
+
+from gui.events.event_channel import EventChannel
 import ttkbootstrap as ttk
 
-from gui.protocols.controller_protocol import ControllerProtocol
+from gui.events.event_types import FrameCapturedEvent
 from gui.model.model import AppModel
+from gui.protocols.controller import BaseController
 from gui.services.images.http_source import HTTPCaptureSource
 from gui.services.images.source import ImageSource
 from gui.services.images.video_source import VideoSource
 from gui.services.images.webcam_source import WebCamSource
 from gui.view.app_view import AppView
-import numpy as np
 
 SOURCES = [
     (WebCamSource, "Ctrl+W"),
@@ -20,13 +22,9 @@ SOURCES = [
 UPDATE_INTERVAL_MS = int((1 / 30) * 1000)  # Update interval for the UI in milliseconds
 
 
-class SourceController(ControllerProtocol):
-    def __init__(self, view: AppView, model: AppModel):
-        super().__init__(view, model)
-        self._view = view
-        self._model = model
-        self._latest_frame = None
-        self._lock = threading.Lock()
+class SourceController(BaseController):
+    def __init__(self, view: AppView, model: AppModel, event_channel: EventChannel):
+        super().__init__(view, model, event_channel)
         self._running = False
         self._thread = None
         self._current_source: ImageSource | None = None
@@ -111,8 +109,7 @@ class SourceController(ControllerProtocol):
 
                 processed_frame = self._current_source.process_frame(frame)
                 if processed_frame is not None:
-                    with self._lock:
-                        self._latest_frame = processed_frame
+                        self.event_channel.post(FrameCapturedEvent(processed_frame))
                 else:
                     time.sleep(0.01)
         except Exception:
@@ -122,20 +119,6 @@ class SourceController(ControllerProtocol):
             if self._current_source is not None:
                 self._current_source.close()
             self._running = False
-
-    def get_frame(self) -> np.ndarray | None:
-        """
-        Retrieves the most recently captured frame safely.
-
-        Returns
-        -------
-        np.ndarray | None
-            The current frame as a numpy array, or None if no frame is available.
-        """
-        with self._lock:
-            if self._latest_frame is not None:
-                return self._latest_frame.copy()
-            return None
 
     def on_select_source(self, source_name: str) -> None:
         """

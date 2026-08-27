@@ -1,19 +1,20 @@
-from typing import Callable
 import tkinter as tk
 
+from gui.events.event_channel import EventChannel
+from gui.events.event_types import DartThrowEvent
 from gui.model.model import AppModel
-from gui.protocols.controller_protocol import ControllerProtocol
+from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
 from scored_lib.dart.dart_throw import DartThrow
 from scored_lib.dart.multiplier import Multiplier
 
 
-class ScorepadController(ControllerProtocol):
+class ScorepadController(BaseController):
     """Thin controller for the ScorepadView to keep multiplier state and expose on_throw."""
 
-    def __init__(self, view: AppView, model: AppModel) -> None:
+    def __init__(self, view: AppView, model: AppModel, event_channel: EventChannel) -> None:
+        super().__init__(view, model, event_channel)
         self.scorepad_view = view.game_view.scorepad_view
-        self._callback: Callable[[DartThrow], None] | None = None
 
         self.multiplier = Multiplier.SINGLE
 
@@ -57,14 +58,12 @@ class ScorepadController(ControllerProtocol):
         dart_throw = DartThrow(number=0, multiplier=multiplier)
         self.set_multiplier(Multiplier.SINGLE)  # reset multiplier after throw
 
-        # TODO do something with the dart_throw
-
-        self.multiplier = Multiplier.SINGLE  # reset multiplier after throw
+        self._event_channel.emit(DartThrowEvent(dart_throw))
 
     def on_number_press(self, number: int) -> None:
         dart_throw = DartThrow(number=number, multiplier=self.multiplier)
-        self.set_multiplier(Multiplier.SINGLE)  # reset multiplier after throw
-        # TODO do something with the dart_throw
+        self.set_multiplier(Multiplier.SINGLE)
+        self._event_channel.emit(DartThrowEvent(dart_throw))
 
     def start(self) -> None:
         pass
