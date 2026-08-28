@@ -16,7 +16,7 @@ from scored_lib.game.rule import FinishRule, StartRule
 class DartGameController(BaseController):
     def __init__(self, view: AppView, model: AppModel, event_channel: EventChannel):
         super().__init__(view, model, event_channel)
-        self.game_view = self._app_view.game_view
+        self.game_view = self._view.game_view
 
     def bind_menu(self, menu: ttk.Menu) -> None:
         menu.add_command(label="Add Player", command=self._add_player, accelerator="Ctrl+P")
@@ -25,8 +25,8 @@ class DartGameController(BaseController):
         menu.add_command(label="Start Game", command=self._start_game, accelerator="Ctrl+G")
 
     def bind_components(self) -> None:
-        self._app_view.master.bind_all("<Control-p>", lambda _: self._add_player())
-        self._app_view.master.bind_all("<Control-g>", lambda _: self._start_game())
+        self._view.master.bind_all("<Control-p>", lambda _: self._add_player())
+        self._view.master.bind_all("<Control-g>", lambda _: self._start_game())
         self._event_channel.subscribe(DartThrowEvent, self._on_dart_throw)
 
     def _on_dart_throw(self, _event: DartThrowEvent) -> None:
@@ -40,7 +40,7 @@ class DartGameController(BaseController):
         name = ttk.Querybox.get_string(
             prompt="Player name:",
             title="Add Player",
-            parent=self._app_view,
+            parent=self._view,
         )
         if not name:
             return
@@ -54,7 +54,7 @@ class DartGameController(BaseController):
             ttk.Messagebox.show_info(
                 message="No players to remove.",
                 title="Remove Player",
-                parent=self._app_view,
+                parent=self._view,
             )
             return
         removed = self._model.players.pop()
@@ -62,7 +62,7 @@ class DartGameController(BaseController):
         ttk.Messagebox.show_info(
             message=f"Removed {removed.name}",
             title="Remove Player",
-            parent=self._app_view,
+            parent=self._view,
         )
 
     def _start_game(self) -> None:
@@ -71,7 +71,7 @@ class DartGameController(BaseController):
             messagebox.show_info(
                 message="Add at least one player before starting.",
                 title="Start Game",
-                parent=self._app_view,
+                parent=self._view,
             )
             return
 
@@ -89,9 +89,9 @@ class DartGameController(BaseController):
 
     def _ask_game_settings(self) -> tuple[int, StartRule, FinishRule] | None:
         """Open a modal dialog to configure game settings using ttkbootstrap."""
-        dialog = ttk.Toplevel(self._app_view)
+        dialog = ttk.Toplevel(self._view)
         dialog.title("Game Settings")
-        dialog.transient(self._app_view)
+        dialog.transient(self._view)
         dialog.grab_set()
 
         ttk.Label(dialog, text="Starting Score:").grid(row=0, column=0, sticky="w", padx=6, pady=6)
@@ -144,7 +144,7 @@ class DartGameController(BaseController):
         ttk.Button(btnframe, text="OK", command=on_ok).pack(side="left", padx=6)
         ttk.Button(btnframe, text="Cancel", command=on_cancel).pack(side="left", padx=6)
 
-        self._app_view.wait_window(dialog)
+        self._view.wait_window(dialog)
 
         if not result:
             return None

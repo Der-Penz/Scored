@@ -41,22 +41,24 @@ class AppView(ttk.Frame):
     def refresh_left_panes(self) -> None:
         """Refresh the left-side pane layout after visibility changes."""
         current_panes = self.main_paned_window.panes()
-
-        if str(self.left_view) in current_panes:
-            self.main_paned_window.forget(self.left_view)
-        if str(self.game_view) in current_panes:
-            self.main_paned_window.forget(self.game_view)
-
+        left_in_panes = str(self.left_view) in current_panes
+        game_in_panes = str(self.game_view) in current_panes
         left_visible = self.left_view.is_visible()
+
         if left_visible:
-            self.main_paned_window.add(self.left_view)
-        self.main_paned_window.add(self.game_view)
+            if not left_in_panes:
+                if game_in_panes:
+                    self.main_paned_window.forget(self.game_view)
+                    self.main_paned_window.add(self.left_view)
+                    self.main_paned_window.add(self.game_view)
+                else:
+                    self.main_paned_window.add(self.left_view)
+            self.after_idle(self._apply_pane_ratio)
+        elif left_in_panes:
+            self.main_paned_window.forget(self.left_view)
 
-        if not left_visible:
-            self.update_idletasks()
-            return
-
-        self.after_idle(self._apply_pane_ratio)
+        if not game_in_panes:
+            self.main_paned_window.add(self.game_view)
 
     def _on_paned_window_configure(self, _event: tk.Event) -> None:
         if self.left_view.is_visible():

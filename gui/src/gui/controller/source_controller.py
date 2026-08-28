@@ -109,7 +109,7 @@ class SourceController(BaseController):
 
                 processed_frame = self._current_source.process_frame(frame)
                 if processed_frame is not None:
-                        self.event_channel.post(FrameCapturedEvent(processed_frame))
+                    self._event_channel.emit(FrameCapturedEvent(processed_frame))
                 else:
                     time.sleep(0.01)
         except Exception:

@@ -22,6 +22,7 @@ class CameraFeedController(BaseController):
         self._left_view = view.left_view
         self._source_view = view.left_view.source_view
         self._latest_frame = None
+        self.capture_event_subscription = None
 
     def bind_menu(self, menu: tk.Menu) -> None:
         self._feed_visible = tk.BooleanVar(value=True)
@@ -32,7 +33,7 @@ class CameraFeedController(BaseController):
         )
 
     def bind_components(self) -> None:
-        self._event_channel.subscribe(FrameCapturedEvent, self._on_frame_captured)
+        self.capture_event_subscription = self._event_channel.subscribe(FrameCapturedEvent, self._on_frame_captured)
 
     def _on_frame_captured(self, event: FrameCapturedEvent) -> None:
         self._latest_frame = event.frame
@@ -43,6 +44,14 @@ class CameraFeedController(BaseController):
     def _toggle_feed_visibility(self) -> None:
         self._left_view.set_source_visible(self._feed_visible.get())
         self._view.refresh_left_panes()
+        if self._feed_visible.get():
+            if self.capture_event_subscription is None:
+                self.capture_event_subscription = self._event_channel.subscribe(FrameCapturedEvent, self._on_frame_captured)
+                self._source_view.after(UPDATE_INTERVAL_MS, self._render_image)
+        else:
+            if self.capture_event_subscription is not None:
+                self.capture_event_subscription.cancel()
+                self.capture_event_subscription = None        
 
     def _render_image(self) -> None:
         if self._latest_frame is not None:
@@ -50,4 +59,5 @@ class CameraFeedController(BaseController):
             if pil is not None:
                 self._source_view.display_image(pil)
 
-        self._source_view.after(UPDATE_INTERVAL_MS, self._render_image)
+        if self._feed_visible.get():
+            self._source_view.after(UPDATE_INTERVAL_MS, self._render_image)

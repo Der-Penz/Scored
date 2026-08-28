@@ -26,7 +26,7 @@ class LeftView(ttk.Frame):
             frame.pack_forget()
 
         if self._dartboard_visible:
-            self.dartboard_frame.pack(side="top", fill="both", expand=True)
+            self.dartboard_frame.pack(side="top", fill="x")
 
         if self._source_visible:
             self.source_view.pack(side="top", fill="both", expand=True)

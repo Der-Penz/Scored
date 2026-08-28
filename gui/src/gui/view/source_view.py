@@ -29,8 +29,11 @@ class SourceView(ttk.Frame, DartboardProtocol):
             self._photo_image = None
             return
 
-        width = self.image_label.winfo_width() or pil_image.width
-        height = self.image_label.winfo_height() or pil_image.height
+        width = self.master.winfo_width()
+        height = self.master.winfo_height()
+        if width <= 1 or height <= 1:
+            return
+
         image = pil_image.copy()
         image.thumbnail((width, height), Image.LANCZOS)
 
