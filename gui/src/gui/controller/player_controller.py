@@ -1,12 +1,16 @@
 import tkinter as tk
 
 from gui.events.event_channel import EventChannel
-from gui.events.event_types import DartThrowEvent, PlayerAddedEvent, PlayersChangedEvent
+from gui.events.event_types import (
+    GameStarted,
+    PlayerAdded,
+    PlayerRemoved,
+    ScoreChanged,
+    TurnChanged,
+)
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
-from scored_lib.dart.dart_throw import DartThrow
-from scored_lib.dart.multiplier import Multiplier
 
 
 class PlayerController(BaseController):
@@ -20,12 +24,40 @@ class PlayerController(BaseController):
         pass
 
     def bind_components(self) -> None:
-        self._event_channel.subscribe(PlayersChangedEvent, self._on_players_changed)
-        self._event_channel.subscribe(PlayerAddedEvent, self._on_player_added)
+        self._event_channel.subscribe(PlayerAdded, self._on_player_added)
+        self._event_channel.subscribe(PlayerRemoved, self._on_player_removed)
+        self._event_channel.subscribe(ScoreChanged, self._on_score_changed)
+        self._event_channel.subscribe(TurnChanged, self._on_turn_changed)
+        self._event_channel.subscribe(GameStarted, self._on_game_started)
 
-    def _on_players_changed(self, _event: PlayersChangedEvent) -> None:
-        self.player_view.set_current(self._model.players)
- 
+    def _on_player_added(self, event: PlayerAdded) -> None:
+        self.player_view.add_player(event.player)
+
+    def _on_player_removed(self, event: PlayerRemoved) -> None:
+        self.player_view.remove_player(event.player)
+
+    def _on_score_changed(self, _event: ScoreChanged) -> None:
+        self._sync_scores()
+
+    def _on_turn_changed(self, _event: TurnChanged) -> None:
+        game = self._model.game
+        if game is not None:
+            self.player_view.set_current(game.current_player)
+
+    def _on_game_started(self, _event: GameStarted) -> None:
+        for player in self._model.players:
+            if player not in self.player_view._player_widgets:
+                self.player_view.add_player(player)
+        self._sync_scores()
+
+    def _sync_scores(self) -> None:
+        game = self._model.game
+        if game is None:
+            return
+        for player in self._model.players:
+            leg = game.leg_for(player)
+            self.player_view.update_player(player, score=leg.score, avg=leg.avg())
+        self.player_view.set_current(game.current_player)
 
     def start(self) -> None:
         pass

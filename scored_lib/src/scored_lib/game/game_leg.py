@@ -59,15 +59,31 @@ class GameLeg:
     @property
     def is_finished(self) -> bool:
         return self._winner is not None
+    
+    @property
+    def current_leg(self) -> DartLeg:
+        return self._legs[self.current_player]
 
     def leg_for(self, player: Player) -> DartLeg:
         return self._legs[player]
 
-    def add_throw(self, dart_throw: DartThrow) -> tuple[Player, ThrowResult]:
+    def add_throw(self, dart_throw: DartThrow) -> tuple[Player, ThrowResult, bool]:
         """
         Record a throw for the current player.
 
         Automatically advances to the next player after the turn ends.
+        
+        Parameters
+        ----------
+        dart_throw : DartThrow
+            The throw to record for the current player.
+            
+        Returns
+        -------
+        tuple[Player, ThrowResult, bool]
+            A tuple containing the player who made the throw, the result of the throw,
+            and a boolean indicating whether the turn has ended.
+        
         """
 
         if self.is_finished:
@@ -80,12 +96,12 @@ class GameLeg:
 
         if result.finished:
             self._winner = self.current_player
-            return player, result
+            return player, result, True
 
         if end_turn:
             self._next_player()
 
-        return player, result
+        return player, result, end_turn
 
     def _next_player(self) -> None:
         self._current_player = (self._current_player + 1) % len(self.players)

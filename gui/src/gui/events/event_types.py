@@ -3,26 +3,44 @@ from __future__ import annotations
 from dataclasses import dataclass
 import numpy as np
 from scored_lib.dart.dart_throw import DartThrow
+from scored_lib.game.player import Player
 
 
 @dataclass(frozen=True)
 class DartThrowEvent:
-    """Notification that a new dart throw is available in AppModel.pending_throw."""
-    throw : DartThrow
+    """Carries a new dart throw that should be registered (see AppModel.game)."""
+
+    throw: DartThrow
 
 
 @dataclass(frozen=True)
-class PlayerAddedEvent:
-    """Notification that a new player was added (see AppModel.players)."""
+class PlayerAdded:
+    """Carries the player that was added to AppModel.players."""
 
-@dataclass(frozen=True)
-class PlayersChangedEvent:
-    """Notification that the player list changed (see AppModel.players)."""
+    player: Player
 
 
 @dataclass(frozen=True)
-class GameStartedEvent:
-    """Notification that a new game was started (see AppModel.legs)."""
+class PlayerRemoved:
+    """Carries the player that was removed from AppModel.players."""
+
+    player: Player
+
+
+@dataclass(frozen=True)
+class ScoreChanged:
+    """Notification that scores changed (see AppModel.game)."""
+
+
+@dataclass(frozen=True)
+class TurnChanged:
+    """Notification that the current player changed (see AppModel.game)."""
+
+
+@dataclass(frozen=True)
+class GameStarted:
+    """Notification that a new game was started (see AppModel.game)."""
+
 
 @dataclass(frozen=True)
 class FrameCapturedEvent:

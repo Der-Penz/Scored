@@ -4,6 +4,7 @@ import ttkbootstrap as ttk
 from gui.controller.camera_feed_controller import CameraFeedController
 from gui.controller.dartboard_controller import DartboardController
 from gui.controller.dartgame_controller import DartGameController
+from gui.controller.player_controller import PlayerController
 from gui.controller.scorepad_controller import ScorepadController
 from gui.controller.source_controller import SourceController
 from gui.events.event_channel import EventChannel
@@ -24,6 +25,7 @@ class AppController(BaseController):
         self.source_controller = SourceController(view, model, self._event_channel)
         self.dartboard_controller = DartboardController(view, model, self._event_channel)
         self.dartgame_controller = DartGameController(view, model, self._event_channel)
+        self.player_controller = PlayerController(view, model, self._event_channel)
         self.camera_feed_controller = CameraFeedController(view, model, self._event_channel)
         self.scorepad_controller = ScorepadController(view, model, self._event_channel)
 
@@ -60,6 +62,7 @@ class AppController(BaseController):
         self.dartboard_controller.bind_components()
         self.camera_feed_controller.bind_components()
         self.dartgame_controller.bind_components()
+        self.player_controller.bind_components()
         self.scorepad_controller.bind_components()
 
     def start(self):
@@ -70,6 +73,7 @@ class AppController(BaseController):
         self.dartboard_controller.start()
         self.camera_feed_controller.start()
         self.dartgame_controller.start()
+        self.player_controller.start()
         self.scorepad_controller.start()
 
         # start the main loop of the Tkinter application

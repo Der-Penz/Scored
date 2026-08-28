@@ -1,14 +1,20 @@
 import tkinter as tk
-from tkinter import messagebox
 
 from gui.events.event_channel import EventChannel
-from gui.events.event_types import DartThrowEvent, GameStartedEvent
+from gui.events.event_types import (
+    DartThrowEvent,
+    GameStarted,
+    PlayerAdded,
+    PlayerRemoved,
+    ScoreChanged,
+    TurnChanged,
+)
 import ttkbootstrap as ttk
 
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
-from scored_lib.game.dart_leg import DartLeg
+from scored_lib.game.game_leg import GameLeg
 from scored_lib.game.player import Player
 from scored_lib.game.rule import FinishRule, StartRule
 
@@ -29,8 +35,33 @@ class DartGameController(BaseController):
         self._view.master.bind_all("<Control-g>", lambda _: self._start_game())
         self._event_channel.subscribe(DartThrowEvent, self._on_dart_throw)
 
-    def _on_dart_throw(self, _event: DartThrowEvent) -> None:
-        pass
+    def _on_dart_throw(self, event: DartThrowEvent) -> None:
+        if self._model.game is None:
+            ttk.Messagebox.show_info(
+                message="Start a game before throwing darts.",
+                title="No Game Running",
+                parent=self._view,
+            )
+            return
+        _ , throw_result, end_turn = self._model.game.add_throw(event.throw)
+        
+        self._event_channel.emit(ScoreChanged())
+
+        current_leg = self._model.game.current_leg
+        self.game_view.turn_view.set_throw(3 - current_leg.throws_left, str(throw_result.dart_throw.short_label))
+        if end_turn:
+            self.game_view.turn_view.reset_throws()
+            self._event_channel.emit(TurnChanged())
+        
+        
+        if self._model.game.is_finished:
+            winner = self._model.game.winner
+            self.game_view.turn_view.reset_throws()
+            ttk.Messagebox.show_info(
+                message=f"{winner.name} wins!" if winner else "Game finished.",
+                title="Game Over",
+                parent=self._view,
+            )
 
     def start(self) -> None:
         pass
@@ -46,10 +77,10 @@ class DartGameController(BaseController):
             return
         p = Player(name=name)
         self._model.players.append(p)
-        self.game_view.set_players(self._model.players)
+        self._event_channel.emit(PlayerAdded(player=p))
 
     def _remove_player(self) -> None:
-        """Remove the last player from the list and update the view."""
+        """Prompt the user to select a player to remove, then update the view."""
         if not self._model.players:
             ttk.Messagebox.show_info(
                 message="No players to remove.",
@@ -57,18 +88,80 @@ class DartGameController(BaseController):
                 parent=self._view,
             )
             return
-        removed = self._model.players.pop()
-        self.game_view.set_players(self._model.players)
-        ttk.Messagebox.show_info(
-            message=f"Removed {removed.name}",
-            title="Remove Player",
-            parent=self._view,
+
+        selected = self._ask_remove_player()
+        if selected is None:
+            return
+
+        self._model.players.remove(selected)
+        self._event_channel.emit(PlayerRemoved(player=selected))
+
+    def _ask_remove_player(self) -> Player | None:
+        """Show a modal dialog with a dropdown to pick which player to remove."""
+        dialog = ttk.Toplevel(self._view)
+        dialog.title("Remove Player")
+        dialog.transient(self._view)
+        dialog.grab_set()
+        self._center_dialog(dialog)
+
+        ttk.Label(dialog, text="Select player to remove:").grid(
+            row=0, column=0, columnspan=2, sticky="w", padx=6, pady=6
         )
+
+        players_by_name = {p.name: p for p in self._model.players}
+        names = list(players_by_name.keys())
+        selected_var = tk.StringVar(value=names[0])
+        combo = ttk.Combobox(
+            dialog,
+            textvariable=selected_var,
+            values=names,
+            state="readonly",
+        )
+        combo.grid(row=1, column=0, columnspan=2, padx=6, pady=6, sticky="ew")
+
+        result = {}
+
+        def on_remove() -> None:
+            name = selected_var.get()
+            if name in players_by_name:
+                result["player"] = players_by_name[name]
+                dialog.destroy()
+
+        def on_cancel() -> None:
+            dialog.destroy()
+
+        btnframe = ttk.Frame(dialog)
+        btnframe.grid(row=2, column=0, columnspan=2, pady=10)
+        ttk.Button(btnframe, text="Remove", command=on_remove).pack(side="left", padx=6)
+        ttk.Button(btnframe, text="Cancel", command=on_cancel).pack(side="left", padx=6)
+
+        self._view.wait_window(dialog)
+
+        return result.get("player")
+
+    def _center_dialog(self, dialog: tk.Toplevel) -> None:
+        """Center a dialog over its parent window on screen."""
+        dialog.update_idletasks()
+        dialog_w, dialog_h = dialog.winfo_width(), dialog.winfo_height()
+
+        parent = self._view
+        try:
+            x = parent.winfo_rootx()
+            y = parent.winfo_rooty()
+            parent_w = parent.winfo_width()
+            parent_h = parent.winfo_height()
+        except tk.TclError:
+            x = y = 0
+            parent_w = parent_h = 0
+
+        x_pos = x + max(0, (parent_w - dialog_w) // 2)
+        y_pos = y + max(0, (parent_h - dialog_h) // 2)
+        dialog.geometry(f"+{x_pos}+{y_pos}")
 
     def _start_game(self) -> None:
         """Start a new game session after validating players and settings."""
         if not self._model.players:
-            messagebox.show_info(
+            ttk.Messagebox.show_info(
                 message="Add at least one player before starting.",
                 title="Start Game",
                 parent=self._view,
@@ -80,12 +173,16 @@ class DartGameController(BaseController):
             return
         starting_score, start_rule, finish_rule = settings
 
-        self._model.legs = {
-            p.id: DartLeg(starting_score, start_rule, finish_rule) for p in self._model.players
-        }
-        self._model.current_player_index = 0
-        
-        self._event_channel.publish(GameStartedEvent())
+        self._model.game = GameLeg(
+            players=tuple(self._model.players),
+            starting_score=starting_score,
+            start_rule=start_rule,
+            finish_rule=finish_rule,
+        )
+
+        self.game_view.turn_view.reset_throws()
+
+        self._event_channel.emit(GameStarted())
 
     def _ask_game_settings(self) -> tuple[int, StartRule, FinishRule] | None:
         """Open a modal dialog to configure game settings using ttkbootstrap."""
@@ -93,6 +190,7 @@ class DartGameController(BaseController):
         dialog.title("Game Settings")
         dialog.transient(self._view)
         dialog.grab_set()
+        self._center_dialog(dialog)
 
         ttk.Label(dialog, text="Starting Score:").grid(row=0, column=0, sticky="w", padx=6, pady=6)
         start_entry = ttk.Entry(dialog)
