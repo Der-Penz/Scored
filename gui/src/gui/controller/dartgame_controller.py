@@ -1,5 +1,7 @@
 import tkinter as tk
 
+import ttkbootstrap as ttk
+
 from gui.events.event_channel import EventChannel
 from gui.events.event_types import (
     DartThrowEvent,
@@ -9,8 +11,6 @@ from gui.events.event_types import (
     ScoreChanged,
     TurnChanged,
 )
-import ttkbootstrap as ttk
-
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
@@ -23,6 +23,7 @@ class DartGameController(BaseController):
     def __init__(self, view: AppView, model: AppModel, event_channel: EventChannel):
         super().__init__(view, model, event_channel)
         self.game_view = self._view.game_view
+        self._turn_pending = False
 
     def bind_menu(self, menu: ttk.Menu) -> None:
         menu.add_command(label="Add Player", command=self._add_player, accelerator="Ctrl+P")
@@ -34,6 +35,9 @@ class DartGameController(BaseController):
         self._view.master.bind_all("<Control-p>", lambda _: self._add_player())
         self._view.master.bind_all("<Control-g>", lambda _: self._start_game())
         self._event_channel.subscribe(DartThrowEvent, self._on_dart_throw)
+        self.game_view.scorepad_view.turn_overlay.bind_callbacks(
+            on_next=self._on_turn_next, on_undo=self._on_turn_undo
+        )
 
     def _on_dart_throw(self, event: DartThrowEvent) -> None:
         if self._model.game is None:
@@ -43,17 +47,18 @@ class DartGameController(BaseController):
                 parent=self._view,
             )
             return
-        _ , throw_result, end_turn = self._model.game.add_throw(event.throw)
-        
+        if self._turn_pending:
+            return
+
+        _, throw_result, end_turn = self._model.game.add_throw(event.throw)
+
         self._event_channel.emit(ScoreChanged())
 
         current_leg = self._model.game.current_leg
-        self.game_view.turn_view.set_throw(3 - current_leg.throws_left, str(throw_result.dart_throw.short_label))
-        if end_turn:
-            self.game_view.turn_view.reset_throws()
-            self._event_channel.emit(TurnChanged())
-        
-        
+        self.game_view.turn_view.set_throw(
+            3 - current_leg.throws_left, str(throw_result.dart_throw.short_label)
+        )
+
         if self._model.game.is_finished:
             winner = self._model.game.winner
             self.game_view.turn_view.reset_throws()
@@ -62,6 +67,34 @@ class DartGameController(BaseController):
                 title="Game Over",
                 parent=self._view,
             )
+            return
+
+        if end_turn:
+            self._turn_pending = True
+            self.game_view.scorepad_view.turn_overlay.show()
+
+    def _on_turn_next(self) -> None:
+        """Confirm the finished turn and advance to the next player."""
+        self._turn_pending = False
+        self._model.game.next_player()
+        self.game_view.scorepad_view.turn_overlay.hide()
+        self.game_view.turn_view.reset_throws()
+        self._event_channel.emit(TurnChanged())
+
+    def _on_turn_undo(self) -> None:
+        """Undo the last throw and let the same player throw again."""
+        self._turn_pending = False
+        self._model.game.undo_last_throw()
+        self.game_view.scorepad_view.turn_overlay.hide()
+        self.game_view.turn_view.reset_throws()
+        self._refresh_current_turn()
+        self._event_channel.emit(ScoreChanged())
+
+    def _refresh_current_turn(self) -> None:
+        """Redraw the current player's registered throws into the turn view."""
+        current_leg = self._model.game.current_leg
+        for idx, throw_result in enumerate(current_leg.current_turn_throws):
+            self.game_view.turn_view.set_throw(idx + 1, str(throw_result.dart_throw.short_label))
 
     def start(self) -> None:
         pass
@@ -81,6 +114,15 @@ class DartGameController(BaseController):
 
     def _remove_player(self) -> None:
         """Prompt the user to select a player to remove, then update the view."""
+
+        if self._model.game is not None:
+            ttk.Messagebox.show_info(
+                message="Cannot remove players while a game is in progress.",
+                title="Remove Player",
+                parent=self._view,
+            )
+            return
+
         if not self._model.players:
             ttk.Messagebox.show_info(
                 message="No players to remove.",

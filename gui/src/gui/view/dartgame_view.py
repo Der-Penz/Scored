@@ -1,6 +1,6 @@
 import tkinter as tk
-import ttkbootstrap as ttk
 
+import ttkbootstrap as ttk
 
 from gui.view.player_view import PlayerView
 from gui.view.scorepad_view import ScorepadView

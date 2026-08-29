@@ -1,6 +1,8 @@
 import tkinter as tk
+
 import ttkbootstrap as ttk
 
+from gui.view.turn_end_overlay import TurnEndOverlay
 from scored_lib.dart.multiplier import Multiplier
 
 
@@ -11,6 +13,7 @@ class ScorepadView(ttk.Frame):
         super().__init__(master, style="Card.TFrame")
 
         self._create_widgets()
+        self.turn_overlay = TurnEndOverlay(self)
 
     def _create_widgets(self) -> None:
         rows = 5

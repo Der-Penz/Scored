@@ -59,7 +59,7 @@ class GameLeg:
     @property
     def is_finished(self) -> bool:
         return self._winner is not None
-    
+
     @property
     def current_leg(self) -> DartLeg:
         return self._legs[self.current_player]
@@ -71,19 +71,19 @@ class GameLeg:
         """
         Record a throw for the current player.
 
-        Automatically advances to the next player after the turn ends.
-        
+        Does not advance to the next player after the turn ends; call
+        :meth:`next_player` once the finished turn is confirmed.
+
         Parameters
         ----------
         dart_throw : DartThrow
             The throw to record for the current player.
-            
+
         Returns
         -------
         tuple[Player, ThrowResult, bool]
             A tuple containing the player who made the throw, the result of the throw,
             and a boolean indicating whether the turn has ended.
-        
         """
 
         if self.is_finished:
@@ -98,13 +98,32 @@ class GameLeg:
             self._winner = self.current_player
             return player, result, True
 
-        if end_turn:
-            self._next_player()
-
         return player, result, end_turn
 
-    def _next_player(self) -> None:
+    def next_player(self) -> Player:
+        """
+        Advance to the next player.
+
+        Call this to confirm a completed turn before it moves to the next player.
+
+        Returns
+        -------
+        Player
+            The player whose turn is active afterwards.
+        """
         self._current_player = (self._current_player + 1) % len(self.players)
+        return self.current_player
+
+    def undo_last_throw(self) -> DartThrow | None:
+        """
+        Remove the last registered throw of the current player's leg.
+
+        Returns
+        -------
+        DartThrow | None
+            The removed throw, or None if there was nothing to remove.
+        """
+        return self.current_leg.remove_last_throw()
 
     def standings(self) -> list[tuple[Player, int]]:
         """

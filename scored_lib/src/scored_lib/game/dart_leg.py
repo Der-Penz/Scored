@@ -44,6 +44,21 @@ class DartLeg:
             raise ValueError("starting_score must be greater than zero")
 
     @property
+    def current_turn_throws(self) -> tuple[ThrowResult, ...]:
+        """
+        Get the registered throw results of the current visible turn.
+
+        Returns
+        -------
+        tuple of ThrowResult
+            The non-None throw results of the last non-empty turn.
+        """
+        for turn in reversed(self._results):
+            if turn:
+                return tuple(tr for tr in turn if tr is not None)
+        return ()
+
+    @property
     def num_darts_thrown(self) -> int:
         """
         Get the total number of darts thrown in the leg.
@@ -98,9 +113,7 @@ class DartLeg:
         if len(last_throws) == 0:
             return self.starting_score
 
-        for throw_result in last_throws[
-            ::-1
-        ]:  # Iterate in reverse to find the last non-None throw
+        for throw_result in last_throws[::-1]:  # Iterate in reverse to find the last non-None throw
             if throw_result is not None:
                 return throw_result.score_after
 
@@ -251,6 +264,39 @@ class DartLeg:
 
         next_round |= bust
         return throw_result, next_round
+
+    def remove_last_throw(self) -> DartThrow | None:
+        """
+        Remove the last registered throw and restore the leg as if it was never thrown.
+
+        The state is rebuilt by replaying all remaining throws, which also clears
+        any bust placeholders, the finished flag and the leg-open state derived
+        from the removed throw.
+
+        Returns
+        -------
+        DartThrow | None
+            The removed throw, or None if the leg has no throws to remove.
+        """
+        throws = [tr.dart_throw for turn in self._results for tr in turn if tr is not None]
+        if not throws:
+            return None
+
+        removed = throws.pop()
+
+        rebuilt = DartLeg(
+            starting_score=self.starting_score,
+            start_rule=self.start_rule,
+            finish_rule=self.finish_rule,
+        )
+        for throw in throws:
+            rebuilt.add_throw(throw)
+
+        self._results = rebuilt._results
+        self._is_open = rebuilt._is_open
+        self._finished = rebuilt._finished
+
+        return removed
 
     def _matches_start_rule(self, dart_throw: DartThrow) -> bool:
         """
