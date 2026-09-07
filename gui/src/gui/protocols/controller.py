@@ -8,7 +8,9 @@ from gui.view.app_view import AppView
 
 
 class BaseController(ABC):
-    def __init__(self, view: AppView, model: AppModel, event_channel: EventChannel) -> None:
+    def __init__(
+        self, view: AppView, model: AppModel, event_channel: EventChannel
+    ) -> None:
         """
         Initialize the controller with the given view and model.
 

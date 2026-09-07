@@ -83,6 +83,20 @@ class DartLeg:
             The current round number.
         """
         return len(self._results) + 1
+    
+    @property
+    def throw(self) -> int:
+        """
+        Get the current throw number within the round (1-based).
+
+        Returns
+        -------
+        int
+            The current throw number within the round.
+        """
+        if not self._results:
+            return 1
+        return len(self._results[-1]) + 1
 
     def avg(self) -> float:
         """

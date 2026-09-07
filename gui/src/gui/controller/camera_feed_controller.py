@@ -33,7 +33,9 @@ class CameraFeedController(BaseController):
         )
 
     def bind_components(self) -> None:
-        self.capture_event_subscription = self._event_channel.subscribe(FrameCapturedEvent, self._on_frame_captured)
+        self.capture_event_subscription = self._event_channel.subscribe(
+            FrameCapturedEvent, self._on_frame_captured
+        )
 
     def _on_frame_captured(self, event: FrameCapturedEvent) -> None:
         self._latest_frame = event.frame
@@ -46,12 +48,14 @@ class CameraFeedController(BaseController):
         self._view.refresh_left_panes()
         if self._feed_visible.get():
             if self.capture_event_subscription is None:
-                self.capture_event_subscription = self._event_channel.subscribe(FrameCapturedEvent, self._on_frame_captured)
+                self.capture_event_subscription = self._event_channel.subscribe(
+                    FrameCapturedEvent, self._on_frame_captured
+                )
                 self._source_view.after(UPDATE_INTERVAL_MS, self._render_image)
         else:
             if self.capture_event_subscription is not None:
                 self.capture_event_subscription.cancel()
-                self.capture_event_subscription = None        
+                self.capture_event_subscription = None
 
     def _render_image(self) -> None:
         if self._latest_frame is not None:

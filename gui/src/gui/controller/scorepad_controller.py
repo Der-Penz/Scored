@@ -12,7 +12,9 @@ from scored_lib.dart.multiplier import Multiplier
 class ScorepadController(BaseController):
     """Thin controller for the ScorepadView to keep multiplier state and expose on_throw."""
 
-    def __init__(self, view: AppView, model: AppModel, event_channel: EventChannel) -> None:
+    def __init__(
+        self, view: AppView, model: AppModel, event_channel: EventChannel
+    ) -> None:
         super().__init__(view, model, event_channel)
         self.scorepad_view = view.game_view.scorepad_view
 

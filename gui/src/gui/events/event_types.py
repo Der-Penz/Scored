@@ -43,6 +43,11 @@ class GameStarted:
 
 
 @dataclass(frozen=True)
+class GameEnded:
+    """Notification that the current game ended (see AppModel.game)."""
+
+
+@dataclass(frozen=True)
 class FrameCapturedEvent:
     """Carries the captured frame (too transient for model storage)."""
 

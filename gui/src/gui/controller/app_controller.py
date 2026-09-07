@@ -1,3 +1,4 @@
+from gui.controller.menu_controller import MenuController
 from gui.protocols.controller import BaseController
 import ttkbootstrap as ttk
 
@@ -23,11 +24,16 @@ class AppController(BaseController):
 
         self.config = config
         self.source_controller = SourceController(view, model, self._event_channel)
-        self.dartboard_controller = DartboardController(view, model, self._event_channel)
+        self.dartboard_controller = DartboardController(
+            view, model, self._event_channel
+        )
         self.dartgame_controller = DartGameController(view, model, self._event_channel)
         self.player_controller = PlayerController(view, model, self._event_channel)
-        self.camera_feed_controller = CameraFeedController(view, model, self._event_channel)
+        self.camera_feed_controller = CameraFeedController(
+            view, model, self._event_channel
+        )
         self.scorepad_controller = ScorepadController(view, model, self._event_channel)
+        self.menu_controller = MenuController(view, model, self._event_channel)
 
         self.bind_menu()
         self.bind_components()
@@ -57,6 +63,8 @@ class AppController(BaseController):
 
         self.scorepad_controller.bind_menu(game_menu)
 
+        self.menu_controller.bind_menu(game_menu)
+
     def bind_components(self) -> None:
         self.source_controller.bind_components()
         self.dartboard_controller.bind_components()
@@ -64,6 +72,7 @@ class AppController(BaseController):
         self.dartgame_controller.bind_components()
         self.player_controller.bind_components()
         self.scorepad_controller.bind_components()
+        self.menu_controller.bind_components()
 
     def start(self):
         if self.config.source is not None:
@@ -75,6 +84,7 @@ class AppController(BaseController):
         self.dartgame_controller.start()
         self.player_controller.start()
         self.scorepad_controller.start()
+        self.menu_controller.start()
 
         # start the main loop of the Tkinter application
         self._view.mainloop()

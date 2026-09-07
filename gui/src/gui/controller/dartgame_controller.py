@@ -26,10 +26,14 @@ class DartGameController(BaseController):
         self._turn_pending = False
 
     def bind_menu(self, menu: ttk.Menu) -> None:
-        menu.add_command(label="Add Player", command=self._add_player, accelerator="Ctrl+P")
+        menu.add_command(
+            label="Add Player", command=self._add_player, accelerator="Ctrl+P"
+        )
         menu.add_command(label="Remove Player", command=self._remove_player)
         menu.add_separator()
-        menu.add_command(label="Start Game", command=self._start_game, accelerator="Ctrl+G")
+        menu.add_command(
+            label="Start Game", command=self._start_game, accelerator="Ctrl+G"
+        )
 
     def bind_components(self) -> None:
         self._view.master.bind_all("<Control-p>", lambda _: self._add_player())
@@ -94,7 +98,9 @@ class DartGameController(BaseController):
         """Redraw the current player's registered throws into the turn view."""
         current_leg = self._model.game.current_leg
         for idx, throw_result in enumerate(current_leg.current_turn_throws):
-            self.game_view.turn_view.set_throw(idx + 1, str(throw_result.dart_throw.short_label))
+            self.game_view.turn_view.set_throw(
+                idx + 1, str(throw_result.dart_throw.short_label)
+            )
 
     def start(self) -> None:
         pass
@@ -234,12 +240,16 @@ class DartGameController(BaseController):
         dialog.grab_set()
         self._center_dialog(dialog)
 
-        ttk.Label(dialog, text="Starting Score:").grid(row=0, column=0, sticky="w", padx=6, pady=6)
+        ttk.Label(dialog, text="Starting Score:").grid(
+            row=0, column=0, sticky="w", padx=6, pady=6
+        )
         start_entry = ttk.Entry(dialog)
         start_entry.insert(0, "501")
         start_entry.grid(row=0, column=1, padx=6, pady=6)
 
-        ttk.Label(dialog, text="Start Rule:").grid(row=1, column=0, sticky="w", padx=6, pady=6)
+        ttk.Label(dialog, text="Start Rule:").grid(
+            row=1, column=0, sticky="w", padx=6, pady=6
+        )
         start_var = tk.StringVar(value=StartRule.ANY.name)
         start_combo = ttk.Combobox(
             dialog,
@@ -249,7 +259,9 @@ class DartGameController(BaseController):
         )
         start_combo.grid(row=1, column=1, padx=6, pady=6)
 
-        ttk.Label(dialog, text="Finish Rule:").grid(row=2, column=0, sticky="w", padx=6, pady=6)
+        ttk.Label(dialog, text="Finish Rule:").grid(
+            row=2, column=0, sticky="w", padx=6, pady=6
+        )
         finish_var = tk.StringVar(value=FinishRule.DOUBLE.name)
         finish_combo = ttk.Combobox(
             dialog,

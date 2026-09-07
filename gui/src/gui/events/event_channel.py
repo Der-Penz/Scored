@@ -37,7 +37,9 @@ class EventChannel:
         self._lock = threading.Lock()
         self._subscribers: dict[type, list[Callable[..., Any]]] = {}
 
-    def subscribe(self, event_type: type[T], callback: Callable[[T], None]) -> Subscription:
+    def subscribe(
+        self, event_type: type[T], callback: Callable[[T], None]
+    ) -> Subscription:
         """
         Register *callback* to be called whenever an event of *event_type* is emitted.
 
