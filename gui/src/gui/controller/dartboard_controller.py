@@ -1,6 +1,7 @@
 import tkinter as tk
 
 from gui.events.event_channel import EventChannel
+from gui.events.event_types import ScoreChanged, TurnChanged
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
@@ -20,7 +21,20 @@ class DartboardController(BaseController):
         )
 
     def bind_components(self) -> None:
+        self._event_channel.subscribe(TurnChanged, lambda _: self.clear())
+        self._event_channel.subscribe(ScoreChanged, lambda _: self.on_score_changed)
+
+    def clear(self) -> None:
+        #TODO clear out all drawn darts
         pass
+        
+    def on_score_changed(self, _) -> None:
+        leg = self._model.game.current_leg
+        
+        for throw in leg.current_turn_throws:
+            #TODO draw the dart throw on the dartboard and make them draggable. on drag release update the throw in the model and redraw the dartboard
+            pass
+            
 
     def start(self) -> None:
         pass

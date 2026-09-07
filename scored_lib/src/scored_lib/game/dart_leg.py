@@ -16,6 +16,8 @@ class ThrowResult:
     opened_leg: bool
     bust: bool
     finished: bool
+    round: int
+    throw: int
 
 
 @dataclass(slots=True)
@@ -148,6 +150,7 @@ class DartLeg:
 
     @property
     def finished_index(self) -> tuple[int, int]:
+        """One-based (round, throw) index where the leg was finished, or (-1, -1)."""
         return self._finished
 
     @property
@@ -164,20 +167,20 @@ class DartLeg:
         Parameters
         ----------
         round : int
-                zero-based index of the round
+                one-based index of the round
         throw : int
-                zero-based index of the throw within the round
+                one-based index of the throw within the round
 
         Returns
         -------
         ThrowResult or None
-                the result of the throw at the specified round and throw index, or None if a throw is after a bust
+                the result of the throw at the specified round and throw index, or None if the slot is a bust placeholder
         """
-        if round < 0 or round >= len(self._results):
+        if round < 1 or round > len(self._results):
             raise IndexError("round index out of range")
-        if throw < 0 or throw >= len(self._results[round]):
+        if throw < 1 or throw > len(self._results[round - 1]):
             raise IndexError("throw index out of range")
-        return self._results[round][throw]
+        return self._results[round - 1][throw - 1]
 
     def get_best_checkout_path(self) -> tuple[DartThrow, ...] | None:
         """
@@ -233,7 +236,7 @@ class DartLeg:
                     finished = True
                     self._finished = (
                         len(self._results),
-                        len(self._results[-1]) if self._results else 0,
+                        len(self._results[-1]) + 1 if self._results else 1,
                     )
                 else:
                     bust = True
@@ -252,6 +255,8 @@ class DartLeg:
             opened_leg=opened_leg,
             bust=bust,
             finished=finished,
+            round=len(self._results),
+            throw=len(self._results[-1]) + 1,
         )
         self._results[-1].append(throw_result)
         if bust:
