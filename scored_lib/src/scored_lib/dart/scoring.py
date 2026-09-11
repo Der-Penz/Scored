@@ -68,6 +68,8 @@ def get_scored_multiplier(rel_pos: Position) -> Multiplier:
         <= RING_RADIUS_NORMALIZED["double_outer"]
     ):
         return Multiplier.DOUBLE
+    elif distance > RING_RADIUS_NORMALIZED["double_outer"]:
+        return Multiplier.MISS
     else:
         return Multiplier.SINGLE
 
