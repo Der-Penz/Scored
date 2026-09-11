@@ -9,6 +9,7 @@ from gui.events.event_types import (
     PlayerAdded,
     PlayerRemoved,
     ScoreChanged,
+    ThrowEdited,
     TurnChanged,
 )
 from gui.model.model import AppModel
@@ -39,6 +40,7 @@ class DartGameController(BaseController):
         self._view.master.bind_all("<Control-p>", lambda _: self._add_player())
         self._view.master.bind_all("<Control-g>", lambda _: self._start_game())
         self._event_channel.subscribe(DartThrowEvent, self._on_dart_throw)
+        self._event_channel.subscribe(ThrowEdited, self._on_throw_edited)
         self.game_view.scorepad_view.turn_overlay.bind_callbacks(
             on_next=self._on_turn_next, on_undo=self._on_turn_undo
         )
@@ -76,6 +78,13 @@ class DartGameController(BaseController):
         if end_turn:
             self._turn_pending = True
             self.game_view.scorepad_view.turn_overlay.show()
+
+    def _on_throw_edited(self, event: ThrowEdited) -> None:
+        current_leg = self._model.game.current_leg
+        throw_result = current_leg.current_turn_throws[event.throw - 1]
+        self.game_view.turn_view.set_throw(
+            event.throw, str(throw_result.dart_throw.short_label)
+        )
 
     def _on_turn_next(self) -> None:
         """Confirm the finished turn and advance to the next player."""

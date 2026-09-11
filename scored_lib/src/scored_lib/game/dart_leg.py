@@ -316,6 +316,50 @@ class DartLeg:
         self._finished = rebuilt._finished
 
         return removed
+    
+    def edit_current_throw(self, dart_throw: DartThrow, throw: int) -> ThrowResult:
+        """
+        Edit one of the throws in the current round and recompute the leg state.
+
+        Parameters
+        ----------
+        dart_throw : DartThrow
+            The new throw to replace the current throw.
+        throw : int
+            The one-based index of the throw to edit within the current round.
+
+        Returns
+        -------
+        ThrowResult
+            The computed result of the edited throw.
+        """
+        if self.is_finished:
+            raise ValueError("Cannot edit throw in a finished leg.")
+
+        if throw < 1 or throw > len(self._results[-1]):
+            raise IndexError("throw index out of range")
+
+        # Remove the old throw and rebuild the leg state
+        old_throw_result = self._results[-1][throw - 1]
+        if old_throw_result is None:
+            raise ValueError("Cannot edit a bust placeholder.")
+
+        throws = [tr.dart_throw for turn in self._results for tr in turn if tr is not None]
+        throws[sum(len(turn) for turn in self._results[:-1]) + (throw - 1)] = dart_throw
+
+        rebuilt = DartLeg(
+            starting_score=self.starting_score,
+            start_rule=self.start_rule,
+            finish_rule=self.finish_rule,
+        )
+        for t in throws:
+            rebuilt.add_throw(t)
+        
+        self._results = rebuilt._results
+        self._is_open = rebuilt._is_open
+        self._finished = rebuilt._finished
+
+        return self._results[-1][throw - 1]
 
     def _matches_start_rule(self, dart_throw: DartThrow) -> bool:
         """

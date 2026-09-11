@@ -1,7 +1,7 @@
 import tkinter as tk
 
 from gui.events.event_channel import EventChannel
-from gui.events.event_types import ScoreChanged, TurnChanged
+from gui.events.event_types import ScoreChanged, ThrowEdited, TurnChanged
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
@@ -53,32 +53,26 @@ class DartboardController(BaseController):
         """Re-draw the current dart list at the new board geometry."""
         self._redraw_darts()
 
-    def _on_drag_release(self, index: int, position: Position, inside: bool) -> None:
+    def _on_drag_release(self, index: int, position: Position) -> None:
         """Handle a dart marker drag release, updating the model."""
         if index < 0 or index >= len(self._darts):
-            return
-
-        throw_result = self._darts[index]
-        if throw_result.dart_throw.position is None and not inside:
             return
 
         self._cancel_debounce()
         self._debounce_after_id = self._view.after(
             DRAG_RELEASE_DEBOUNCE_MS,
-            lambda tr=throw_result, pos=position: self._apply_dart_drag(tr, pos),
+            lambda idx=index, pos=position: self._apply_dart_drag(idx, pos),
         )
 
-    def _apply_dart_drag(
-        self, throw_result: ThrowResult, new_position: Position
-    ) -> None:
+    def _apply_dart_drag(self, index: int, new_position: Position) -> None:
         self._debounce_after_id = None
-        if self._model.game is None or throw_result.bust:
-            return
 
         scoring_position = canvas_to_relative_position(new_position)
         scored = score_dart_throw(scoring_position)
-        # TODO replace with model update call
-        print(f"New throw: {scored} for throw result: {throw_result}")
+
+        self._model.game.current_leg.edit_current_throw(scored, throw=index + 1)
+        self._event_channel.emit(ThrowEdited(throw=index + 1))
+        self._event_channel.emit(ScoreChanged())
 
     def _cancel_debounce(self) -> None:
         if self._debounce_after_id is not None:
