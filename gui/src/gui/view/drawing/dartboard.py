@@ -1,21 +1,79 @@
 import math
-
-from scored_lib.dart.constants import (
-    DARTBOARD_NUMBERS,
-    RING_RADIUS_NORMALIZED,
-    BED_ANGLE_DEGREES,
-)
 import tkinter as tk
 
+from scored_lib.dart.constants import (
+    BED_ANGLE_DEGREES,
+    DARTBOARD_NUMBERS,
+    RING_RADIUS_NORMALIZED,
+)
 
 ODD_COLOR = "#F9DFBC"
 EVEN_COLOR = "black"
 ODD_COLOR_MULTIPLIER = "#D20E15"
 EVEN_COLOR_MULTIPLIER = "#0D7643"
 
+DART_COLORS = [
+    "#1E90FF",
+    "#FFA500",
+    "#EE82EE",
+    "#00CED1",
+    "#FF6347",
+    "#32CD32",
+    "#FFD700",
+    "#FF69B4",
+]
+
+
+def draw_dart_marker(
+    canvas: tk.Canvas,
+    center_x: float,
+    center_y: float,
+    radius: float,
+    color: str,
+    label: str,
+    tag: str | tuple[str, ...] | None = None,
+) -> None:
+    """
+    Draw a single dart marker (a colored circle with the throw label inside).
+
+    Parameters
+    ----------
+    canvas : tk.Canvas
+        The Tkinter canvas widget to draw on.
+    center_x : float
+        The x-coordinate of the center of the marker.
+    center_y : float
+        The y-coordinate of the center of the marker.
+    radius : float
+        The radius of the marker circle in pixels.
+    color : str
+        The fill color for the marker circle.
+    label : str
+        The short label text to draw inside the circle (e.g. "D20", "T5", "X").
+    tag : str or tuple of str, optional
+        Tag(s) assigned to the marker items for later lookup or deletion.
+    """
+    draw_circle(
+        canvas,
+        center_x,
+        center_y,
+        radius,
+        color,
+        "silver",
+        tag=tag,
+    )
+    canvas.create_text(
+        center_x,
+        center_y,
+        text=label,
+        fill="white",
+        font=("Arial", int(radius * 0.9), "bold"),
+        tag=tag,
+    )
+
 
 def draw_circle(
-    canvas: tk.Canvas, center_x: float, center_y: float, radius: float, color: str
+    canvas: tk.Canvas, center_x: float, center_y: float, radius: float, color: str, outline: str, tag: str | tuple[str, ...] | None = None
 ) -> None:
     """
     Helper function to draw a filled circle on the canvas.
@@ -32,6 +90,10 @@ def draw_circle(
         The radius of the circle.
     color : str
         The fill color for the circle.
+    outline : str
+        The outline color for the circle.
+    tag : str or tuple of str, optional
+        Tag(s) assigned to the circle item for later lookup or deletion.
     """
     canvas.create_oval(
         center_x - radius,
@@ -39,9 +101,9 @@ def draw_circle(
         center_x + radius,
         center_y + radius,
         fill=color,
-        outline="silver",
+        outline=outline,
+        tag=tag,
     )
-
 
 def draw_arc(
     canvas: tk.Canvas,
@@ -109,11 +171,9 @@ def draw_dartboard(canvas: tk.Canvas, size: float) -> None:
     r_bo = RING_RADIUS_NORMALIZED["outer_bull"] * size / 2
     r_bi = RING_RADIUS_NORMALIZED["inner_bull"] * size / 2
     r_edge = RING_RADIUS_NORMALIZED["edge"] * size / 2
-    r_text = (
-        r_edge * 0.9
-    )  # Position text slightly inside the edge for better visibility
+    r_text = r_edge * 0.9  # Position text slightly inside the edge for better visibility
 
-    draw_circle(canvas, center_x, center_y, r_edge, "black")
+    draw_circle(canvas, center_x, center_y, r_edge, "black", "silver")
 
     offset = 4  # Offset to align with the defined numbers since degrees start at number 6 but the numbers at 1
     for i, number in enumerate(DARTBOARD_NUMBERS):
@@ -155,9 +215,7 @@ def draw_dartboard(canvas: tk.Canvas, size: float) -> None:
             BED_ANGLE_DEGREES,
             color_double_triple,
         )
-        draw_arc(
-            canvas, center_x, center_y, r_di, arc_start, BED_ANGLE_DEGREES, color_single
-        )
+        draw_arc(canvas, center_x, center_y, r_di, arc_start, BED_ANGLE_DEGREES, color_single)
         draw_arc(
             canvas,
             center_x,
@@ -167,9 +225,7 @@ def draw_dartboard(canvas: tk.Canvas, size: float) -> None:
             BED_ANGLE_DEGREES,
             color_double_triple,
         )
-        draw_arc(
-            canvas, center_x, center_y, r_ti, arc_start, BED_ANGLE_DEGREES, color_single
-        )
+        draw_arc(canvas, center_x, center_y, r_ti, arc_start, BED_ANGLE_DEGREES, color_single)
 
-    draw_circle(canvas, center_x, center_y, r_bo, EVEN_COLOR_MULTIPLIER)  # Outer bulls
-    draw_circle(canvas, center_x, center_y, r_bi, ODD_COLOR_MULTIPLIER)  # Inner bulls
+    draw_circle(canvas, center_x, center_y, r_bo, EVEN_COLOR_MULTIPLIER, "silver")  # Outer bulls
+    draw_circle(canvas, center_x, center_y, r_bi, ODD_COLOR_MULTIPLIER, "silver")  # Inner bulls

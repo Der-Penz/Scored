@@ -1,10 +1,11 @@
 import tkinter as tk
-import ttkbootstrap as ttk
+from typing import Sequence
 
+import ttkbootstrap as ttk
 from PIL import Image, ImageTk
 
 from gui.protocols.dartboard_protocol import DartboardProtocol
-from scored_lib.dart.dart_throw import DartThrow
+from scored_lib.game.dart_leg import ThrowResult
 
 
 class SourceView(ttk.Frame, DartboardProtocol):
@@ -16,10 +17,10 @@ class SourceView(ttk.Frame, DartboardProtocol):
         self.image_label.pack(fill="both", expand=True)
         self._photo_image = None
 
-    def addDartThrow(self, dart_throw: DartThrow) -> None:
+    def draw_darts(self, throws: Sequence[ThrowResult]) -> None:
         pass
 
-    def resetDartThrow(self) -> None:
+    def clear(self) -> None:
         pass
 
     def display_image(self, pil_image: Image.Image) -> None:

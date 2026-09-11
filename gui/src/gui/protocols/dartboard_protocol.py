@@ -1,13 +1,13 @@
-from typing import Protocol
+from typing import Protocol, Sequence
 
-from scored_lib.dart.dart_throw import DartThrow
+from scored_lib.game.dart_leg import ThrowResult
 
 
 class DartboardProtocol(Protocol):
     """Communication contract for dartboard-related UI consumers."""
 
-    def addDartThrow(self, dart_throw: DartThrow) -> None:
-        """Register a dart throw on the dartboard view."""
+    def draw_darts(self, throws: Sequence[ThrowResult]) -> None:
+        """Draw the given dart throws on the dartboard view."""
 
-    def resetDartThrow(self) -> None:
+    def clear(self) -> None:
         """Clear dartboard throw state and redraw the board."""

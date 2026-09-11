@@ -104,3 +104,6 @@ class DartThrow:
         if theta < 0:
             theta += 2 * math.pi
         return r, theta
+
+    def __repr__(self) -> str:
+        return f"{self.label} {self.position}"
