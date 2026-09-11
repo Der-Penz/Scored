@@ -2,7 +2,10 @@ import tkinter as tk
 from typing import Callable, Sequence
 
 from scored_lib.dart.dart_throw import DartThrow
-from scored_lib.util.position import get_segment_default_position, relative_to_canvas_position
+from scored_lib.util.position import (
+    get_segment_default_position,
+    relative_to_canvas_position,
+)
 import ttkbootstrap as ttk
 
 from gui.protocols.dartboard_protocol import DartboardProtocol
@@ -83,7 +86,9 @@ class DartboardView(tk.Frame, DartboardProtocol):
             color = DART_COLORS[index % len(DART_COLORS)]
             label = str(throw_result.throw)
 
-            pos = self._marker_pixel_position(throw_result.dart_throw, index, len(throws))
+            pos = self._marker_pixel_position(
+                throw_result.dart_throw, index, len(throws)
+            )
             px, py = self._normalized_to_pixel(pos)
             draw_dart_marker(
                 self.canvas,
@@ -103,7 +108,9 @@ class DartboardView(tk.Frame, DartboardProtocol):
         if position is not None:
             return relative_to_canvas_position(position)
 
-        if dart_throw.is_miss: # place missed darts evenly along the bottom of the board
+        if (
+            dart_throw.is_miss
+        ):  # place missed darts evenly along the bottom of the board
             spacing = 1.0 / (count + 1)
             x = spacing * (index + 1)
             return relative_to_canvas_position((x, BOTTOM_Y_NORMALIZED))
@@ -156,7 +163,6 @@ class DartboardView(tk.Frame, DartboardProtocol):
             return
         index, _ = self._dragged
         self._dragged = None
-
 
         position = self._pixel_to_normalized((event.x, event.y))
 

@@ -73,7 +73,13 @@ def draw_dart_marker(
 
 
 def draw_circle(
-    canvas: tk.Canvas, center_x: float, center_y: float, radius: float, color: str, outline: str, tag: str | tuple[str, ...] | None = None
+    canvas: tk.Canvas,
+    center_x: float,
+    center_y: float,
+    radius: float,
+    color: str,
+    outline: str,
+    tag: str | tuple[str, ...] | None = None,
 ) -> None:
     """
     Helper function to draw a filled circle on the canvas.
@@ -104,6 +110,7 @@ def draw_circle(
         outline=outline,
         tag=tag,
     )
+
 
 def draw_arc(
     canvas: tk.Canvas,
@@ -171,7 +178,9 @@ def draw_dartboard(canvas: tk.Canvas, size: float) -> None:
     r_bo = RING_RADIUS_NORMALIZED["outer_bull"] * size / 2
     r_bi = RING_RADIUS_NORMALIZED["inner_bull"] * size / 2
     r_edge = RING_RADIUS_NORMALIZED["edge"] * size / 2
-    r_text = r_edge * 0.9  # Position text slightly inside the edge for better visibility
+    r_text = (
+        r_edge * 0.9
+    )  # Position text slightly inside the edge for better visibility
 
     draw_circle(canvas, center_x, center_y, r_edge, "black", "silver")
 
@@ -215,7 +224,9 @@ def draw_dartboard(canvas: tk.Canvas, size: float) -> None:
             BED_ANGLE_DEGREES,
             color_double_triple,
         )
-        draw_arc(canvas, center_x, center_y, r_di, arc_start, BED_ANGLE_DEGREES, color_single)
+        draw_arc(
+            canvas, center_x, center_y, r_di, arc_start, BED_ANGLE_DEGREES, color_single
+        )
         draw_arc(
             canvas,
             center_x,
@@ -225,7 +236,13 @@ def draw_dartboard(canvas: tk.Canvas, size: float) -> None:
             BED_ANGLE_DEGREES,
             color_double_triple,
         )
-        draw_arc(canvas, center_x, center_y, r_ti, arc_start, BED_ANGLE_DEGREES, color_single)
+        draw_arc(
+            canvas, center_x, center_y, r_ti, arc_start, BED_ANGLE_DEGREES, color_single
+        )
 
-    draw_circle(canvas, center_x, center_y, r_bo, EVEN_COLOR_MULTIPLIER, "silver")  # Outer bulls
-    draw_circle(canvas, center_x, center_y, r_bi, ODD_COLOR_MULTIPLIER, "silver")  # Inner bulls
+    draw_circle(
+        canvas, center_x, center_y, r_bo, EVEN_COLOR_MULTIPLIER, "silver"
+    )  # Outer bulls
+    draw_circle(
+        canvas, center_x, center_y, r_bi, ODD_COLOR_MULTIPLIER, "silver"
+    )  # Inner bulls

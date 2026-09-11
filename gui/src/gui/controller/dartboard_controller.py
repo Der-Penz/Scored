@@ -68,14 +68,16 @@ class DartboardController(BaseController):
             lambda tr=throw_result, pos=position: self._apply_dart_drag(tr, pos),
         )
 
-    def _apply_dart_drag(self, throw_result: ThrowResult, new_position: Position) -> None:
+    def _apply_dart_drag(
+        self, throw_result: ThrowResult, new_position: Position
+    ) -> None:
         self._debounce_after_id = None
         if self._model.game is None or throw_result.bust:
             return
 
         scoring_position = canvas_to_relative_position(new_position)
         scored = score_dart_throw(scoring_position)
-        #TODO replace with model update call
+        # TODO replace with model update call
         print(f"New throw: {scored} for throw result: {throw_result}")
 
     def _cancel_debounce(self) -> None:
