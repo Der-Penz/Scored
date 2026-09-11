@@ -82,7 +82,7 @@ class DartLeg:
         int
             The current round number.
         """
-        return len(self._results) + 1
+        return len(self._results)
     
     @property
     def throw(self) -> int:

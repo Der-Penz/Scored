@@ -1,4 +1,4 @@
-from gui.events.event_types import GameEnded, GameStarted, TurnChanged
+from gui.events.event_types import GameEnded, GameStarted, ScoreChanged, TurnChanged
 import ttkbootstrap as ttk
 
 from gui.events.event_channel import EventChannel
@@ -18,6 +18,7 @@ class MenuController(BaseController):
 
     def bind_components(self) -> None:
         self._event_channel.subscribe(GameStarted, lambda _: self.set_normal_status())
+        self._event_channel.subscribe(ScoreChanged, lambda _: self.set_normal_status())
         self._event_channel.subscribe(TurnChanged, lambda _: self.set_normal_status())
         self._event_channel.subscribe(
             GameEnded,
