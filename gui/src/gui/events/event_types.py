@@ -33,13 +33,6 @@ class ScoreChanged:
 
 
 @dataclass(frozen=True)
-class ThrowEdited:
-    """Notification that a throw was edited (see AppModel.game)."""
-
-    throw: int
-
-
-@dataclass(frozen=True)
 class TurnChanged:
     """Notification that the current player changed (see AppModel.game)."""
 

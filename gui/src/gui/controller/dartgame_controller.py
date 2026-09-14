@@ -9,7 +9,6 @@ from gui.events.event_types import (
     PlayerAdded,
     PlayerRemoved,
     ScoreChanged,
-    ThrowEdited,
     TurnChanged,
 )
 from gui.model.model import AppModel
@@ -40,10 +39,21 @@ class DartGameController(BaseController):
         self._view.master.bind_all("<Control-p>", lambda _: self._add_player())
         self._view.master.bind_all("<Control-g>", lambda _: self._start_game())
         self._event_channel.subscribe(DartThrowEvent, self._on_dart_throw)
-        self._event_channel.subscribe(ThrowEdited, self._on_throw_edited)
+        self._event_channel.subscribe(ScoreChanged, lambda _: self._on_score_changed())
         self.game_view.scorepad_view.turn_overlay.bind_callbacks(
             on_next=self._on_turn_next, on_undo=self._on_turn_undo
         )
+
+    def _on_score_changed(self) -> None:
+        """Update the turn view with the current player's throws."""
+        if self._model.game is None:
+            return
+
+        current_leg = self._model.game.current_leg
+        for idx, throw_result in enumerate(current_leg.current_turn_throws):
+            self.game_view.turn_view.set_throw(
+                idx + 1, str(throw_result.dart_throw.short_label)
+            )
 
     def _on_dart_throw(self, event: DartThrowEvent) -> None:
         if self._model.game is None:
@@ -60,11 +70,6 @@ class DartGameController(BaseController):
 
         self._event_channel.emit(ScoreChanged())
 
-        current_leg = self._model.game.current_leg
-        self.game_view.turn_view.set_throw(
-            3 - current_leg.throws_left, str(throw_result.dart_throw.short_label)
-        )
-
         if self._model.game.is_finished:
             winner = self._model.game.winner
             self.game_view.turn_view.reset_throws()
@@ -78,13 +83,6 @@ class DartGameController(BaseController):
         if end_turn:
             self._turn_pending = True
             self.game_view.scorepad_view.turn_overlay.show()
-
-    def _on_throw_edited(self, event: ThrowEdited) -> None:
-        current_leg = self._model.game.current_leg
-        throw_result = current_leg.current_turn_throws[event.throw - 1]
-        self.game_view.turn_view.set_throw(
-            event.throw, str(throw_result.dart_throw.short_label)
-        )
 
     def _on_turn_next(self) -> None:
         """Confirm the finished turn and advance to the next player."""

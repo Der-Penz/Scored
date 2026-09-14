@@ -1,7 +1,7 @@
 import tkinter as tk
 
 from gui.events.event_channel import EventChannel
-from gui.events.event_types import ScoreChanged, ThrowEdited, TurnChanged
+from gui.events.event_types import ScoreChanged, TurnChanged
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
@@ -71,7 +71,6 @@ class DartboardController(BaseController):
         scored = score_dart_throw(scoring_position)
 
         self._model.game.current_leg.edit_current_throw(scored, throw=index + 1)
-        self._event_channel.emit(ThrowEdited(throw=index + 1))
         self._event_channel.emit(ScoreChanged())
 
     def _cancel_debounce(self) -> None:
