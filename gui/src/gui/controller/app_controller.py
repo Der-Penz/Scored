@@ -1,16 +1,17 @@
-from gui.controller.menu_controller import MenuController
-from gui.protocols.controller import BaseController
 import ttkbootstrap as ttk
 
 from gui.controller.camera_feed_controller import CameraFeedController
 from gui.controller.dartboard_controller import DartboardController
 from gui.controller.dartgame_controller import DartGameController
+from gui.controller.menu_controller import MenuController
 from gui.controller.player_controller import PlayerController
+from gui.controller.scorecard_controller import ScorecardController
 from gui.controller.scorepad_controller import ScorepadController
 from gui.controller.source_controller import SourceController
 from gui.events.event_channel import EventChannel
 from gui.model.args import AppConfig
 from gui.model.model import AppModel
+from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
 
 
@@ -34,6 +35,9 @@ class AppController(BaseController):
         )
         self.scorepad_controller = ScorepadController(view, model, self._event_channel)
         self.menu_controller = MenuController(view, model, self._event_channel)
+        self.scorecard_controller = ScorecardController(
+            view, model, self._event_channel
+        )
 
         self.bind_menu()
         self.bind_components()
@@ -65,6 +69,8 @@ class AppController(BaseController):
 
         self.menu_controller.bind_menu(game_menu)
 
+        self.scorecard_controller.bind_menu(game_menu)
+
     def bind_components(self) -> None:
         self.source_controller.bind_components()
         self.dartboard_controller.bind_components()
@@ -73,6 +79,7 @@ class AppController(BaseController):
         self.player_controller.bind_components()
         self.scorepad_controller.bind_components()
         self.menu_controller.bind_components()
+        self.scorecard_controller.bind_components()
 
     def start(self):
         if self.config.source is not None:
@@ -85,6 +92,7 @@ class AppController(BaseController):
         self.player_controller.start()
         self.scorepad_controller.start()
         self.menu_controller.start()
+        self.scorecard_controller.start()
 
         # start the main loop of the Tkinter application
         self._view.mainloop()
