@@ -1,10 +1,10 @@
 import threading
 import time
-from tkinter import filedialog, simpledialog
+from tkinter import filedialog
 
-from gui.events.event_channel import EventChannel
 import ttkbootstrap as ttk
 
+from gui.events.event_channel import EventChannel
 from gui.events.event_types import FrameCapturedEvent
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
@@ -133,16 +133,22 @@ class SourceController(BaseController):
                 source = VideoSource(path)
 
             elif source_name == WebCamSource.get_name():
-                idx = simpledialog.askinteger(
-                    "Camera index", "Enter camera index (0,1,...):", minvalue=0
+                idx = ttk.Querybox.get_integer(
+                    "Enter camera index (0,1,...):",
+                    title="Camera index",
+                    minvalue=0,
+                    parent=self._view,
                 )
                 if idx is None:
                     return
                 source = WebCamSource(idx)
 
             elif source_name == HTTPCaptureSource.get_name():
-                url = simpledialog.askstring(
-                    "Stream URL", "Enter HTTP stream URL:", initialvalue="http://"
+                url = ttk.Querybox.get_string(
+                    "Enter HTTP stream URL:",
+                    title="Stream URL",
+                    initialvalue="http://",
+                    parent=self._view,
                 )
                 if not url:
                     return
