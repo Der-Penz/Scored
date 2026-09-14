@@ -1,5 +1,7 @@
 # Scored
 
+> Currently under development, this project is a work in progress. Please check back later for updates.
+
 ## Single Camera automated darts scoring using keypoint detection
 
 The project aims to detect dart scores by using a yolo v11 keypose model on a single camera image to predict the score of the thrown darts.
@@ -11,35 +13,7 @@ After detecting the keypoints, the 4 dartboard keypoints are used to apply a per
 
 ![image](images/warped_dartboard.png)
 
-## How to use
 
-This project uses a **Poetry monorepo setup**. Each project has its own `pyproject.toml` inside the respective `projects/<project_name>` folder.
-
-1. Install Poetry if you don’t have it yet:
-
-   ```bash
-   pip install poetry
-   ```
-
-1. From the top-level project folder, install each package environment:
-
-   ```bash
-   poetry install --directory projects/<package_name>
-   ```
-
-1. To run scripts defined in pyproject.toml (e.g. evaluation):
-
-   ```bash
-   poetry run --directory projects/ml eval <model_path> <dataset_path>
-   ```
-
-   Paths are given relative to the top-level folder (recommended) or as absolute paths.
-
-1. To open a shell in the a environment:
-
-    ```bash
-    poetry shell --directory projects/<package_name>
-    ```
 
 ## Training
 
