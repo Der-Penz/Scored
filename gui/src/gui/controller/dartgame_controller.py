@@ -23,6 +23,8 @@ class DartGameController(BaseController):
     def __init__(self, view: AppView, model: AppModel, event_channel: EventChannel):
         super().__init__(view, model, event_channel)
         self.game_view = self._view.game_view
+        self.turn_view = self._view.game_view.turn_view
+        self.turn_overlay = self.game_view.scorepad_view.turn_overlay
         self._turn_pending = False
 
     def bind_menu(self, menu: ttk.Menu) -> None:
@@ -39,21 +41,12 @@ class DartGameController(BaseController):
         self._view.master.bind_all("<Control-p>", lambda _: self._add_player())
         self._view.master.bind_all("<Control-g>", lambda _: self._start_game())
         self._event_channel.subscribe(DartThrowEvent, self._on_dart_throw)
-        self._event_channel.subscribe(ScoreChanged, lambda _: self._on_score_changed())
-        self.game_view.scorepad_view.turn_overlay.bind_callbacks(
+        self._event_channel.subscribe(
+            ScoreChanged, lambda _: self._refresh_current_turn()
+        )
+        self.turn_overlay.bind_callbacks(
             on_next=self._on_turn_next, on_undo=self._on_turn_undo
         )
-
-    def _on_score_changed(self) -> None:
-        """Update the turn view with the current player's throws."""
-        if self._model.game is None:
-            return
-
-        current_leg = self._model.game.current_leg
-        for idx, throw_result in enumerate(current_leg.current_turn_throws):
-            self.game_view.turn_view.set_throw(
-                idx + 1, str(throw_result.dart_throw.short_label)
-            )
 
     def _on_dart_throw(self, event: DartThrowEvent) -> None:
         if self._model.game is None:
@@ -66,13 +59,13 @@ class DartGameController(BaseController):
         if self._turn_pending:
             return
 
-        _, throw_result, end_turn = self._model.game.add_throw(event.throw)
+        _, _, end_turn = self._model.game.add_throw(event.throw)
 
         self._event_channel.emit(ScoreChanged())
 
         if self._model.game.is_finished:
             winner = self._model.game.winner
-            self.game_view.turn_view.reset_throws()
+            self.turn_view.reset_throws()
             ttk.Messagebox.show_info(
                 message=f"{winner.name} wins!" if winner else "Game finished.",
                 title="Game Over",
@@ -82,32 +75,42 @@ class DartGameController(BaseController):
 
         if end_turn:
             self._turn_pending = True
-            self.game_view.scorepad_view.turn_overlay.show()
+            self.turn_overlay.show()
 
     def _on_turn_next(self) -> None:
         """Confirm the finished turn and advance to the next player."""
+        if (
+            self._turn_pending is False
+        ):  # prevent accidental clicks when no turn is pending from focus issues
+            return
         self._turn_pending = False
+
+        self.turn_overlay.hide()
+        self.turn_view.reset_throws()
         self._model.game.next_player()
-        self.game_view.scorepad_view.turn_overlay.hide()
-        self.game_view.turn_view.reset_throws()
         self._event_channel.emit(TurnChanged())
 
     def _on_turn_undo(self) -> None:
         """Undo the last throw and let the same player throw again."""
+        if (
+            self._turn_pending is False
+        ):  # prevent accidental clicks when no turn is pending from focus issues
+            return
         self._turn_pending = False
+
         self._model.game.undo_last_throw()
-        self.game_view.scorepad_view.turn_overlay.hide()
-        self.game_view.turn_view.reset_throws()
-        self._refresh_current_turn()
+        self.turn_overlay.hide()
         self._event_channel.emit(ScoreChanged())
 
     def _refresh_current_turn(self) -> None:
         """Redraw the current player's registered throws into the turn view."""
+        if self._model.game is None:
+            return
+
         current_leg = self._model.game.current_leg
+        self.turn_view.reset_throws()
         for idx, throw_result in enumerate(current_leg.current_turn_throws):
-            self.game_view.turn_view.set_throw(
-                idx + 1, str(throw_result.dart_throw.short_label)
-            )
+            self.turn_view.set_throw(idx + 1, str(throw_result.dart_throw.short_label))
 
     def start(self) -> None:
         pass
@@ -235,7 +238,7 @@ class DartGameController(BaseController):
             finish_rule=finish_rule,
         )
 
-        self.game_view.turn_view.reset_throws()
+        self.turn_view.reset_throws()
 
         self._event_channel.emit(GameStarted())
 
@@ -246,14 +249,18 @@ class DartGameController(BaseController):
         dialog.transient(self._view)
         dialog.grab_set()
         self._center_dialog(dialog)
-dialog.focus_force()
+        dialog.focus_force()
 
-        ttk.Label(dialog, text="Starting Score:").grid(row=0, column=0, sticky="w", padx=6, pady=6)
+        ttk.Label(dialog, text="Starting Score:").grid(
+            row=0, column=0, sticky="w", padx=6, pady=6
+        )
         start_entry = ttk.Entry(dialog)
         start_entry.insert(0, "501")
         start_entry.grid(row=0, column=1, padx=6, pady=6)
 
-        ttk.Label(dialog, text="Start Rule:").grid(row=1, column=0, sticky="w", padx=6, pady=6)
+        ttk.Label(dialog, text="Start Rule:").grid(
+            row=1, column=0, sticky="w", padx=6, pady=6
+        )
         start_var = tk.StringVar(value=StartRule.ANY.name)
         start_combo = ttk.Combobox(
             dialog,
@@ -263,7 +270,9 @@ dialog.focus_force()
         )
         start_combo.grid(row=1, column=1, padx=6, pady=6)
 
-        ttk.Label(dialog, text="Finish Rule:").grid(row=2, column=0, sticky="w", padx=6, pady=6)
+        ttk.Label(dialog, text="Finish Rule:").grid(
+            row=2, column=0, sticky="w", padx=6, pady=6
+        )
         finish_var = tk.StringVar(value=FinishRule.DOUBLE.name)
         finish_combo = ttk.Combobox(
             dialog,
@@ -296,8 +305,8 @@ dialog.focus_force()
         btnframe = ttk.Frame(dialog)
         btnframe.grid(row=3, column=0, columnspan=2, pady=10)
         ttk.Button(btnframe, text="OK", command=on_ok, bootstyle="primary").pack(
-side="left", padx=6
-)
+            side="left", padx=6
+        )
         ttk.Button(btnframe, text="Cancel", command=on_cancel).pack(side="left", padx=6)
 
         self._view.wait_window(dialog)
