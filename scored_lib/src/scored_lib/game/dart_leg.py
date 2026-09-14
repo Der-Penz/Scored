@@ -96,7 +96,7 @@ class DartLeg:
         """
         if not self._results:
             return 1
-        return len(self._results[-1]) + 1
+        return min(len(self._results[-1]), 3)
 
     def avg(self) -> float:
         """
@@ -143,7 +143,19 @@ class DartLeg:
         int
             The number of throws left in the current turn (1 to 3).
         """
+        if not self._results:
+            return 3
         last_turn = self._results[-1]
+        if self.is_finished:
+            return 0
+        
+        if len(last_turn) == 0:
+            return 3
+        
+        if last_turn[-1] is None:
+            # If the last throw was a bust placeholder, turn is considered complete
+            return 0 
+        
         return 3 - len(last_turn)
 
     @property
@@ -207,6 +219,18 @@ class DartLeg:
         """
         return lookup_best_checkout_path(self.score, self.finish_rule)
 
+    def next_turn(self) -> None:
+        """
+        Start a new turn for the player.
+        """
+        if self.is_finished:
+            raise ValueError("Cannot start a new turn in a finished leg.")
+        
+        if self.throws_left > 0:
+            raise ValueError("Cannot start a new turn before finishing the current turn.")
+        
+        self._results.append([])
+    
     def add_throw(self, dart_throw: DartThrow) -> tuple[ThrowResult, bool]:
         """
         Add a dart throw to the leg and compute the result.
@@ -223,7 +247,10 @@ class DartLeg:
         """
         if self.is_finished:
             raise ValueError("Cannot add throw to a finished leg.")
-
+        
+        if self.throws_left == 0:
+            raise ValueError("Cannot add throw; the current turn is already complete. Call next_turn() to start a new turn.")
+        
         score_before = self.score
         score_after = score_before - dart_throw.score
 
@@ -277,11 +304,7 @@ class DartLeg:
             left = self.throws_left
             for _ in range(left):
                 self._results[-1].append(None)
-
-        if next_round := self.throws_left == 0 and not finished:
-            self._results.append([])
-
-        next_round |= bust
+        next_round = self.throws_left == 0 or bust
         return throw_result, next_round
 
     def remove_last_throw(self) -> DartThrow | None:

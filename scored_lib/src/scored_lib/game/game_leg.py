@@ -112,6 +112,7 @@ class GameLeg:
             The player whose turn is active afterwards.
         """
         self._current_player = (self._current_player + 1) % len(self.players)
+        self.leg_for(self.current_player).next_turn()
         return self.current_player
 
     def undo_last_throw(self) -> DartThrow | None:
