@@ -11,6 +11,7 @@ from gui.events.event_types import (
     ScoreChanged,
     TurnChanged,
 )
+from gui.helper import center_dialog
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
@@ -160,7 +161,7 @@ class DartGameController(BaseController):
         dialog.title("Remove Player")
         dialog.transient(self._view)
         dialog.grab_set()
-        self._center_dialog(dialog)
+        center_dialog(dialog, self._view)
 
         ttk.Label(dialog, text="Select player to remove:").grid(
             row=0, column=0, columnspan=2, sticky="w", padx=6, pady=6
@@ -197,25 +198,6 @@ class DartGameController(BaseController):
 
         return result.get("player")
 
-    def _center_dialog(self, dialog: tk.Toplevel) -> None:
-        """Center a dialog over its parent window on screen."""
-        dialog.update_idletasks()
-        dialog_w, dialog_h = dialog.winfo_width(), dialog.winfo_height()
-
-        parent = self._view
-        try:
-            x = parent.winfo_rootx()
-            y = parent.winfo_rooty()
-            parent_w = parent.winfo_width()
-            parent_h = parent.winfo_height()
-        except tk.TclError:
-            x = y = 0
-            parent_w = parent_h = 0
-
-        x_pos = x + max(0, (parent_w - dialog_w) // 2)
-        y_pos = y + max(0, (parent_h - dialog_h) // 2)
-        dialog.geometry(f"+{x_pos}+{y_pos}")
-
     def _start_game(self) -> None:
         """Start a new game session after validating players and settings."""
         if not self._model.players:
@@ -248,7 +230,7 @@ class DartGameController(BaseController):
         dialog.title("Game Settings")
         dialog.transient(self._view)
         dialog.grab_set()
-        self._center_dialog(dialog)
+        center_dialog(dialog, self._view)
         dialog.focus_force()
 
         ttk.Label(dialog, text="Starting Score:").grid(

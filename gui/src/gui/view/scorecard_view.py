@@ -3,6 +3,7 @@ import tkinter as tk
 import ttkbootstrap as ttk
 from ttkbootstrap import Tableview
 
+from gui.helper import center_dialog
 from scored_lib.game.dart_leg import DartLeg
 from scored_lib.game.game_leg import GameLeg
 from scored_lib.game.player import Player
@@ -26,6 +27,7 @@ class ScorecardView(ttk.Toplevel):
         self.transient(master)
         self.geometry("580x420")
         self.minsize(420, 280)
+        center_dialog(self, self.master)
 
         self._tables: dict[Player, Tableview] = {}
 
