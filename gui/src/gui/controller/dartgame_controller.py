@@ -115,6 +115,15 @@ class DartGameController(BaseController):
 
     def _add_player(self) -> None:
         """Prompt for a player name and add them to the player list."""
+
+        if self._model.game is not None:
+            ttk.Messagebox.show_info(
+                message="Cannot add players while a game is in progress.",
+                title="Add Player",
+                parent=self._view,
+            )
+            return
+
         name = ttk.Querybox.get_string(
             prompt="Player name:",
             title="Add Player",
