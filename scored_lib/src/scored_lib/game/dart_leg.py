@@ -70,7 +70,7 @@ class DartLeg:
         int
             The total number of darts thrown.
         """
-        return sum(len(turn) for turn in self._results)
+        return sum(1 for turn in self._results for tr in turn if tr is not None)
 
     @property
     def round(self) -> int:
@@ -83,7 +83,7 @@ class DartLeg:
             The current round number.
         """
         return len(self._results)
-    
+
     @property
     def throw(self) -> int:
         """
@@ -94,7 +94,7 @@ class DartLeg:
         int
             The current throw number within the round.
         """
-        if not self._results:
+        if not self._results or not self._results[-1]:
             return 1
         return min(len(self._results[-1]), 3)
 
@@ -148,14 +148,14 @@ class DartLeg:
         last_turn = self._results[-1]
         if self.is_finished:
             return 0
-        
+
         if len(last_turn) == 0:
             return 3
-        
+
         if last_turn[-1] is None:
             # If the last throw was a bust placeholder, turn is considered complete
-            return 0 
-        
+            return 0
+
         return 3 - len(last_turn)
 
     @property
@@ -225,12 +225,12 @@ class DartLeg:
         """
         if self.is_finished:
             raise ValueError("Cannot start a new turn in a finished leg.")
-        
+
         if self.throws_left > 0:
             raise ValueError("Cannot start a new turn before finishing the current turn.")
-        
+
         self._results.append([])
-    
+
     def add_throw(self, dart_throw: DartThrow) -> tuple[ThrowResult, bool]:
         """
         Add a dart throw to the leg and compute the result.
@@ -247,10 +247,12 @@ class DartLeg:
         """
         if self.is_finished:
             raise ValueError("Cannot add throw to a finished leg.")
-        
+
         if self.throws_left == 0:
-            raise ValueError("Cannot add throw; the current turn is already complete. Call next_turn() to start a new turn.")
-        
+            raise ValueError(
+                "Cannot add throw; the current turn is already complete. Call next_turn() to start a new turn."
+            )
+
         score_before = self.score
         score_after = score_before - dart_throw.score
 
@@ -341,7 +343,7 @@ class DartLeg:
         self._finished = rebuilt._finished
 
         return removed
-    
+
     def edit_current_throw(self, dart_throw: DartThrow, throw: int) -> ThrowResult:
         """
         Edit one of the throws in the current round and recompute the leg state.
@@ -370,7 +372,10 @@ class DartLeg:
             raise ValueError("Cannot edit a bust placeholder.")
 
         throws = [tr.dart_throw for turn in self._results for tr in turn if tr is not None]
-        throws[sum(len(turn) for turn in self._results[:-1]) + (throw - 1)] = dart_throw
+        offset = sum(len([tr for tr in turn if tr is not None]) for turn in self._results[:-1])
+        if offset + (throw - 1) >= len(throws):
+            raise IndexError("throw index out of range")
+        throws[offset + (throw - 1)] = dart_throw
 
         rebuilt = DartLeg(
             starting_score=self.starting_score,
@@ -378,13 +383,26 @@ class DartLeg:
             finish_rule=self.finish_rule,
         )
         for t in throws:
-            rebuilt.add_throw(t)
-        
+            _, next_round = rebuilt.add_throw(t)
+            if next_round and not rebuilt.is_finished:
+                rebuilt.next_turn()
+
+        # The replay starts a fresh turn whenever a throw ends one (bust/3 darts).
+        # That is only valid if the original leg actually advanced past the current
+        # turn; the current turn is still in progress, so drop the trailing empty turn.
+        if self._results[-1] and not rebuilt.is_finished and not rebuilt._results[-1]:
+            rebuilt._results.pop()
+
         self._results = rebuilt._results
         self._is_open = rebuilt._is_open
         self._finished = rebuilt._finished
 
-        return self._results[-1][throw - 1]
+        return next(
+            tr
+            for turn in rebuilt._results
+            for tr in turn
+            if tr is not None and tr.dart_throw is dart_throw
+        )
 
     def _matches_start_rule(self, dart_throw: DartThrow) -> bool:
         """

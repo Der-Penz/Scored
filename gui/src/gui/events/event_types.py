@@ -38,6 +38,11 @@ class TurnChanged:
 
 
 @dataclass(frozen=True)
+class UndoRequested:
+    """Notification that the user wants to undo the last registered throw."""
+
+
+@dataclass(frozen=True)
 class GameStarted:
     """Notification that a new game was started (see AppModel.game)."""
 

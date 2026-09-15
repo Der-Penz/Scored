@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from scored_lib.game.dart_leg import DartLeg, ThrowResult
 from scored_lib.dart.dart_throw import DartThrow
+from scored_lib.game.dart_leg import DartLeg, ThrowResult
 from scored_lib.game.player import Player
 from scored_lib.game.rule import FinishRule, StartRule
 
@@ -112,19 +112,33 @@ class GameLeg:
             The player whose turn is active afterwards.
         """
         self._current_player = (self._current_player + 1) % len(self.players)
-        self.leg_for(self.current_player).next_turn()
+        leg = self.leg_for(self.current_player)
+        if leg.throws_left == 0:
+            leg.next_turn()
         return self.current_player
 
     def undo_last_throw(self) -> DartThrow | None:
         """
-        Remove the last registered throw of the current player's leg.
+        Remove the most recently registered throw, wherever it was thrown.
+
+        The active player is restored to whoever made the removed throw. If
+        that throw had finished the game, the winner is cleared again.
 
         Returns
         -------
         DartThrow | None
             The removed throw, or None if there was nothing to remove.
         """
-        return self.current_leg.remove_last_throw()
+        if self.winner is not None:
+            raise ValueError("Cannot undo a throw after the leg has finished.")
+                
+        if self.current_leg.throws_left == 3:
+            # If the current player has not thrown yet, we need to go back to the previous player.
+            self._current_player = (self._current_player - 1) % len(self.players)
+        
+        throw = self.current_leg.remove_last_throw()
+
+        return throw
 
     def standings(self) -> list[tuple[Player, int]]:
         """

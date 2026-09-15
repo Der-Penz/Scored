@@ -8,6 +8,7 @@ from gui.events.event_types import (
     PlayerRemoved,
     ScoreChanged,
     TurnChanged,
+    UndoRequested,
 )
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
@@ -42,6 +43,7 @@ class DartGameController(BaseController):
         self._event_channel.subscribe(
             ScoreChanged, lambda _: self._refresh_current_turn()
         )
+        self._event_channel.subscribe(UndoRequested, lambda e: self._undo_throw())
         self.turn_overlay.bind_callbacks(
             on_next=self._on_turn_next, on_undo=self._on_turn_undo
         )
@@ -94,10 +96,18 @@ class DartGameController(BaseController):
             self._turn_pending is False
         ):  # prevent accidental clicks when no turn is pending from focus issues
             return
-        self._turn_pending = False
+        self._undo_throw()
+
+    def _undo_throw(self) -> None:
+        """Remove the most recent throw and refresh the UI."""
+        if self._model.game is None or self._model.game.is_finished:
+            return
+
+        if self._turn_pending:
+            self._turn_pending = False
+            self.turn_overlay.hide()
 
         self._model.game.undo_last_throw()
-        self.turn_overlay.hide()
         self._event_channel.emit(ScoreChanged())
 
     def _refresh_current_turn(self) -> None:
