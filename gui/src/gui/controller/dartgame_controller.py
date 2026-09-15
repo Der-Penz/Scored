@@ -1,5 +1,3 @@
-import tkinter as tk
-
 import ttkbootstrap as ttk
 
 from gui.events.event_channel import EventChannel
@@ -11,13 +9,12 @@ from gui.events.event_types import (
     ScoreChanged,
     TurnChanged,
 )
-from gui.helper import center_dialog
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
+from gui.view.widgets.dartgame_dialogs import ask_game_settings, ask_remove_player
 from scored_lib.game.game_leg import GameLeg
 from scored_lib.game.player import Player
-from scored_lib.game.rule import FinishRule, StartRule
 
 
 class DartGameController(BaseController):
@@ -148,55 +145,12 @@ class DartGameController(BaseController):
             )
             return
 
-        selected = self._ask_remove_player()
+        selected = ask_remove_player(self._view, self._model.players)
         if selected is None:
             return
 
         self._model.players.remove(selected)
         self._event_channel.emit(PlayerRemoved(player=selected))
-
-    def _ask_remove_player(self) -> Player | None:
-        """Show a modal dialog with a dropdown to pick which player to remove."""
-        dialog = ttk.Toplevel(self._view)
-        dialog.title("Remove Player")
-        dialog.transient(self._view)
-        dialog.grab_set()
-        center_dialog(dialog, self._view)
-
-        ttk.Label(dialog, text="Select player to remove:").grid(
-            row=0, column=0, columnspan=2, sticky="w", padx=6, pady=6
-        )
-
-        players_by_name = {p.name: p for p in self._model.players}
-        names = list(players_by_name.keys())
-        selected_var = tk.StringVar(value=names[0])
-        combo = ttk.Combobox(
-            dialog,
-            textvariable=selected_var,
-            values=names,
-            state="readonly",
-        )
-        combo.grid(row=1, column=0, columnspan=2, padx=6, pady=6, sticky="ew")
-
-        result = {}
-
-        def on_remove() -> None:
-            name = selected_var.get()
-            if name in players_by_name:
-                result["player"] = players_by_name[name]
-                dialog.destroy()
-
-        def on_cancel() -> None:
-            dialog.destroy()
-
-        btnframe = ttk.Frame(dialog)
-        btnframe.grid(row=2, column=0, columnspan=2, pady=10)
-        ttk.Button(btnframe, text="Remove", command=on_remove).pack(side="left", padx=6)
-        ttk.Button(btnframe, text="Cancel", command=on_cancel).pack(side="left", padx=6)
-
-        self._view.wait_window(dialog)
-
-        return result.get("player")
 
     def _start_game(self) -> None:
         """Start a new game session after validating players and settings."""
@@ -208,7 +162,7 @@ class DartGameController(BaseController):
             )
             return
 
-        settings = self._ask_game_settings()
+        settings = ask_game_settings(self._view)
         if settings is None:
             return
         starting_score, start_rule, finish_rule = settings
@@ -223,76 +177,3 @@ class DartGameController(BaseController):
         self.turn_view.reset_throws()
 
         self._event_channel.emit(GameStarted())
-
-    def _ask_game_settings(self) -> tuple[int, StartRule, FinishRule] | None:
-        """Open a modal dialog to configure game settings using ttkbootstrap."""
-        dialog = ttk.Toplevel(self._view)
-        dialog.title("Game Settings")
-        dialog.transient(self._view)
-        dialog.grab_set()
-        center_dialog(dialog, self._view)
-        dialog.focus_force()
-
-        ttk.Label(dialog, text="Starting Score:").grid(
-            row=0, column=0, sticky="w", padx=6, pady=6
-        )
-        start_entry = ttk.Entry(dialog)
-        start_entry.insert(0, "501")
-        start_entry.grid(row=0, column=1, padx=6, pady=6)
-
-        ttk.Label(dialog, text="Start Rule:").grid(
-            row=1, column=0, sticky="w", padx=6, pady=6
-        )
-        start_var = tk.StringVar(value=StartRule.ANY.name)
-        start_combo = ttk.Combobox(
-            dialog,
-            textvariable=start_var,
-            values=[s.name for s in StartRule],
-            state="readonly",
-        )
-        start_combo.grid(row=1, column=1, padx=6, pady=6)
-
-        ttk.Label(dialog, text="Finish Rule:").grid(
-            row=2, column=0, sticky="w", padx=6, pady=6
-        )
-        finish_var = tk.StringVar(value=FinishRule.DOUBLE.name)
-        finish_combo = ttk.Combobox(
-            dialog,
-            textvariable=finish_var,
-            values=[f.name for f in FinishRule],
-            state="readonly",
-        )
-        finish_combo.grid(row=2, column=1, padx=6, pady=6)
-
-        result = {}
-
-        def on_ok() -> None:
-            try:
-                s = int(start_entry.get())
-            except ValueError:
-                ttk.Messagebox.show_error(
-                    message="Starting score must be an integer.",
-                    title="Invalid",
-                    parent=dialog,
-                )
-                return
-            result["starting_score"] = s
-            result["start_rule"] = StartRule[start_var.get()]
-            result["finish_rule"] = FinishRule[finish_var.get()]
-            dialog.destroy()
-
-        def on_cancel() -> None:
-            dialog.destroy()
-
-        btnframe = ttk.Frame(dialog)
-        btnframe.grid(row=3, column=0, columnspan=2, pady=10)
-        ttk.Button(btnframe, text="OK", command=on_ok, bootstyle="primary").pack(
-            side="left", padx=6
-        )
-        ttk.Button(btnframe, text="Cancel", command=on_cancel).pack(side="left", padx=6)
-
-        self._view.wait_window(dialog)
-
-        if not result:
-            return None
-        return result["starting_score"], result["start_rule"], result["finish_rule"]
