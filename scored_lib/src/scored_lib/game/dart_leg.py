@@ -332,7 +332,9 @@ class DartLeg:
             finish_rule=self.finish_rule,
         )
         for throw in throws:
-            rebuilt.add_throw(throw)
+            _, next = rebuilt.add_throw(throw)
+            if next:
+                rebuilt.next_turn()
 
         self._results = rebuilt._results
         self._is_open = rebuilt._is_open

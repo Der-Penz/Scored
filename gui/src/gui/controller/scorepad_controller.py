@@ -1,7 +1,7 @@
 import tkinter as tk
 
 from gui.events.event_channel import EventChannel
-from gui.events.event_types import DartThrowEvent
+from gui.events.event_types import DartThrowEvent, ScoreChanged
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
@@ -24,6 +24,7 @@ class ScorepadController(BaseController):
         pass
 
     def bind_components(self) -> None:
+        self._view.master.bind("<BackSpace>", lambda _: self.undo_throw())
         for num, btn in self.scorepad_view.number_buttons.items():
             btn.config(command=lambda n=num: self.on_number_press(n))
 
@@ -42,6 +43,12 @@ class ScorepadController(BaseController):
         self.scorepad_view.miss.config(
             command=lambda: self.on_special_press(Multiplier.MISS)
         )
+
+    def undo_throw(self) -> None:
+        if self._model.game is None:
+            return
+        self._model.game.undo_last_throw()
+        self._event_channel.emit(ScoreChanged())
 
     def set_multiplier(self, multiplier: Multiplier) -> None:
         if multiplier not in (Multiplier.SINGLE, Multiplier.DOUBLE, Multiplier.TRIPLE):
