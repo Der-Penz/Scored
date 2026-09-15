@@ -28,6 +28,14 @@ class ScorepadController(BaseController):
 
     def bind_components(self) -> None:
         self._view.master.bind("<BackSpace>", lambda _: self._undo_throw())
+
+        self._view.master.bind(
+            "<Shift_L>", lambda _: self.set_multiplier(Multiplier.DOUBLE)
+        )
+        self._view.master.bind(
+            "<Control_L>", lambda _: self.set_multiplier(Multiplier.TRIPLE)
+        )
+
         for num, btn in self.scorepad_view.number_buttons.items():
             btn.config(command=lambda n=num: self.on_number_press(n))
 
