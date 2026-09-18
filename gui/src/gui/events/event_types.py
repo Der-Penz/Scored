@@ -7,7 +7,7 @@ from scored_lib.game.player import Player
 
 
 @dataclass(frozen=True)
-class DartThrowEvent:
+class DartThrow:
     """Carries a new dart throw that should be registered (see AppModel.game)."""
 
     throw: DartThrow

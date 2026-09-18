@@ -2,7 +2,7 @@ import ttkbootstrap as ttk
 
 from gui.events.event_channel import EventChannel
 from gui.events.event_types import (
-    DartThrowEvent,
+    DartThrow,
     GameStarted,
     PlayerAdded,
     PlayerRemoved,
@@ -39,7 +39,7 @@ class DartGameController(BaseController):
     def bind_components(self) -> None:
         self._view.master.bind_all("<Control-p>", lambda _: self._add_player())
         self._view.master.bind_all("<Control-g>", lambda _: self._start_game())
-        self._event_channel.subscribe(DartThrowEvent, self._on_dart_throw)
+        self._event_channel.subscribe(DartThrow, self._on_dart_throw)
         self._event_channel.subscribe(
             ScoreChanged, lambda _: self._refresh_current_turn()
         )
@@ -48,7 +48,7 @@ class DartGameController(BaseController):
             on_next=self._on_turn_next, on_undo=self._on_turn_undo
         )
 
-    def _on_dart_throw(self, event: DartThrowEvent) -> None:
+    def _on_dart_throw(self, event: DartThrow) -> None:
         if self._model.game is None:
             ttk.Messagebox.show_info(
                 message="Start a game before throwing darts.",

@@ -2,7 +2,7 @@ import tkinter as tk
 
 from gui.events.event_channel import EventChannel
 from gui.events.event_types import (
-    DartThrowEvent,
+    DartThrow,
     UndoRequested,
 )
 from gui.model.model import AppModel
@@ -75,12 +75,12 @@ class ScorepadController(BaseController):
         dart_throw = DartThrow(number=0, multiplier=multiplier)
         self.set_multiplier(Multiplier.SINGLE)  # reset multiplier after throw
 
-        self._event_channel.emit(DartThrowEvent(dart_throw))
+        self._event_channel.emit(DartThrow(dart_throw))
 
     def on_number_press(self, number: int) -> None:
         dart_throw = DartThrow(number=number, multiplier=self.multiplier)
         self.set_multiplier(Multiplier.SINGLE)
-        self._event_channel.emit(DartThrowEvent(dart_throw))
+        self._event_channel.emit(DartThrow(dart_throw))
 
     def start(self) -> None:
         pass
