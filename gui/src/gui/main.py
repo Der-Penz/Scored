@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 import sys
 import ttkbootstrap as ttk
 import darkdetect
@@ -26,6 +27,12 @@ def get_args() -> AppConfig:
         "-s",
         type=str,
         help="Specify the initial video source: a number for webcam, a path to a video file, or a URL for an HTTP stream.",
+    )
+    parser.add_argument(
+        "--data-dir",
+        "-d",
+        type=Path,
+        help="Specify the directory to store data during game sessions.",
     )
 
     args = parser.parse_args()
