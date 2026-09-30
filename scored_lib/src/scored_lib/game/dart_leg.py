@@ -129,7 +129,9 @@ class DartLeg:
         if len(last_throws) == 0:
             return self.starting_score
 
-        for throw_result in last_throws[::-1]:  # Iterate in reverse to find the last non-None throw
+        for throw_result in last_throws[
+            ::-1
+        ]:  # Iterate in reverse to find the last non-None throw
             if throw_result is not None:
                 return throw_result.score_after
 
@@ -227,7 +229,9 @@ class DartLeg:
             raise ValueError("Cannot start a new turn in a finished leg.")
 
         if self.throws_left > 0:
-            raise ValueError("Cannot start a new turn before finishing the current turn.")
+            raise ValueError(
+                "Cannot start a new turn before finishing the current turn."
+            )
 
         self._results.append([])
 
@@ -322,7 +326,9 @@ class DartLeg:
         DartThrow | None
             The removed throw, or None if the leg has no throws to remove.
         """
-        throws = [tr.dart_throw for turn in self._results for tr in turn if tr is not None]
+        throws = [
+            tr.dart_throw for turn in self._results for tr in turn if tr is not None
+        ]
         if not throws:
             return None
 
@@ -371,8 +377,12 @@ class DartLeg:
         if old_throw_result is None:
             raise ValueError("Cannot edit a bust placeholder.")
 
-        throws = [tr.dart_throw for turn in self._results for tr in turn if tr is not None]
-        offset = sum(len([tr for tr in turn if tr is not None]) for turn in self._results[:-1])
+        throws = [
+            tr.dart_throw for turn in self._results for tr in turn if tr is not None
+        ]
+        offset = sum(
+            len([tr for tr in turn if tr is not None]) for turn in self._results[:-1]
+        )
         if offset + (throw - 1) >= len(throws):
             raise IndexError("throw index out of range")
         throws[offset + (throw - 1)] = dart_throw

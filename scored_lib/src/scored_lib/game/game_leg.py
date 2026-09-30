@@ -131,11 +131,11 @@ class GameLeg:
         """
         if self.winner is not None:
             raise ValueError("Cannot undo a throw after the leg has finished.")
-                
+
         if self.current_leg.throws_left == 3:
             # If the current player has not thrown yet, we need to go back to the previous player.
             self._current_player = (self._current_player - 1) % len(self.players)
-        
+
         throw = self.current_leg.remove_last_throw()
 
         return throw
