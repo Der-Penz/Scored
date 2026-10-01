@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass, field
 
 from scored_lib.dart.dart_throw import DartThrow
@@ -311,6 +312,19 @@ class DartLeg:
             for _ in range(left):
                 self._results[-1].append(None)
         next_round = self.throws_left == 0 or bust
+
+        bust_text = " (bust)" if bust else ""
+        logging.debug(
+            f"Throw round {throw_result.round} dart {throw_result.throw} "
+            f"{dart_throw.short_label}: {throw_result.score_before} -> "
+            f"{throw_result.score_after}{bust_text}"
+        )
+        if finished:
+            logging.info(
+                f"Leg finished in round {throw_result.round} "
+                f"dart {throw_result.throw} with {dart_throw.short_label}"
+            )
+
         return throw_result, next_round
 
     def remove_last_throw(self) -> DartThrow | None:

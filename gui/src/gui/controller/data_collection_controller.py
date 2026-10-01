@@ -1,19 +1,18 @@
-from datetime import datetime
-import os
-from pathlib import Path
-import platform
-import subprocess
+import logging
 import tkinter as tk
-from tkinter import filedialog
 import uuid
+from datetime import datetime
+from pathlib import Path
+from tkinter import filedialog
 
-from gui.events.event_types import FrameCapturedEvent, GameStarted, ScoreChanged
 import numpy as np
-from scored_lib.annotation.leg_annotation_handler import LegAnnotationHandler
-from scored_lib.annotation.leg_annotation import LegAnnotation
 import ttkbootstrap as ttk
+from scored_lib.annotation.leg_annotation import LegAnnotation
+from scored_lib.annotation.leg_annotation_handler import LegAnnotationHandler
 
 from gui.events.event_channel import EventChannel, Subscription
+from gui.events.event_types import FrameCapturedEvent, GameStarted, ScoreChanged
+from gui.helper import open_in_file_manager
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
@@ -26,18 +25,20 @@ class DataCollectionController(BaseController):
         self._output_dir: Path | None = (
             Path(model.config.data_dir) if model.config.data_dir else None
         )
-        
+
         if self._output_dir:
             try:
                 self._output_dir.mkdir(parents=True, exist_ok=True)
-            except OSError as _:
+                logging.info(f"Collecting data in {self._output_dir}")
+            except OSError as error:
+                logging.error(f"Could not create the data collection directory: {error}")
                 ttk.Messagebox.show_error(
                     message=f"Could not create the data collection directory.",
                     title="Data Collection Error",
                     parent=self._view,
                 )
                 self._output_dir = None
-        
+
         self.events: list[Subscription] = []
         self.current_frame: np.ndarray | None = None
         self.annotation_handler: dict[str, LegAnnotationHandler] | None = None
@@ -96,7 +97,9 @@ class DataCollectionController(BaseController):
         try:
             self._output_dir.mkdir(parents=True, exist_ok=True)
             self._enable_data_collection()
-        except OSError as _:
+            logging.info(f"Data collection enabled, writing to {self._output_dir}")
+        except OSError as error:
+            logging.error(f"Could not create the data collection directory: {error}")
             ttk.Messagebox.show_error(
                 message=f"Could not create the data collection directory.",
                 title="Data Collection Error",
@@ -107,7 +110,7 @@ class DataCollectionController(BaseController):
             return
 
     def _on_score_changed(self) -> None:
-        print("Saving frame to output directory")
+        logging.debug("Score changed, saving frame to output directory")
 
     def _on_game_started(self) -> None:
         self.annotation_handler = {}
@@ -127,10 +130,14 @@ class DataCollectionController(BaseController):
             )
             self.annotation_handler[player.id] = annotation_handler
 
+        count = len(self._model.players)
+        logging.info(f"Started annotations for {count} player(s) in {directory}")
+
     def _disable_data_collection(self) -> None:
         for subscription in self.events:
             subscription.unsubscribe()
         self.events = []
+        logging.info("Data collection disabled")
 
     def _enable_data_collection(self) -> None:
         self._disable_data_collection()  # remove any existing subscriptions
@@ -163,10 +170,5 @@ class DataCollectionController(BaseController):
                 parent=self._view,
             )
             return
-        if platform.system() == "Windows":
-            os.startfile(str(self._output_dir.resolve()))
-        elif platform.system() == "Darwin":
-            program = "open"
-        else:
-            program = "xdg-open"
-        subprocess.run([program, str(self._output_dir.resolve())])
+
+        open_in_file_manager(self._output_dir.resolve())

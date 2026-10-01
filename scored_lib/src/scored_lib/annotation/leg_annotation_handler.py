@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import shutil
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -150,6 +151,9 @@ class LegAnnotationHandler:
 
         annotation.save(directory)
 
+        logging.debug(
+            f"Stored sample {annotation.round}_{annotation.throw} in {self.directory}"
+        )
         return Sample(annotation, directory / "image.jpg")
 
     def read(self, round: int, throw: int) -> Sample:
