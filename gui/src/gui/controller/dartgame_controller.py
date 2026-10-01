@@ -59,9 +59,9 @@ class DartGameController(BaseController):
         if self._turn_pending:
             return
 
-        _, _, end_turn = self._model.game.add_throw(event.throw)
+        _, result, end_turn = self._model.game.add_throw(event.throw)
 
-        self._event_channel.emit(ScoreChanged())
+        self._event_channel.emit(ScoreChanged(result.round, result.throw))
 
         if self._model.game.is_finished:
             winner = self._model.game.winner
@@ -108,7 +108,8 @@ class DartGameController(BaseController):
             self.turn_overlay.hide()
 
         self._model.game.undo_last_throw()
-        self._event_channel.emit(ScoreChanged())
+
+        self._event_channel.emit(ScoreChanged(0, 0))
 
     def _refresh_current_turn(self) -> None:
         """Redraw the current player's registered throws into the turn view."""

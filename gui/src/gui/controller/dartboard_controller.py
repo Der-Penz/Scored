@@ -70,8 +70,10 @@ class DartboardController(BaseController):
         scoring_position = canvas_to_relative_position(new_position)
         scored = score_dart_throw(scoring_position)
 
-        self._model.game.current_leg.edit_current_throw(scored, throw=index + 1)
-        self._event_channel.emit(ScoreChanged())
+        result = self._model.game.current_leg.edit_current_throw(
+            scored, throw=index + 1
+        )
+        self._event_channel.emit(ScoreChanged(result.round, result.throw))
 
     def _cancel_debounce(self) -> None:
         if self._debounce_after_id is not None:

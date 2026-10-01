@@ -11,6 +11,7 @@ from gui.events.event_types import FrameCapturedEvent, GameStarted, ScoreChanged
 import numpy as np
 from scored_lib.annotation.leg_annotation_handler import LegAnnotationHandler
 from scored_lib.annotation.leg_annotation import LegAnnotation
+from scored_lib.annotation.throw_annotation import DartThrowAnnotation, PositionSource
 import ttkbootstrap as ttk
 
 from gui.events.event_channel import EventChannel, Subscription
@@ -26,7 +27,7 @@ class DataCollectionController(BaseController):
         self._output_dir: Path | None = (
             Path(model.config.data_dir) if model.config.data_dir else None
         )
-        
+
         if self._output_dir:
             try:
                 self._output_dir.mkdir(parents=True, exist_ok=True)
@@ -37,13 +38,12 @@ class DataCollectionController(BaseController):
                     parent=self._view,
                 )
                 self._output_dir = None
-        
+
         self.events: list[Subscription] = []
         self.current_frame: np.ndarray | None = None
         self.annotation_handler: dict[str, LegAnnotationHandler] | None = None
 
         self._enabled_var = tk.BooleanVar(value=self._output_dir is not None)
-        self._skip_busts_var = tk.BooleanVar(value=False)
         self._replace_on_edit_var = tk.BooleanVar(value=False)
 
     def bind_menu(self, menu: ttk.Menu) -> None:
@@ -56,18 +56,18 @@ class DataCollectionController(BaseController):
 
         menu.add_separator()
         menu.add_checkbutton(
-            label="Skip capturing bust throws",
-            variable=self._skip_busts_var,
-        )
-        menu.add_checkbutton(
             label="Replace image when dart is edited",
             variable=self._replace_on_edit_var,
         )
         menu.add_separator()
         menu.add_command(label="Open Output Folder", command=self._open_output_folder)
 
+    @property
+    def enabled(self) -> bool:
+        return self._enabled_var.get()
+
     def bind_components(self) -> None:
-        if self._enabled_var.get():
+        if self.enabled:
             self._enable_data_collection()
 
     def start(self) -> None:
@@ -77,7 +77,7 @@ class DataCollectionController(BaseController):
         self.current_frame = event.frame
 
     def _on_enabled_toggle(self) -> None:
-        if not self._enabled_var.get():
+        if not self.enabled:
             self._enabled_var.set(False)
             self._disable_data_collection()
             return
@@ -106,10 +106,41 @@ class DataCollectionController(BaseController):
             self._disable_data_collection()
             return
 
-    def _on_score_changed(self) -> None:
-        print("Saving frame to output directory")
+    def _on_score_changed(self, event: ScoreChanged) -> None:
+        if self.annotation_handler is None or self._model.game is None:
+            return
+
+        throw_result = self._model.game.current_leg.get_throw(event.round, event.throw)
+
+        if throw_result is None:  # bust placeholder
+            return
+
+        handler = self.annotation_handler[self._model.game.current_player.id]
+
+        dart_annotation = DartThrowAnnotation(
+            throw_data=throw_result.dart_throw,
+            is_bust=throw_result.bust,
+            leg_id=handler.info.leg_id,
+            round=throw_result.round,
+            throw=throw_result.throw,
+            source=PositionSource.MANUAL
+            if throw_result.dart_throw.position is not None
+            else PositionSource.NONE,
+        )
+
+        if self.current_frame is None:
+            return
+
+        handler.add(dart_annotation, self.current_frame)
 
     def _on_game_started(self) -> None:
+        assert self._model.game is not None, (
+            "GameStarted event received but model.game is None"
+        )
+        assert self._output_dir is not None, (
+            "GameStarted event received but output_dir is None"
+        )
+
         self.annotation_handler = {}
         current = datetime.now()
         directory = self._output_dir / f"game_{current.strftime('%d_%m_%H_%M_%S')}"
@@ -129,7 +160,7 @@ class DataCollectionController(BaseController):
 
     def _disable_data_collection(self) -> None:
         for subscription in self.events:
-            subscription.unsubscribe()
+            subscription.cancel()
         self.events = []
 
     def _enable_data_collection(self) -> None:
@@ -141,7 +172,7 @@ class DataCollectionController(BaseController):
         )
         self.events.append(
             self._event_channel.subscribe(
-                ScoreChanged, lambda _: self._on_score_changed()
+                ScoreChanged, lambda evt: self._on_score_changed(evt)
             )
         )
         self.events.append(

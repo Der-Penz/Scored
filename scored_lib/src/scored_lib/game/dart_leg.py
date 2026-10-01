@@ -98,6 +98,20 @@ class DartLeg:
             return 1
         return min(len(self._results[-1]), 3)
 
+    @property
+    def current_throw(self) -> ThrowResult | None:
+        """
+        Get the result of the current throw.
+
+        Returns
+        -------
+        ThrowResult or None
+            The result of the current throw, or None if no throw has been made in the current turn.
+        """
+        if not self._results or not self._results[-1]:
+            return None
+        return self._results[-1][-1]
+
     def avg(self) -> float:
         """
         Calculate the average score per 3 darts thrown.

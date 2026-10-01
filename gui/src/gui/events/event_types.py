@@ -31,6 +31,9 @@ class PlayerRemoved:
 class ScoreChanged:
     """Notification that scores changed (see AppModel.game)."""
 
+    round: int
+    throw: int
+
 
 @dataclass(frozen=True)
 class TurnChanged:
