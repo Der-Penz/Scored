@@ -1,9 +1,10 @@
 import math
 
+from scored_lib.annotation.throw_annotation import PositionSource
 from scored_lib.dart.constants import (
+    BED_ANGLE_DEGREES,
     DARTBOARD_NUMBERS,
     RING_RADIUS_NORMALIZED,
-    BED_ANGLE_DEGREES,
     Position,
 )
 from scored_lib.dart.dart_throw import DartThrow
@@ -74,7 +75,9 @@ def get_scored_multiplier(rel_pos: Position) -> Multiplier:
         return Multiplier.SINGLE
 
 
-def score_dart_throw(rel_pos: Position) -> DartThrow:
+def score_dart_throw(
+    rel_pos: Position, source: PositionSource = PositionSource.MANUAL
+) -> DartThrow:
     """
     Score a dart throw based on its position on the dartboard.
 
@@ -82,6 +85,8 @@ def score_dart_throw(rel_pos: Position) -> DartThrow:
     ----------
     rel_pos : Position
         The normalized xy-coordinate relative to the center.
+    source : PositionSource, optional
+        The source of the position. Defaults to PositionSource.MANUAL.
 
     Returns
     -------
@@ -91,4 +96,6 @@ def score_dart_throw(rel_pos: Position) -> DartThrow:
     number = get_scored_number(rel_pos)
     multiplier = get_scored_multiplier(rel_pos)
 
-    return DartThrow(number=number, multiplier=multiplier, position=rel_pos)
+    return DartThrow(
+        number=number, multiplier=multiplier, position=rel_pos, source=source
+    )

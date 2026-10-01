@@ -1,14 +1,16 @@
 import tkinter as tk
 
+from scored_lib.dart.constants import Position
+from scored_lib.dart.dart_throw import PositionSource
+from scored_lib.dart.scoring import score_dart_throw
+from scored_lib.game.dart_leg import ThrowResult
+from scored_lib.util.position import canvas_to_relative_position
+
 from gui.events.event_channel import EventChannel
 from gui.events.event_types import ScoreChanged, TurnChanged
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
-from scored_lib.dart.constants import Position
-from scored_lib.dart.scoring import score_dart_throw
-from scored_lib.game.dart_leg import ThrowResult
-from scored_lib.util.position import canvas_to_relative_position
 
 DRAG_RELEASE_DEBOUNCE_MS = 150
 
@@ -65,10 +67,12 @@ class DartboardController(BaseController):
         )
 
     def _apply_dart_drag(self, index: int, new_position: Position) -> None:
+        assert self._model.game is not None
+
         self._debounce_after_id = None
 
         scoring_position = canvas_to_relative_position(new_position)
-        scored = score_dart_throw(scoring_position)
+        scored = score_dart_throw(scoring_position, PositionSource.MANUAL)
 
         result = self._model.game.current_leg.edit_current_throw(
             scored, throw=index + 1

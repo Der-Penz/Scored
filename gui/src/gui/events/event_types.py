@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+
 import numpy as np
 from scored_lib.dart.dart_throw import DartThrow
 from scored_lib.game.player import Player
 
 
 @dataclass(frozen=True)
-class DartThrow:
+class DartThrowEvent:
     """Carries a new dart throw that should be registered (see AppModel.game)."""
 
     throw: DartThrow

@@ -1,9 +1,9 @@
-from gui.controller.data_collection_controller import DataCollectionController
 import ttkbootstrap as ttk
 
 from gui.controller.camera_feed_controller import CameraFeedController
 from gui.controller.dartboard_controller import DartboardController
 from gui.controller.dartgame_controller import DartGameController
+from gui.controller.data_collection_controller import DataCollectionController
 from gui.controller.menu_controller import MenuController
 from gui.controller.player_controller import PlayerController
 from gui.controller.scorecard_controller import ScorecardController
@@ -92,7 +92,7 @@ class AppController(BaseController):
         # start the main loop of the Tkinter application
         self._view.mainloop()
 
-    def _create_menu(self, title: str) -> None:
+    def _create_menu(self, title: str) -> ttk.Menu:
         """Create the menu bar and attach it to the main window."""
         menu_btn = ttk.Menubutton(self._view.menu_frame, text=title)
         menu_btn.pack(side="left", padx=2)

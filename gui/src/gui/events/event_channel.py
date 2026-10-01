@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import threading
-from typing import Any, Callable, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 T = TypeVar("T")
 
@@ -9,7 +10,7 @@ T = TypeVar("T")
 class Subscription:
     """Handle returned by EventChannel.subscribe(); call cancel() to unsubscribe."""
 
-    __slots__ = ("_channel", "_event_type", "_callback", "_cancelled")
+    __slots__ = ("_callback", "_cancelled", "_channel", "_event_type")
 
     def __init__(
         self,

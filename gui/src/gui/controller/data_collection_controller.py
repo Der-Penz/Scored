@@ -123,9 +123,6 @@ class DataCollectionController(BaseController):
             leg_id=handler.info.leg_id,
             round=throw_result.round,
             throw=throw_result.throw,
-            source=PositionSource.MANUAL
-            if throw_result.dart_throw.position is not None
-            else PositionSource.NONE,
         )
 
         if self.current_frame is None:

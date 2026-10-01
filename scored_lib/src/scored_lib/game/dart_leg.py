@@ -136,9 +136,8 @@ class DartLeg:
             return self.starting_score
 
         last_throws = self._results[-1]
-        if len(last_throws) == 0:
-            if len(self._results) >= 2:
-                last_throws = self._results[-2]
+        if len(last_throws) == 0 and len(self._results) >= 2:
+            last_throws = self._results[-2]
 
         if len(last_throws) == 0:
             return self.starting_score
@@ -148,6 +147,9 @@ class DartLeg:
         ]:  # Iterate in reverse to find the last non-None throw
             if throw_result is not None:
                 return throw_result.score_after
+        assert False, (
+            "Should never reach here; there should be at least one non-None throw in the last turn."
+        )
 
     @property
     def throws_left(self) -> int:
@@ -175,7 +177,7 @@ class DartLeg:
         return 3 - len(last_turn)
 
     @property
-    def rounds(self) -> tuple[tuple[ThrowResult, ...], ...]:
+    def rounds(self) -> tuple[tuple[ThrowResult | None, ...], ...]:
         """
         Get all throws grouped into rounds.
 
@@ -303,11 +305,15 @@ class DartLeg:
                     bust = True
 
         if bust:
-            first_throw_in_turn = True if self.throws_left == 3 else False
+            first_throw_in_turn = self.throws_left == 3
             if first_throw_in_turn:
                 score_after = score_before
             else:
-                score_after = self._results[-1][0].score_before
+                l = self._results[-1][0]
+                if l is None:
+                    score_after = score_before
+                else:
+                    score_after = l.score_before
 
         throw_result = ThrowResult(
             dart_throw=dart_throw,

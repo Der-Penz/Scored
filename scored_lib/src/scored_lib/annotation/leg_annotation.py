@@ -97,14 +97,18 @@ class LegAnnotation:
         LegInfo
             The deserialized leg annotation.
         """
-        return LegAnnotation(
-            leg_id=raw["leg_id", ""],
-            player_name=raw["player_name", ""],
-            starting_score=raw["starting_score", 501],
-            is_won=raw["is_won"],
-            time_start=raw["time_start"],
-            time_end=raw["time_end"],
+        instance = LegAnnotation(
+            leg_id=raw["leg_id"],
+            player_name=raw["player_name"],
+            starting_score=raw["starting_score"],
         )
+
+        # Populate the init=False fields from dictionary values
+        object.__setattr__(instance, "time_start", raw["time_start"])
+        object.__setattr__(instance, "time_end", raw["time_end"])
+        object.__setattr__(instance, "is_won", raw["is_won"])
+
+        return instance
 
     def save(self, dir: Path) -> Path:
         """Write the leg annotation to disk.

@@ -1,7 +1,17 @@
-from dataclasses import dataclass, field
 import math
-from scored_lib.dart.multiplier import Multiplier
+from dataclasses import dataclass, field
+from enum import Enum
+
 from scored_lib.dart.constants import PolarPosition, Position
+from scored_lib.dart.multiplier import Multiplier
+
+
+class PositionSource(str, Enum):
+    """Source indicating how the dart coordinates were obtained."""
+
+    MANUAL = "manual"
+    NONE = "none"
+    AI = "ai"
 
 
 @dataclass(frozen=True, eq=True)
@@ -17,11 +27,23 @@ class DartThrow:
         The multiplier of the segment hit by the dart.
     position : Position | None
         The position of the dart on the dartboard in normalized coordinates where (0,0) is the center if available.
+    source : PositionSource | None
+        The source of the position. Defaults to PositionSource.MANUAL if position is provided,
+        or PositionSource.NONE if position is None.
     """
 
     number: int
     multiplier: Multiplier
     position: Position | None = field(compare=False, default=None)
+    source: PositionSource = field(compare=False, default=PositionSource.NONE)
+
+    def __post_init__(self) -> None:
+        if self.position is None:
+            # When position is None, source is set to NONE
+            object.__setattr__(self, "source", PositionSource.NONE)
+        elif self.source is None:
+            # When position is provided but source was omitted, default to MANUAL
+            object.__setattr__(self, "source", PositionSource.MANUAL)
 
     @property
     def score(self) -> int:
@@ -67,6 +89,7 @@ class DartThrow:
             return "D" + str(self.number)
         if self.multiplier == Multiplier.TRIPLE:
             return "T" + str(self.number)
+        assert False, f"Unhandled multiplier: {self.multiplier}"
 
     @property
     def label(self) -> str:
@@ -82,6 +105,7 @@ class DartThrow:
             return "Double " + str(self.number)
         if self.multiplier == Multiplier.TRIPLE:
             return "Triple " + str(self.number)
+        assert False, f"Unhandled multiplier: {self.multiplier}"
 
     @property
     def polar(self) -> PolarPosition:

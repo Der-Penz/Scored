@@ -6,18 +6,10 @@ from pathlib import Path
 from time import time
 from typing import Any
 
-from scored_lib.dart.dart_throw import DartThrow
+from scored_lib.dart.dart_throw import DartThrow, PositionSource
 from scored_lib.dart.multiplier import Multiplier
-from enum import Enum
 
 ANNOTATION_FILENAME = "annotation.json"
-
-
-class PositionSource(str, Enum):
-    """Source indicating how the dart coordinates were obtained."""
-
-    MANUAL = "manual"
-    NONE = "none"
 
 
 @dataclass
@@ -52,7 +44,6 @@ class DartThrowAnnotation:
     leg_id: str
     timestamp: float = field(default_factory=lambda: time())
     is_bust: bool = False
-    source: PositionSource = PositionSource.MANUAL
 
     @property
     def index(self) -> tuple[int, int]:
@@ -79,11 +70,11 @@ class DartThrowAnnotation:
                 "number": self.throw_data.number,
                 "multiplier": self.throw_data.multiplier.value,
                 "position": tuple(position) if position is not None else None,
+                "source": self.throw_data.source.value,
             },
             "round": self.round,
             "throw": self.throw,
             "timestamp": self.timestamp,
-            "source": self.source.value,
             "is_bust": self.is_bust,
             "leg_id": self.leg_id,
         }
@@ -108,21 +99,19 @@ class DartThrowAnnotation:
         throw_data = raw["throw_data"]
         position = throw_data["position"]
 
-        return (
-            DartThrowAnnotation(
+        return DartThrowAnnotation(
                 round=raw["round"],
                 throw=raw["throw"],
                 timestamp=raw["timestamp"],
-                source=PositionSource(raw["source"]),
                 is_bust=raw["is_bust"],
                 leg_id=raw["leg_id"],
                 throw_data=DartThrow(
                     number=throw_data["number"],
                     multiplier=Multiplier(throw_data["multiplier"]),
+                    position=tuple(position) if position is not None else None,
+                    source=PositionSource(throw_data["source"]),
                 ),
-                position=tuple(position) if position is not None else None,
-            ),
-        )
+            )
 
     def save(self, parent: Path):
         """Write the annotation to ``annotation.json``.
