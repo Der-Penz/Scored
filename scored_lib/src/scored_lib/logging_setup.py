@@ -1,24 +1,6 @@
-"""Logging setup shared by the scored packages.
-
-:func:`setup_logging` configures the root logger, so every module can simply
-``import logging`` and call the module level functions like
-``logging.info("...")`` without creating named loggers first::
-
-    import logging
-    from scored_lib.logging_setup import setup_logging
-
-    setup_logging()          # writes ./logs/<start time>/scored.log and echoes to stderr
-    logging.info("started")  # goes to both
-
-Every start gets its own timestamped folder so a restart never overwrites an
-earlier log. The oldest of those folders are removed once more than
-``max_sessions`` of them exist.
-"""
-
 from __future__ import annotations
 
 import logging
-import shutil
 import sys
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
@@ -142,54 +124,107 @@ def create_formatter(
     )
 
 
-def is_session_folder(path: Path) -> bool:
+def session_timestamp(start_time: datetime | None = None) -> str:
     """
-    Check whether *path* is a folder created by a previous logging session.
+    Format *start_time* as the timestamp used in the log file name.
 
     Parameters
     ----------
-    path : Path
-        The folder to check.
+    start_time : datetime, optional
+        The moment to format, defaults to now.
 
     Returns
     -------
-    bool
-        True if the folder name is a session timestamp.
+    str
+        A sortable timestamp like ``2026-10-01_18-58-41_512720``.
     """
-    try:
-        datetime.strptime(path.name, SESSION_TIME_FORMAT)
-    except ValueError:
-        return False
-    return True
+    return (start_time or datetime.now()).strftime(SESSION_TIME_FORMAT)
 
 
-def prune_sessions(base_dir: Path, keep: int = DEFAULT_MAX_SESSIONS) -> list[Path]:
+def stamp_filename(filename: str, start_time: datetime | None = None) -> str:
     """
-    Delete the oldest session folders so at most *keep* of them remain.
+    Prefix *filename* with the session timestamp, keeping the extension.
 
-    Only folders named after a session timestamp are considered, other content
-    of *base_dir* is left alone. The current session is never removed.
+    Parameters
+    ----------
+    filename : str, optional
+        Name of the log file, for example ``"gui_scored.log"``.
+    start_time : datetime, optional
+        The moment to format, defaults to now.
+
+    Returns
+    -------
+    str
+        For example ``2026-10-01_18-58-41_512720_gui_scored.log``.
+    """
+    return f"{session_timestamp(start_time)}_{Path(filename).stem}{Path(filename).suffix}"
+
+
+def list_sessions(base_dir: Path, filename: str) -> list[tuple[str, list[Path]]]:
+    """
+    Group the log files of *filename* in *base_dir* by their session timestamp.
+
+    Only files carrying a session timestamp are listed, other content of
+    *base_dir* is ignored. Rotation backups belong to the session of their log
+    file. The sessions are sorted by timestamp, so oldest first.
 
     Parameters
     ----------
     base_dir : Path
-        Directory holding the session folders.
+        Directory holding the log files.
+    filename : str
+        Name of the log file without the timestamp, e.g. ``"scored.log"``.
+
+    Returns
+    -------
+    list of (str, list[Path])
+        The session timestamps with their files.
+    """
+    marker = f"_{Path(filename).stem}{Path(filename).suffix}"
+    sessions: dict[str, list[Path]] = {}
+
+    for path in base_dir.glob(f"*{marker}*"):
+        timestamp, separator, backup = path.name.partition(marker)
+        if not separator or (backup and not backup.replace(".", "").isdigit()):
+            continue
+        try:
+            datetime.strptime(timestamp, SESSION_TIME_FORMAT)
+        except ValueError:
+            continue
+        sessions.setdefault(timestamp, []).append(path)
+
+    return sorted(sessions.items())
+
+
+def prune_sessions(base_dir: Path, filename: str, keep: int = DEFAULT_MAX_SESSIONS) -> list[Path]:
+    """
+    Delete the oldest session logs so at most *keep* of them remain.
+
+    The running log is never removed.
+
+    Parameters
+    ----------
+    base_dir : Path
+        Directory holding the log files.
+    filename : str
+        Name of the log file without the timestamp.
     keep : int, optional
-        Number of session folders to keep, by default 20. Values below one keep
-        the newest folder.
+        Number of sessions to keep, by default 20. Values below one keep the
+        newest session.
 
     Returns
     -------
     list[Path]
-        The removed folders, oldest first.
+        The removed files, oldest session first.
     """
     keep = max(1, keep)
-    sessions = sorted(path for path in base_dir.glob("*") if is_session_folder(path))
+    sessions = list_sessions(base_dir, filename)
 
     removed: list[Path] = []
-    for path in sessions[: max(0, len(sessions) - keep)]:
-        shutil.rmtree(path, ignore_errors=True)
-        removed.append(path)
+    for _, paths in sessions[: max(0, len(sessions) - keep)]:
+        for path in paths:
+            path.unlink(missing_ok=True)
+            removed.append(path)
 
     return removed
 
@@ -203,22 +238,22 @@ def setup_logging(
     stream: TextIO | None = None,
     max_bytes: int = DEFAULT_MAX_BYTES,
     backup_count: int = DEFAULT_BACKUP_COUNT,
-    session_folder: bool = True,
     max_sessions: int = DEFAULT_MAX_SESSIONS,
     start_time: datetime | None = None,
 ) -> Path | None:
     """
     Configure the root logger with a rotating file and an optional console handler.
 
-    Calling this function again replaces the handlers installed by a previous
-    call instead of stacking them.
+    The log file name is prefixed with the start time, so every start writes its
+    own log file and nothing is overwritten. Calling this function again
+    replaces the handlers installed by a previous call instead of stacking them.
 
     Parameters
     ----------
     log_dir : Path, optional
         Base directory for the log file, defaults to ``./logs``.
     filename : str, optional
-        Name of the log file, defaults to ``"scored.log"``.
+        Name of the log file without the timestamp, defaults to ``"scored.log"``.
     level : int | str, optional
         Initial log level, defaults to ``"INFO"``.
     console : bool, optional
@@ -227,14 +262,11 @@ def setup_logging(
         Alternative stream for the console handler, by default stderr.
     max_bytes, backup_count : int, optional
         Rotation limits of the file handler.
-    session_folder : bool, optional
-        Write into a timestamped subfolder so every start keeps its own log,
-        by default True.
     max_sessions : int, optional
-        Number of session folders to keep, by default 20. The oldest ones are
-        deleted, values below one keep the newest folder.
+        Number of log files to keep, by default 20. The oldest ones are deleted,
+        values below one keep the newest one.
     start_time : datetime, optional
-        Timestamp of the session folder, defaults to now.
+        Timestamp in the log file name, defaults to now.
 
     Returns
     -------
@@ -244,7 +276,7 @@ def setup_logging(
     global _LOG_FILE
 
     # Release the handlers of a previous call first, otherwise their log files
-    # stay open and cannot be removed when old sessions are pruned.
+    # stay open and cannot be removed when old logs are pruned.
     root = logging.getLogger()
     for handler in list(root.handlers):
         if getattr(handler, "_scored_managed", False):
@@ -261,22 +293,12 @@ def setup_logging(
 
     log_file: Path | None = None
     file_error: OSError | None = None
-    removed_sessions: list[Path] = []
+    removed_logs: list[Path] = []
     base_dir = Path(log_dir) if log_dir is not None else Path.cwd() / DEFAULT_LOG_DIR
 
     try:
         base_dir.mkdir(parents=True, exist_ok=True)
-        directory = (
-            base_dir / (start_time or datetime.now()).strftime(SESSION_TIME_FORMAT)
-            if session_folder
-            else base_dir
-        )
-        directory.mkdir(parents=True, exist_ok=True)
-
-        if session_folder:
-            removed_sessions = prune_sessions(base_dir, max_sessions)
-
-        log_file = directory / filename
+        log_file = base_dir / stamp_filename(filename, start_time)
         file_handler = RotatingFileHandler(
             log_file,
             maxBytes=max_bytes,
@@ -285,6 +307,10 @@ def setup_logging(
         )
         file_handler.setFormatter(formatter)
         handlers.append(file_handler)
+
+        # Pruned after the new file exists, so it counts towards the limit and
+        # the number of log files never exceeds max_sessions.
+        removed_logs = prune_sessions(base_dir, filename, max_sessions)
     except OSError as error:
         log_file = None
         file_error = error
@@ -300,10 +326,12 @@ def setup_logging(
         logging.getLogger(name).setLevel(logging.WARNING)
 
     if file_error is not None:
-        logging.warning(f"File logging disabled, cannot write to {base_dir}: {file_error}")
+        logging.warning(
+            f"File logging disabled, cannot write to {base_dir}: {file_error}"
+        )
 
-    for session in removed_sessions:
-        logging.info(f"Removed old log session {session.name}")
+    for log in removed_logs:
+        logging.info(f"Removed old log file {log.name}")
 
     _LOG_FILE = log_file
     return log_file
