@@ -340,10 +340,14 @@ version = "0.1.0"
 source = { editable = "scored_lib" }
 dependencies = [
     { name = "numpy" },
+    { name = "opencv-python" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "numpy", specifier = ">=2.4.3" }]
+requires-dist = [
+    { name = "numpy", specifier = ">=2.4.3" },
+    { name = "opencv-python", specifier = ">=4.13.0.92" },
+]
 
 [[package]]
 name = "simple-parsing"

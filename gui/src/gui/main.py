@@ -45,7 +45,7 @@ def main() -> None:
     parser.add_arguments(AppConfig, dest="config")
     args = parser.parse_args()
 
-    model = AppModel(args=args.config)
+    model = AppModel(config=args.config)
     root = ttk.Window(
         title="Scored GUI",
         minsize=(600, 500),

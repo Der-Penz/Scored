@@ -10,7 +10,7 @@ import cv2
 
 import numpy as np
 from scored_lib.annotation.throw_annotation import DartThrowAnnotation
-from scored_lib.annotation.leg_info import LegAnnotation
+from scored_lib.annotation.leg_annotation import LegAnnotation
 
 
 class Sample(NamedTuple):

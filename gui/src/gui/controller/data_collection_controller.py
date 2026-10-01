@@ -1,11 +1,16 @@
+from datetime import datetime
+import os
 from pathlib import Path
 import platform
 import subprocess
 import tkinter as tk
 from tkinter import filedialog
+import uuid
 
-from gui.events.event_types import FrameCapturedEvent, ScoreChanged
+from gui.events.event_types import FrameCapturedEvent, GameStarted, ScoreChanged
 import numpy as np
+from scored_lib.annotation.leg_annotation_handler import LegAnnotationHandler
+from scored_lib.annotation.leg_annotation import LegAnnotation
 import ttkbootstrap as ttk
 
 from gui.events.event_channel import EventChannel, Subscription
@@ -19,10 +24,23 @@ class DataCollectionController(BaseController):
         super().__init__(view, model, event_channel)
 
         self._output_dir: Path | None = (
-            Path(model.args.data_dir) if model.args.data_dir else None
+            Path(model.config.data_dir) if model.config.data_dir else None
         )
+        
+        if self._output_dir:
+            try:
+                self._output_dir.mkdir(parents=True, exist_ok=True)
+            except OSError as _:
+                ttk.Messagebox.show_error(
+                    message=f"Could not create the data collection directory.",
+                    title="Data Collection Error",
+                    parent=self._view,
+                )
+                self._output_dir = None
+        
         self.events: list[Subscription] = []
         self.current_frame: np.ndarray | None = None
+        self.annotation_handler: dict[str, LegAnnotationHandler] | None = None
 
         self._enabled_var = tk.BooleanVar(value=self._output_dir is not None)
         self._skip_busts_var = tk.BooleanVar(value=False)
@@ -91,6 +109,24 @@ class DataCollectionController(BaseController):
     def _on_score_changed(self) -> None:
         print("Saving frame to output directory")
 
+    def _on_game_started(self) -> None:
+        self.annotation_handler = {}
+        current = datetime.now()
+        directory = self._output_dir / f"game_{current.strftime('%d_%m_%H_%M_%S')}"
+
+        for player in self._model.players:
+            leg_anno = LegAnnotation(
+                leg_id=uuid.uuid4().hex,
+                player_name=player.name,
+                starting_score=self._model.game.starting_score,
+            )
+
+            annotation_handler = LegAnnotationHandler(
+                directory=directory / player.name,
+                info=leg_anno,
+            )
+            self.annotation_handler[player.id] = annotation_handler
+
     def _disable_data_collection(self) -> None:
         for subscription in self.events:
             subscription.unsubscribe()
@@ -108,6 +144,15 @@ class DataCollectionController(BaseController):
                 ScoreChanged, lambda _: self._on_score_changed()
             )
         )
+        self.events.append(
+            self._event_channel.subscribe(
+                GameStarted, lambda _: self._on_game_started()
+            )
+        )
+
+        # if game already started, trigger the game started event to initialize the annotation handler
+        if self._model.game is not None:
+            self._on_game_started()
 
     def _open_output_folder(self) -> None:
         """Open the output directory in the system file manager."""
@@ -119,9 +164,9 @@ class DataCollectionController(BaseController):
             )
             return
         if platform.system() == "Windows":
-            program = "explorer"
+            os.startfile(str(self._output_dir.resolve()))
         elif platform.system() == "Darwin":
             program = "open"
         else:
             program = "xdg-open"
-        subprocess.run([program, str(self._output_dir)])
+        subprocess.run([program, str(self._output_dir.resolve())])

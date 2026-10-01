@@ -6,7 +6,7 @@ from scored_lib.game.player import Player
 class AppModel:
     """Single source of truth for shared application state"""
 
-    def __init__(self, args: AppConfig) -> None:
-        self.args = args
+    def __init__(self, config: AppConfig) -> None:
+        self.config = config
         self.players: list[Player] = []
         self.game: GameLeg | None = None

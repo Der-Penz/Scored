@@ -3,6 +3,8 @@
 
 train/data
 
+/data
+/video
 # label studio
 label-studio/
 
