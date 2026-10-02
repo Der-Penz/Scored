@@ -5,6 +5,8 @@ train/data
 
 /data
 /video
+# Logs
+/logs/
 # label studio
 label-studio/
 

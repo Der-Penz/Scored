@@ -8,3 +8,6 @@ class AppConfig:
 
     source: str | None = None
     data_dir: Path | None = None
+    log_dir: Path | None = None
+    log_filename: str = "gui_scored.log"
+    log_level: str = "INFO"

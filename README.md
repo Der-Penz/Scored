@@ -15,6 +15,21 @@ After detecting the keypoints, the 4 dartboard keypoints are used to apply a per
 
 
 
+## Logging
+
+Logging is set up in `scored_lib.logging_setup`. Call `setup_logging()` once at
+startup and then use `import logging` anywhere:
+
+```python
+from scored_lib.logging_setup import setup_logging
+
+setup_logging()                      # ./logs/<start time>/scored.log + stderr
+setup_logging("logs", "my.log", "DEBUG")
+```
+
+Records go to a rotating file (`2 MB` x `5`) and to the console. The level can
+be changed at runtime with `set_log_level("DEBUG")`.
+
 ## Training
 
 To see how to train your own model and how to prepare and create a dataset, refer to [Train Instructions](train.md)

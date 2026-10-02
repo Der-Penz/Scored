@@ -1,3 +1,4 @@
+import logging
 import threading
 import time
 from tkinter import filedialog
@@ -76,6 +77,10 @@ class SourceController(BaseController):
             The initialized image source object to stream from.
         """
         self.stop()
+        if source is None:
+            logging.info("No capture source selected")
+        else:
+            logging.info(f"Starting capture source {source.get_name()}")
         self._current_source = source
         self._thread = threading.Thread(target=self._update, daemon=True)
         self._thread.start()
@@ -84,6 +89,7 @@ class SourceController(BaseController):
         """Stops the source and releases resources."""
         self._running = False
         if self._current_source is not None:
+            logging.info(f"Stopping capture source {self._current_source.get_name()}")
             self._current_source.close()
 
         if self._thread is not None and self._thread.is_alive():
@@ -114,7 +120,7 @@ class SourceController(BaseController):
                     time.sleep(0.01)
         except Exception:
             # Prevent background thread crash from corrupting state
-            pass
+            logging.exception(f"Capture loop of {self._current_source} stopped unexpectedly")
         finally:
             if self._current_source is not None:
                 self._current_source.close()
@@ -164,5 +170,6 @@ class SourceController(BaseController):
 
             self.set_source(source)
 
-        except Exception as _:
+        except Exception:
+            logging.exception(f"Could not start source {source_name}")
             self.set_source(None)

@@ -1,8 +1,11 @@
 import argparse
-from pathlib import Path
+import logging
 import sys
-import ttkbootstrap as ttk
+from pathlib import Path
+
 import darkdetect
+import ttkbootstrap as ttk
+from scored_lib.logging_setup import setup_logging
 from simple_parsing import ArgumentParser
 
 from gui.controller.app_controller import AppController
@@ -45,6 +48,16 @@ def main() -> None:
     parser.add_arguments(AppConfig, dest="config")
     args = parser.parse_args()
 
+    log_file = setup_logging(
+        log_dir=args.config.log_dir,
+        filename=args.config.log_filename,
+        level=args.config.log_level,
+    )
+
+    logging.info("Starting Scored GUI")
+    logging.info(f"Config: {args.config}")
+    logging.info(f"Logging to file: {log_file if log_file else 'disabled'}")
+
     model = AppModel(config=args.config)
     root = ttk.Window(
         title="Scored GUI",
@@ -78,6 +91,8 @@ def main() -> None:
 
     controller = AppController(view, model, args.config)
     controller.start()
+
+    logging.info("Scored GUI stopped")
 
 
 if __name__ == "__main__":

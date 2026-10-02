@@ -1,4 +1,8 @@
+import os
+import platform
+import subprocess
 import tkinter as tk
+from pathlib import Path
 
 
 def center_dialog(window: tk.Toplevel, parent: tk.Misc) -> None:
@@ -18,3 +22,21 @@ def center_dialog(window: tk.Toplevel, parent: tk.Misc) -> None:
     x_pos = x + max(0, (parent_w - window_w) // 2)
     y_pos = y + max(0, (parent_h - window_h) // 2)
     window.geometry(f"+{x_pos}+{y_pos}")
+
+
+def open_in_file_manager(path: Path | str) -> None:
+    """Open *path* with the file manager of the current system."""
+    target = Path(path)
+    system = platform.system()
+
+    if system == "Windows":
+        os.startfile(str(target))
+        return
+
+    program = "open" if system == "Darwin" else "xdg-open"
+    subprocess.run(
+        [program, str(target)],
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )

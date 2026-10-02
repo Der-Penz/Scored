@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 
 from scored_lib.dart.dart_throw import DartThrow
@@ -96,6 +97,7 @@ class GameLeg:
 
         if result.finished:
             self._winner = self.current_player
+            logging.info(f"{player.name} won the game")
             return player, result, True
 
         return player, result, end_turn
@@ -137,6 +139,9 @@ class GameLeg:
             self._current_player = (self._current_player - 1) % len(self.players)
 
         throw = self.current_leg.remove_last_throw()
+
+        if throw is not None:
+            logging.info(f"Removed last throw {throw.short_label}")
 
         return throw
 

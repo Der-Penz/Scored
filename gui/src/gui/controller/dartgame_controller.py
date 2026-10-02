@@ -1,3 +1,5 @@
+import logging
+
 import ttkbootstrap as ttk
 from scored_lib.game.game_leg import GameLeg
 from scored_lib.game.player import Player
@@ -59,12 +61,20 @@ class DartGameController(BaseController):
         if self._turn_pending:
             return
 
-        _, result, end_turn = self._model.game.add_throw(event.throw)
+        player, result, end_turn = self._model.game.add_throw(event.throw)
+
+        bust_text = " (bust)" if result.bust else ""
+        checkout_text = " (checkout)" if result.finished else ""
+        logging.info(
+            f"{player.name} threw {event.throw.short_label}: "
+            f"{result.score_before} -> {result.score_after}{bust_text}{checkout_text}"
+        )
 
         self._event_channel.emit(ScoreChanged(result.round, result.throw))
 
         if self._model.game.is_finished:
             winner = self._model.game.winner
+            logging.info(f"{winner.name if winner else 'nobody'} won the game")
             self.turn_view.reset_throws()
             ttk.Messagebox.show_info(
                 message=f"{winner.name} wins!" if winner else "Game finished.",
@@ -87,7 +97,8 @@ class DartGameController(BaseController):
 
         self.turn_overlay.hide()
         self.turn_view.reset_throws()
-        self._model.game.next_player()
+        next_player = self._model.game.next_player()
+        logging.debug(f"Turn confirmed, next player is {next_player.name}")
         self._event_channel.emit(TurnChanged())
 
     def _on_turn_undo(self) -> None:
@@ -107,7 +118,9 @@ class DartGameController(BaseController):
             self._turn_pending = False
             self.turn_overlay.hide()
 
-        self._model.game.undo_last_throw()
+        removed = self._model.game.undo_last_throw()
+        removed_text = removed.short_label if removed else "nothing"
+        logging.info(f"Removed last throw {removed_text}")
 
         self._event_channel.emit(ScoreChanged(0, 0))
 
@@ -144,6 +157,7 @@ class DartGameController(BaseController):
             return
         p = Player(name=name)
         self._model.players.append(p)
+        logging.info(f"Added player {p.name}")
         self._event_channel.emit(PlayerAdded(player=p))
 
     def _remove_player(self) -> None:
@@ -170,6 +184,7 @@ class DartGameController(BaseController):
             return
 
         self._model.players.remove(selected)
+        logging.info(f"Removed player {selected.name}")
         self._event_channel.emit(PlayerRemoved(player=selected))
 
     def _start_game(self) -> None:
@@ -195,5 +210,11 @@ class DartGameController(BaseController):
         )
 
         self.turn_view.reset_throws()
+
+        names = ", ".join(player.name for player in self._model.players)
+        logging.info(
+            f"Started game with {names}, starting score {starting_score}, "
+            f"start rule {start_rule.value}, finish rule {finish_rule.value}"
+        )
 
         self._event_channel.emit(GameStarted())

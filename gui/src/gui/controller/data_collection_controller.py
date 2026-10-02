@@ -1,20 +1,21 @@
-from datetime import datetime
-import os
-from pathlib import Path
-import platform
-import subprocess
+import logging
 import tkinter as tk
-from tkinter import filedialog
 import uuid
+from datetime import datetime
+from pathlib import Path
+from tkinter import filedialog
 
-from gui.events.event_types import FrameCapturedEvent, GameStarted, ScoreChanged
 import numpy as np
+import ttkbootstrap as ttk
+from scored_lib.annotation.leg_annotation import LegAnnotation
 from scored_lib.annotation.leg_annotation_handler import LegAnnotationHandler
 from scored_lib.annotation.leg_annotation import LegAnnotation
 from scored_lib.annotation.throw_annotation import DartThrowAnnotation, PositionSource
 import ttkbootstrap as ttk
 
 from gui.events.event_channel import EventChannel, Subscription
+from gui.events.event_types import FrameCapturedEvent, GameStarted, ScoreChanged
+from gui.helper import open_in_file_manager
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
@@ -31,7 +32,11 @@ class DataCollectionController(BaseController):
         if self._output_dir:
             try:
                 self._output_dir.mkdir(parents=True, exist_ok=True)
-            except OSError as _:
+                logging.info(f"Collecting data in {self._output_dir}")
+            except OSError as error:
+                logging.error(
+                    f"Could not create the data collection directory: {error}"
+                )
                 ttk.Messagebox.show_error(
                     message=f"Could not create the data collection directory.",
                     title="Data Collection Error",
@@ -96,7 +101,9 @@ class DataCollectionController(BaseController):
         try:
             self._output_dir.mkdir(parents=True, exist_ok=True)
             self._enable_data_collection()
-        except OSError as _:
+            logging.info(f"Data collection enabled, writing to {self._output_dir}")
+        except OSError as error:
+            logging.error(f"Could not create the data collection directory: {error}")
             ttk.Messagebox.show_error(
                 message=f"Could not create the data collection directory.",
                 title="Data Collection Error",
@@ -155,10 +162,14 @@ class DataCollectionController(BaseController):
             )
             self.annotation_handler[player.id] = annotation_handler
 
+        count = len(self._model.players)
+        logging.info(f"Started annotations for {count} player(s) in {directory}")
+
     def _disable_data_collection(self) -> None:
         for subscription in self.events:
             subscription.cancel()
         self.events = []
+        logging.info("Data collection disabled")
 
     def _enable_data_collection(self) -> None:
         self._disable_data_collection()  # remove any existing subscriptions
@@ -191,10 +202,5 @@ class DataCollectionController(BaseController):
                 parent=self._view,
             )
             return
-        if platform.system() == "Windows":
-            os.startfile(str(self._output_dir.resolve()))
-        elif platform.system() == "Darwin":
-            program = "open"
-        else:
-            program = "xdg-open"
-        subprocess.run([program, str(self._output_dir.resolve())])
+
+        open_in_file_manager(self._output_dir.resolve())

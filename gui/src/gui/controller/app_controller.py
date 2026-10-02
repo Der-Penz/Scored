@@ -4,6 +4,7 @@ from gui.controller.camera_feed_controller import CameraFeedController
 from gui.controller.dartboard_controller import DartboardController
 from gui.controller.dartgame_controller import DartGameController
 from gui.controller.data_collection_controller import DataCollectionController
+from gui.controller.logging_controller import LoggingController
 from gui.controller.menu_controller import MenuController
 from gui.controller.player_controller import PlayerController
 from gui.controller.scorecard_controller import ScorecardController
@@ -42,6 +43,7 @@ class AppController(BaseController):
         self.data_collection_controller = DataCollectionController(
             view, model, self._event_channel
         )
+        self.logging_controller = LoggingController(view, model, self._event_channel)
 
         self.bind_menu()
         self.bind_components()
@@ -64,6 +66,9 @@ class AppController(BaseController):
         data_menu = self._create_menu("Data")
         self.data_collection_controller.bind_menu(data_menu)
 
+        log_menu = self._create_menu("Logs")
+        self.logging_controller.bind_menu(log_menu)
+
     def bind_components(self) -> None:
         self.source_controller.bind_components()
         self.dartboard_controller.bind_components()
@@ -74,6 +79,7 @@ class AppController(BaseController):
         self.menu_controller.bind_components()
         self.scorecard_controller.bind_components()
         self.data_collection_controller.bind_components()
+        self.logging_controller.bind_components()
 
     def start(self):
         if self.config.source is not None:
@@ -88,6 +94,7 @@ class AppController(BaseController):
         self.menu_controller.start()
         self.scorecard_controller.start()
         self.data_collection_controller.start()
+        self.logging_controller.start()
 
         # start the main loop of the Tkinter application
         self._view.mainloop()
