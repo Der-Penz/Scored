@@ -1,3 +1,4 @@
+import logging
 import tkinter as tk
 
 from scored_lib.dart.constants import Position
@@ -7,7 +8,12 @@ from scored_lib.game.dart_leg import ThrowResult
 from scored_lib.util.position import canvas_to_relative_position
 
 from gui.events.event_channel import EventChannel
-from gui.events.event_types import GameStateChanged, ThrowEdited, TurnChanged
+from gui.events.event_types import (
+    DartThrowEvent,
+    GameStateChanged,
+    ThrowEdited,
+    TurnChanged,
+)
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
@@ -66,6 +72,15 @@ class DartboardController(BaseController):
             lambda idx=index, pos=position: self._apply_dart_drag(idx, pos),
         )
 
+    def _on_board_click(self, position: Position) -> None:
+        if self._model.game is None:
+            return
+
+        scoring_position = canvas_to_relative_position(position)
+        scored = score_dart_throw(scoring_position, PositionSource.MANUAL)
+
+        self._event_channel.emit(DartThrowEvent(throw=scored))
+
     def _apply_dart_drag(self, index: int, new_position: Position) -> None:
         assert self._model.game is not None
 
@@ -78,6 +93,9 @@ class DartboardController(BaseController):
         result = self._model.game.current_leg.edit_current_throw(
             scored, throw=index + 1
         )
+
+        logging.info(f"Edited throw: {previous} -> {scored}")
+
         self._event_channel.emit(
             ThrowEdited(
                 player=self._model.game.current_player,
@@ -95,6 +113,7 @@ class DartboardController(BaseController):
     def start(self) -> None:
         self._dartboard_view.set_resize_callback(self._on_board_resized)
         self._dartboard_view.set_drag_release_callback(self._on_drag_release)
+        self._dartboard_view.set_board_click_callback(self._on_board_click)
 
     def _toggle_dartboard_visibility(self) -> None:
         self._left_view.set_dartboard_visible(self._dartboard_visible.get())

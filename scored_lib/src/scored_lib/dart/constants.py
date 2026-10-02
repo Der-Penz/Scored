@@ -1,4 +1,4 @@
-type Position = tuple[int, int]
+type Position = tuple[float, float]
 type PolarPosition = tuple[float, float]
 
 RING_SIZE_MM = 8

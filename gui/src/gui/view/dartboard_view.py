@@ -1,12 +1,14 @@
 import tkinter as tk
-from typing import Callable, Sequence
+from collections.abc import Callable, Sequence
 
+import ttkbootstrap as ttk
+from scored_lib.dart.constants import Position
 from scored_lib.dart.dart_throw import DartThrow
+from scored_lib.game.dart_leg import ThrowResult
 from scored_lib.util.position import (
     get_segment_default_position,
     relative_to_canvas_position,
 )
-import ttkbootstrap as ttk
 
 from gui.protocols.dartboard_protocol import DartboardProtocol
 from gui.view.drawing.dartboard import (
@@ -14,8 +16,6 @@ from gui.view.drawing.dartboard import (
     draw_dart_marker,
     draw_dartboard,
 )
-from scored_lib.dart.constants import Position
-from scored_lib.game.dart_leg import ThrowResult
 
 DART_TAG = "dart_marker"
 BOTTOM_Y_NORMALIZED = 0.92
@@ -34,6 +34,7 @@ class DartboardView(tk.Frame, DartboardProtocol):
 
         self._on_resize: Callable[[], None] | None = None
         self._on_drag_release: DragReleaseCallback | None = None
+        self._on_board_click: Callable[[Position], None] | None = None
 
         self._board_size: float = 0.0
         self._board_ox: float = 0.0
@@ -53,6 +54,9 @@ class DartboardView(tk.Frame, DartboardProtocol):
 
     def set_drag_release_callback(self, callback: DragReleaseCallback) -> None:
         self._on_drag_release = callback
+
+    def set_board_click_callback(self, callback: Callable[[Position], None]) -> None:
+        self._on_board_click = callback
 
     def _on_canvas_resize(self, event: tk.Event) -> None:
         # Keep the drawing area square so the board fills the full canvas.
@@ -146,9 +150,15 @@ class DartboardView(tk.Frame, DartboardProtocol):
         return None
 
     def _on_press(self, event: tk.Event) -> None:
-        self._dragged = self._marker_at(event)
-        if self._dragged is not None:
+        marker = self._marker_at(event)
+        if marker is not None:
+            self._dragged = marker
             self._drag_last = (event.x, event.y)
+        else:
+            # register a new dart throw at the clicked position
+            if self._on_board_click is not None:
+                position = self._pixel_to_normalized((event.x, event.y))
+                self._on_board_click(position)
 
     def _on_motion(self, event: tk.Event) -> None:
         if self._dragged is None:
