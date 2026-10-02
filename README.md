@@ -1,19 +1,14 @@
 # Scored
+**Single Camera automated darts scoring using keypoint detection**
 
 > Currently under development, this project is a work in progress. Please check back later for updates.
 
-## Single Camera automated darts scoring using keypoint detection
+## Scored GUI
+A simple python tkinter based GUI for collecting data, playing dart legs and testing inferences of the model. The GUI is located in the `gui` folder. For more information on how to use the GUI, please refer to the [GUI README](gui/README.md).
 
-The project aims to detect dart scores by using a yolo v11 keypose model on a single camera image to predict the score of the thrown darts.
-4 Keypoints on the dartboard, the darts tip and flight are detected.
+## Data Collection
 
-![image](images/detected_keypoints.png)
-
-After detecting the keypoints, the 4 dartboard keypoints are used to apply a perspective transform to warp the perspective in a top down view. With the warped points of the dart tips the score of the dart can easily be calculated by their distance to the center and their angle.
-
-![image](images/warped_dartboard.png)
-
-
+For data collection, you can use your own setup and label the data or use the **Scored GUI** to collect and label the data in one step while following the correct labeling structure that is need for the learning process. For more information on how to use the GUI, please refer to the [GUI README data collection](gui/README.md#data_collection).
 
 ## Logging
 
@@ -32,4 +27,4 @@ be changed at runtime with `set_log_level("DEBUG")`.
 
 ## Training
 
-To see how to train your own model and how to prepare and create a dataset, refer to [Train Instructions](train.md)
+WIP
