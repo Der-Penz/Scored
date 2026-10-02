@@ -9,9 +9,7 @@ import numpy as np
 import ttkbootstrap as ttk
 from scored_lib.annotation.leg_annotation import LegAnnotation
 from scored_lib.annotation.leg_annotation_handler import LegAnnotationHandler
-from scored_lib.annotation.leg_annotation import LegAnnotation
-from scored_lib.annotation.throw_annotation import DartThrowAnnotation, PositionSource
-import ttkbootstrap as ttk
+from scored_lib.annotation.throw_annotation import DartThrowAnnotation
 
 from gui.events.event_channel import EventChannel, Subscription
 from gui.events.event_types import FrameCapturedEvent, GameStarted, ScoreChanged
@@ -38,7 +36,7 @@ class DataCollectionController(BaseController):
                     f"Could not create the data collection directory: {error}"
                 )
                 ttk.Messagebox.show_error(
-                    message=f"Could not create the data collection directory.",
+                    message="Could not create the data collection directory.",
                     title="Data Collection Error",
                     parent=self._view,
                 )
@@ -76,7 +74,8 @@ class DataCollectionController(BaseController):
             self._enable_data_collection()
 
     def start(self) -> None:
-        """Nothing to start; all work is driven by events."""
+        if self.enabled:
+            self._enable_data_collection()
 
     def _on_frame_captured(self, event: FrameCapturedEvent) -> None:
         self.current_frame = event.frame
@@ -105,7 +104,7 @@ class DataCollectionController(BaseController):
         except OSError as error:
             logging.error(f"Could not create the data collection directory: {error}")
             ttk.Messagebox.show_error(
-                message=f"Could not create the data collection directory.",
+                message="Could not create the data collection directory.",
                 title="Data Collection Error",
                 parent=self._view,
             )
@@ -144,6 +143,8 @@ class DataCollectionController(BaseController):
         assert self._output_dir is not None, (
             "GameStarted event received but output_dir is None"
         )
+
+        logging.info("Game started, initializing data collection.")
 
         self.annotation_handler = {}
         current = datetime.now()
@@ -188,6 +189,8 @@ class DataCollectionController(BaseController):
                 GameStarted, lambda _: self._on_game_started()
             )
         )
+
+        logging.info("Data collection enabled")
 
         # if game already started, trigger the game started event to initialize the annotation handler
         if self._model.game is not None:
