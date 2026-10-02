@@ -1,17 +1,25 @@
 from __future__ import annotations
 
 import logging
+import re
 import shutil
-from dataclasses import dataclass, replace
+from collections.abc import Iterator
+from dataclasses import dataclass
 from pathlib import Path
 from time import time
-from typing import Any, Iterator, NamedTuple
+from typing import Any, NamedTuple
 
 import cv2
-
 import numpy as np
-from scored_lib.annotation.throw_annotation import DartThrowAnnotation
+
 from scored_lib.annotation.leg_annotation import LegAnnotation
+from scored_lib.annotation.throw_annotation import DartThrowAnnotation
+
+DELETED_MARKER = "d"
+DELETED_SUFFIX = f"_{DELETED_MARKER}"
+
+_SAMPLE_DIR_PATTERN = re.compile(r"^(\d+)_(\d+)$")
+_REMOVED_DIR_PATTERN = re.compile(r"^(\d+)_(\d+)(?:_d+)$")
 
 
 class Sample(NamedTuple):
@@ -21,7 +29,43 @@ class Sample(NamedTuple):
     image_path: Path | None
 
 
-def _sort_key(directory: Path) -> tuple[int, int, str]:
+def _parse_sample_dir(name: str) -> tuple[int, int] | None:
+    """Parse a sample folder name into its one-based (round, throw) index.
+
+    Parameters
+    ----------
+    name : str
+        The folder name to parse.
+
+    Returns
+    -------
+    tuple[int, int] | None
+        The one-based round and throw index, or None if *name* is not a
+        canonical sample folder, e.g. because it was removed or is unrelated.
+    """
+    match = _SAMPLE_DIR_PATTERN.match(name)
+    if match is None:
+        return None
+    return int(match.group(1)), int(match.group(2))
+
+
+def _is_removed_dir(name: str) -> bool:
+    """Check whether a folder name belongs to a removed sample.
+
+    Parameters
+    ----------
+    name : str
+        The folder name to check.
+
+    Returns
+    -------
+    bool
+        True if the folder is a tombstone of a removed sample, False otherwise.
+    """
+    return _REMOVED_DIR_PATTERN.match(name) is not None
+
+
+def _sample_sort_key(directory: Path) -> tuple[int, int]:
     """Sort key ordering sample folders by round and then by throw.
 
     Parameters
@@ -31,14 +75,10 @@ def _sort_key(directory: Path) -> tuple[int, int, str]:
 
     Returns
     -------
-    tuple[int, int, str]
-        A key that sorts ``1_2`` before ``1_10`` and unknown folders last.
+    tuple[int, int]
+        The one-based round and throw index, so that ``1_2`` sorts before ``1_10``.
     """
-    try:
-        round_part, throw_part = directory.name.split("_", 1)
-        return (int(round_part), int(throw_part), "")
-    except ValueError:
-        return (0, 0, directory.name)
+    return _parse_sample_dir(directory.name) or (0, 0)
 
 
 @dataclass
@@ -58,6 +98,10 @@ class LegAnnotationHandler:
 
     Each ``annotation.json`` links to the camera frame sitting next to it, so a
     sample folder can be moved or copied without breaking the annotation.
+
+    A removed sample is either deleted (:meth:`remove`) or kept as a tombstone
+    with a ``_d`` suffix (``1_1_d``), see :meth:`mark_removed`. Tombstoned
+    folders are ignored by :attr:`sample_count` and :meth:`__iter__`.
     """
 
     directory: Path
@@ -72,8 +116,19 @@ class LegAnnotationHandler:
         """The number of samples currently stored in the leg directory."""
         return len(self._sample_directories())
 
+    @property
+    def deleted_count(self) -> int:
+        """The number of removed samples kept as tombstones in the leg directory."""
+        return sum(
+            1
+            for entry in self.directory.iterdir()
+            if entry.is_dir() and _is_removed_dir(entry.name)
+        )
+
     def __iter__(self) -> Iterator[Sample]:
         """Iterate over all samples in round and throw order.
+
+        Removed samples are skipped, they no longer describe a registered throw.
 
         Yields
         ------
@@ -82,8 +137,10 @@ class LegAnnotationHandler:
             Samples unpack as ``annotation, image_path``.
         """
         for directory in self._sample_directories():
-            round, throw = map(int, directory.name.split("_", 1))
-            yield self.read(round, throw)
+            index = _parse_sample_dir(directory.name)
+            if index is None:  # unreachable, filtered out above
+                continue
+            yield self.read(*index)
 
     def end_leg(self, is_won: bool) -> None:
         """Finalize the leg by updating the leg info and writing it to disk.
@@ -236,7 +293,7 @@ class LegAnnotationHandler:
                 )
             annotation.save(directory)
         if image is not None:
-            cv2.imwrite(str(directory / f"image.jpg"), image)
+            cv2.imwrite(str(directory / "image.jpg"), image)
 
         return Sample(
             annotation
@@ -246,7 +303,10 @@ class LegAnnotationHandler:
         )
 
     def remove(self, round: int, throw: int) -> None:
-        """Delete a sample and its annotation from disk.
+        """
+        Delete a sample and its annotation from disk.
+
+        Does nothing if no sample exists for the given throw.
 
         Parameters
         ----------
@@ -255,19 +315,63 @@ class LegAnnotationHandler:
         throw : int
             One-based index of the throw within the round.
         """
-        shutil.rmtree(self.sample_directory(round, throw))
+        directory = self.sample_directory(round, throw)
+        if not directory.exists():
+            return
+        shutil.rmtree(directory)
+
+    def mark_removed(self, round: int, throw: int) -> Path | None:
+        """
+        Keep a removed sample on disk as a tombstone instead of deleting it.
+
+        The folder is renamed to ``<round>_<throw>_d``, appending another ``d``
+        while a folder of that name is already taken. A throw that is recorded,
+        removed and recorded again therefore keeps all of its frames: ``1_1``,
+        then ``1_1_d``, then ``1_1_dd``.
+
+        The stored frame is renamed to ``image.removed`` so the tombstone is not
+        picked up by the Label Studio local storage image filter.
+
+        Parameters
+        ----------
+        round : int
+            One-based index of the round within the leg.
+        throw : int
+            One-based index of the throw within the round.
+
+        Returns
+        -------
+        Path | None
+            The tombstone folder, or None if there was no sample to mark.
+        """
+        directory = self.sample_directory(round, throw)
+        if not directory.exists():
+            return None
+
+        count = 1
+        while True:
+            target = directory.with_name(f"{directory.name}_{DELETED_MARKER * count}")
+            if not target.exists():
+                break
+            count += 1
+
+        directory.rename(target)
+
+        logging.debug(f"Marked sample {round}_{throw} as removed in {target}")
+        return target
 
     def _sample_directories(self) -> list[Path]:
-        """Collect the sample folders of the leg in round and throw order.
+        """Collect the live sample folders of the leg in round and throw order.
 
         Returns
         -------
         list[Path]
-            The sample folders found in the leg directory.
+            The canonical ``<round>_<throw>`` folders found in the leg
+            directory, ignoring removed samples and unrelated folders.
         """
         directories = [
             entry
             for entry in self.directory.iterdir()
-            if entry.is_dir() and not entry.name.startswith(".")
+            if entry.is_dir() and _parse_sample_dir(entry.name) is not None
         ]
-        return sorted(directories, key=_sort_key)
+        return sorted(directories, key=_sample_sort_key)

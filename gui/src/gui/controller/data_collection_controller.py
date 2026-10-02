@@ -12,7 +12,13 @@ from scored_lib.annotation.leg_annotation_handler import LegAnnotationHandler
 from scored_lib.annotation.throw_annotation import DartThrowAnnotation
 
 from gui.events.event_channel import EventChannel, Subscription
-from gui.events.event_types import FrameCapturedEvent, GameStarted, ScoreChanged
+from gui.events.event_types import (
+    FrameCapturedEvent,
+    GameStarted,
+    ThrowEdited,
+    ThrowRecorded,
+    ThrowRemoved,
+)
 from gui.helper import open_in_file_manager
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
@@ -48,6 +54,7 @@ class DataCollectionController(BaseController):
 
         self._enabled_var = tk.BooleanVar(value=self._output_dir is not None)
         self._replace_on_edit_var = tk.BooleanVar(value=False)
+        self._delete_removed_var = tk.BooleanVar(value=True)
 
     def bind_menu(self, menu: ttk.Menu) -> None:
         """Attach the data collection commands to the ``Data`` menu."""
@@ -61,6 +68,10 @@ class DataCollectionController(BaseController):
         menu.add_checkbutton(
             label="Replace image when dart is edited",
             variable=self._replace_on_edit_var,
+        )
+        menu.add_checkbutton(
+            label="Delete removed throws",
+            variable=self._delete_removed_var,
         )
         menu.add_separator()
         menu.add_command(label="Open Output Folder", command=self._open_output_folder)
@@ -112,29 +123,74 @@ class DataCollectionController(BaseController):
             self._disable_data_collection()
             return
 
-    def _on_score_changed(self, event: ScoreChanged) -> None:
-        if self.annotation_handler is None or self._model.game is None:
-            return
+    def _handler_for(self, player_id: str) -> LegAnnotationHandler | None:
+        """Get the annotation handler of a player, if collection is running."""
+        if self.annotation_handler is None:
+            return None
+        return self.annotation_handler.get(player_id)
 
-        throw_result = self._model.game.current_leg.get_throw(event.round, event.throw)
-
-        if throw_result is None:  # bust placeholder
-            return
-
-        handler = self.annotation_handler[self._model.game.current_player.id]
-
-        dart_annotation = DartThrowAnnotation(
-            throw_data=throw_result.dart_throw,
-            is_bust=throw_result.bust,
-            leg_id=handler.info.leg_id,
-            round=throw_result.round,
-            throw=throw_result.throw,
+    def _annotation_for(
+        self, event: ThrowRecorded | ThrowEdited, leg_id: str
+    ) -> DartThrowAnnotation:
+        """Build the on-disk annotation for a recorded or edited throw."""
+        result = event.result
+        return DartThrowAnnotation(
+            throw_data=result.dart_throw,
+            is_bust=result.bust,
+            leg_id=leg_id,
+            round=result.round,
+            throw=result.throw,
         )
 
-        if self.current_frame is None:
+    def _on_throw_recorded(self, event: ThrowRecorded) -> None:
+        handler = self._handler_for(event.player.id)
+        if handler is None:
             return
 
-        handler.add(dart_annotation, self.current_frame)
+        if self.current_frame is None:
+            logging.warning(
+                f"Throw recorded for {event.player.name} but no frame is available"
+            )
+            return
+
+        handler.add(
+            self._annotation_for(event, handler.info.leg_id), self.current_frame
+        )
+
+    def _on_throw_edited(self, event: ThrowEdited) -> None:
+        handler = self._handler_for(event.player.id)
+        if handler is None:
+            return
+
+        result = event.result
+        if not handler.exists(result.round, result.throw):
+            # Nothing stored yet, e.g. no camera frame arrived for this throw.
+            logging.warning(
+                f"Throw edited for {event.player.name} but no sample was stored for {result.round}_{result.throw} yet"
+            )
+            return
+
+        image = self.current_frame if self._replace_on_edit_var.get() else None
+        handler.edit(
+            result.round,
+            result.throw,
+            annotation=self._annotation_for(event, handler.info.leg_id),
+            image=image,
+        )
+
+    def _on_throw_removed(self, event: ThrowRemoved) -> None:
+        handler = self._handler_for(event.player.id)
+        if handler is None:
+            return
+
+        if self._delete_removed_var.get():
+            handler.remove(event.round, event.throw)
+            return
+
+        if handler.mark_removed(event.round, event.throw) is not None:
+            logging.info(
+                f"Kept removed sample {event.round}_{event.throw} as a tombstone"
+            )
 
     def _on_game_started(self) -> None:
         assert self._model.game is not None, (
@@ -181,7 +237,17 @@ class DataCollectionController(BaseController):
         )
         self.events.append(
             self._event_channel.subscribe(
-                ScoreChanged, lambda evt: self._on_score_changed(evt)
+                ThrowRecorded, lambda evt: self._on_throw_recorded(evt)
+            )
+        )
+        self.events.append(
+            self._event_channel.subscribe(
+                ThrowEdited, lambda evt: self._on_throw_edited(evt)
+            )
+        )
+        self.events.append(
+            self._event_channel.subscribe(
+                ThrowRemoved, lambda evt: self._on_throw_removed(evt)
             )
         )
         self.events.append(

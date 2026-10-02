@@ -59,13 +59,19 @@ class LoggingView(ttk.Toplevel):
         toolbar.pack(fill="x")
 
         ttk.Label(toolbar, text="Level:").pack(side="left")
-        self._level_box = ttk.Combobox(toolbar, values=LEVELS, width=10, state="readonly")
+        self._level_box = ttk.Combobox(
+            toolbar, values=LEVELS, width=10, state="readonly"
+        )
         self._level_box.set(level if level in LEVELS else "INFO")
         self._level_box.pack(side="left", padx=(4, 12))
         self._level_box.bind("<<ComboboxSelected>>", self._on_level_selected)
 
-        ttk.Checkbutton(toolbar, text="Auto-scroll", variable=self._autoscroll).pack(side="left")
-        ttk.Button(toolbar, text="Open Folder", command=self._open_folder).pack(side="right")
+        ttk.Checkbutton(toolbar, text="Auto-scroll", variable=self._autoscroll).pack(
+            side="left"
+        )
+        ttk.Button(toolbar, text="Open Folder", command=self._open_folder).pack(
+            side="right"
+        )
         ttk.Button(toolbar, text="Clear", command=self.clear).pack(side="right", padx=4)
 
         body = ttk.Frame(self, padding=8)

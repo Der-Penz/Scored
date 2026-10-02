@@ -119,31 +119,65 @@ class GameLeg:
             leg.next_turn()
         return self.current_player
 
-    def undo_last_throw(self) -> DartThrow | None:
+    def undo_last_throw(self) -> ThrowResult | None:
         """
         Remove the most recently registered throw, wherever it was thrown.
 
         The active player is restored to whoever made the removed throw. If
-        that throw had finished the game, the winner is cleared again.
+        that throw had finished the game, the winner is cleared again. If there
+        is nothing to remove, the active player is left untouched.
 
         Returns
         -------
-        DartThrow | None
-            The removed throw, or None if there was nothing to remove.
+        ThrowResult | None
+            The result the removed throw had, including the ``(round, throw)``
+            coordinates it occupied, or None if there was nothing to remove.
+            The coordinates refer to the state before the removal.
         """
         if self.winner is not None:
             raise ValueError("Cannot undo a throw after the leg has finished.")
 
-        if self.current_leg.throws_left == 3:
-            # If the current player has not thrown yet, we need to go back to the previous player.
-            self._current_player = (self._current_player - 1) % len(self.players)
+        owner = self._owner_of_last_throw()
+        if owner is None:
+            logging.debug("Nothing to undo, no throw has been registered yet")
+            return None
 
-        throw = self.current_leg.remove_last_throw()
+        self._current_player = owner
+        removed = self.current_leg.remove_last_throw()
 
-        if throw is not None:
-            logging.info(f"Removed last throw {throw.short_label}")
+        if removed is not None:
+            logging.info(f"Removed last throw {removed.dart_throw.short_label}")
 
-        return throw
+        return removed
+
+    def _owner_of_last_throw(self) -> int | None:
+        """
+        Find the player whose throw was registered most recently.
+
+        Returns
+        -------
+        int | None
+            The index of that player, or None if no throw has been registered
+            in this game at all.
+        """
+        if self.current_leg.throws_left != 3:
+            # The active player threw within their current turn, so their most
+            # recent throw is also the most recent one of the whole game.
+            return self._current_player
+
+        # The active player's current turn is still empty, so the most recent
+        # throw belongs to a player who already had their turn.
+        for offset in range(1, len(self.players)):
+            index = (self._current_player - offset) % len(self.players)
+            if self._legs[self.players[index]].num_darts_thrown:
+                return index
+
+        # Nobody else has a throw; in a one player game the active player can
+        # still have one from a previous turn.
+        if self.current_leg.num_darts_thrown:
+            return self._current_player
+
+        return None
 
     def standings(self) -> list[tuple[Player, int]]:
         """

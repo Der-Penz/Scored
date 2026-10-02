@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 import numpy as np
 from scored_lib.dart.dart_throw import DartThrow
+from scored_lib.game.dart_leg import ThrowResult
 from scored_lib.game.player import Player
 
 
@@ -29,9 +30,37 @@ class PlayerRemoved:
 
 
 @dataclass(frozen=True)
-class ScoreChanged:
-    """Notification that scores changed (see AppModel.game)."""
+class GameStateChanged:
+    """
+    Notification that the game state changed and views should redraw.
+    """
 
+
+@dataclass(frozen=True)
+class ThrowRecorded:
+    """Notification that a throw was registered for the given player."""
+
+    player: Player
+    result: ThrowResult
+
+
+@dataclass(frozen=True)
+class ThrowEdited:
+    """Notification that an already registered throw was replaced."""
+
+    player: Player
+    result: ThrowResult
+    previous: DartThrow
+
+
+@dataclass(frozen=True)
+class ThrowRemoved:
+    """
+    Notification that a registered throw was removed again.
+    """
+
+    player: Player
+    dart_throw: DartThrow
     round: int
     throw: int
 

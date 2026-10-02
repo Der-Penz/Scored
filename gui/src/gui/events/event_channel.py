@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import threading
 from collections.abc import Callable
 from typing import Any, TypeVar
@@ -55,6 +56,7 @@ class EventChannel:
         Emit *event* to all subscribers whose registered type matches
         ``type(event)`` via subclass check (so a subscriber for a base
         event type also receives subclass events).
+        failed subscribers are skipped.
         """
         event_type = type(event)
         # Collect matching callbacks under the lock, invoke outside it
@@ -64,7 +66,12 @@ class EventChannel:
                 if issubclass(event_type, subscribed_type):
                     callbacks.extend(cbs)
         for cb in callbacks:
-            cb(event)
+            try:
+                cb(event)
+            except Exception:
+                logging.exception(
+                    f"Subscriber {getattr(cb, '__qualname__', cb)} failed while handling {event_type.__name__}",
+                )
 
     def _unsubscribe(self, event_type: type, callback: Callable[..., Any]) -> None:
         """Remove a specific callback from the subscriber list."""

@@ -7,10 +7,13 @@ from scored_lib.game.player import Player
 from gui.events.event_channel import EventChannel
 from gui.events.event_types import (
     DartThrowEvent,
+    GameEnded,
     GameStarted,
+    GameStateChanged,
     PlayerAdded,
     PlayerRemoved,
-    ScoreChanged,
+    ThrowRecorded,
+    ThrowRemoved,
     TurnChanged,
     UndoRequested,
 )
@@ -43,7 +46,7 @@ class DartGameController(BaseController):
         self._view.master.bind_all("<Control-g>", lambda _: self._start_game())
         self._event_channel.subscribe(DartThrowEvent, self._on_dart_throw)
         self._event_channel.subscribe(
-            ScoreChanged, lambda _: self._refresh_current_turn()
+            GameStateChanged, lambda _: self._refresh_current_turn()
         )
         self._event_channel.subscribe(UndoRequested, lambda e: self._undo_throw())
         self.turn_overlay.bind_callbacks(
@@ -70,12 +73,14 @@ class DartGameController(BaseController):
             f"{result.score_before} -> {result.score_after}{bust_text}{checkout_text}"
         )
 
-        self._event_channel.emit(ScoreChanged(result.round, result.throw))
+        self._event_channel.emit(ThrowRecorded(player=player, result=result))
+        self._event_channel.emit(GameStateChanged())
 
         if self._model.game.is_finished:
             winner = self._model.game.winner
             logging.info(f"{winner.name if winner else 'nobody'} won the game")
             self.turn_view.reset_throws()
+            self._event_channel.emit(GameEnded())
             ttk.Messagebox.show_info(
                 message=f"{winner.name} wins!" if winner else "Game finished.",
                 title="Game Over",
@@ -89,6 +94,7 @@ class DartGameController(BaseController):
 
     def _on_turn_next(self) -> None:
         """Confirm the finished turn and advance to the next player."""
+        assert self._model.game is not None, "Turn next requested but no game is active"
         if (
             self._turn_pending is False
         ):  # prevent accidental clicks when no turn is pending from focus issues
@@ -119,10 +125,20 @@ class DartGameController(BaseController):
             self.turn_overlay.hide()
 
         removed = self._model.game.undo_last_throw()
-        removed_text = removed.short_label if removed else "nothing"
-        logging.info(f"Removed last throw {removed_text}")
 
-        self._event_channel.emit(ScoreChanged(0, 0))
+        if removed is not None:
+            logging.info(f"Removed last throw {removed.dart_throw.short_label}")
+            # undo_last_throw restores the active player to whoever made the
+            # removed throw, so this is the leg the sample belongs to.
+            self._event_channel.emit(
+                ThrowRemoved(
+                    player=self._model.game.current_player,
+                    dart_throw=removed.dart_throw,
+                    round=removed.round,
+                    throw=removed.throw,
+                )
+            )
+        self._event_channel.emit(GameStateChanged())
 
     def _refresh_current_turn(self) -> None:
         """Redraw the current player's registered throws into the turn view."""

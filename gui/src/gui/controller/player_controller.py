@@ -3,9 +3,9 @@ import tkinter as tk
 from gui.events.event_channel import EventChannel
 from gui.events.event_types import (
     GameStarted,
+    GameStateChanged,
     PlayerAdded,
     PlayerRemoved,
-    ScoreChanged,
     TurnChanged,
 )
 from gui.model.model import AppModel
@@ -28,7 +28,7 @@ class PlayerController(BaseController):
     def bind_components(self) -> None:
         self._event_channel.subscribe(PlayerAdded, self._on_player_added)
         self._event_channel.subscribe(PlayerRemoved, self._on_player_removed)
-        self._event_channel.subscribe(ScoreChanged, self._on_score_changed)
+        self._event_channel.subscribe(GameStateChanged, self._on_game_state_changed)
         self._event_channel.subscribe(TurnChanged, self._on_turn_changed)
         self._event_channel.subscribe(GameStarted, self._on_game_started)
 
@@ -38,7 +38,7 @@ class PlayerController(BaseController):
     def _on_player_removed(self, event: PlayerRemoved) -> None:
         self.player_view.remove_player(event.player)
 
-    def _on_score_changed(self, _event: ScoreChanged) -> None:
+    def _on_game_state_changed(self, _event: GameStateChanged) -> None:
         self._sync_scores()
 
     def _on_turn_changed(self, _event: TurnChanged) -> None:

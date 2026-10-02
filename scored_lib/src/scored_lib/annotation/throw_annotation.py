@@ -100,18 +100,18 @@ class DartThrowAnnotation:
         position = throw_data["position"]
 
         return DartThrowAnnotation(
-                round=raw["round"],
-                throw=raw["throw"],
-                timestamp=raw["timestamp"],
-                is_bust=raw["is_bust"],
-                leg_id=raw["leg_id"],
-                throw_data=DartThrow(
-                    number=throw_data["number"],
-                    multiplier=Multiplier(throw_data["multiplier"]),
-                    position=tuple(position) if position is not None else None,
-                    source=PositionSource(throw_data["source"]),
-                ),
-            )
+            round=raw["round"],
+            throw=raw["throw"],
+            timestamp=raw["timestamp"],
+            is_bust=raw["is_bust"],
+            leg_id=raw["leg_id"],
+            throw_data=DartThrow(
+                number=throw_data["number"],
+                multiplier=Multiplier(throw_data["multiplier"]),
+                position=tuple(position) if position is not None else None,
+                source=PositionSource(throw_data["source"]),
+            ),
+        )
 
     def save(self, parent: Path):
         """Write the annotation to ``annotation.json``.

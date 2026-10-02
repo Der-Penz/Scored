@@ -347,7 +347,7 @@ class DartLeg:
 
         return throw_result, next_round
 
-    def remove_last_throw(self) -> DartThrow | None:
+    def remove_last_throw(self) -> ThrowResult | None:
         """
         Remove the last registered throw and restore the leg as if it was never thrown.
 
@@ -357,16 +357,25 @@ class DartLeg:
 
         Returns
         -------
-        DartThrow | None
-            The removed throw, or None if the leg has no throws to remove.
+        ThrowResult | None
+            The result the removed throw had, including the ``(round, throw)``
+            coordinates it occupied, or None if the leg has no throws to remove.
         """
+        removed: ThrowResult | None = None
+        for turn in reversed(self._results):
+            for throw_result in reversed(turn):
+                if throw_result is not None:
+                    removed = throw_result
+                    break
+            if removed is not None:
+                break
+        if removed is None:
+            return None
+
         throws = [
             tr.dart_throw for turn in self._results for tr in turn if tr is not None
         ]
-        if not throws:
-            return None
-
-        removed = throws.pop()
+        throws.pop()
 
         rebuilt = DartLeg(
             starting_score=self.starting_score,

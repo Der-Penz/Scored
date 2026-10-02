@@ -7,7 +7,7 @@ from scored_lib.game.dart_leg import ThrowResult
 from scored_lib.util.position import canvas_to_relative_position
 
 from gui.events.event_channel import EventChannel
-from gui.events.event_types import ScoreChanged, TurnChanged
+from gui.events.event_types import GameStateChanged, ThrowEdited, TurnChanged
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
@@ -33,14 +33,14 @@ class DartboardController(BaseController):
 
     def bind_components(self) -> None:
         self._event_channel.subscribe(TurnChanged, lambda _: self.clear())
-        self._event_channel.subscribe(ScoreChanged, self.on_score_changed)
+        self._event_channel.subscribe(GameStateChanged, self.on_game_state_changed)
 
     def clear(self) -> None:
         self._cancel_debounce()
         self._darts.clear()
         self._dartboard_view.clear()
 
-    def on_score_changed(self, _) -> None:
+    def on_game_state_changed(self, _: GameStateChanged) -> None:
         if self._model.game is None:
             self.clear()
             return
@@ -74,10 +74,18 @@ class DartboardController(BaseController):
         scoring_position = canvas_to_relative_position(new_position)
         scored = score_dart_throw(scoring_position, PositionSource.MANUAL)
 
+        previous = self._darts[index].dart_throw
         result = self._model.game.current_leg.edit_current_throw(
             scored, throw=index + 1
         )
-        self._event_channel.emit(ScoreChanged(result.round, result.throw))
+        self._event_channel.emit(
+            ThrowEdited(
+                player=self._model.game.current_player,
+                result=result,
+                previous=previous,
+            )
+        )
+        self._event_channel.emit(GameStateChanged())
 
     def _cancel_debounce(self) -> None:
         if self._debounce_after_id is not None:

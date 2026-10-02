@@ -120,7 +120,9 @@ class SourceController(BaseController):
                     time.sleep(0.01)
         except Exception:
             # Prevent background thread crash from corrupting state
-            logging.exception(f"Capture loop of {self._current_source} stopped unexpectedly")
+            logging.exception(
+                f"Capture loop of {self._current_source} stopped unexpectedly"
+            )
         finally:
             if self._current_source is not None:
                 self._current_source.close()
