@@ -1,8 +1,9 @@
+import logging
 import time
 
 import cv2
-from gui.services.images.cv2_capture_source import CV2CaptureSource
 import numpy as np
+from gui.services.images.cv2_capture_source import CV2CaptureSource
 
 
 class VideoSource(CV2CaptureSource):
@@ -10,7 +11,7 @@ class VideoSource(CV2CaptureSource):
     A stream source that reads frames from a video file
     """
 
-    def __init__(self, video_path: str):
+    def __init__(self, video_path: str, loop: bool = True):
         """
         Init the video source
 
@@ -23,6 +24,7 @@ class VideoSource(CV2CaptureSource):
         self.fps = 30.0
         self.frame_delay = 1.0 / self.fps
         self.last_frame_time = 0.0
+        self.loop = loop
 
     @classmethod
     def get_name(cls) -> str:
@@ -51,6 +53,9 @@ class VideoSource(CV2CaptureSource):
         """
         Read a frame from the video file, maintaining natural FPS timing.
 
+        When the end of the video is reached the source rewinds back to the
+        first frame so playback starts over (unless looping is disabled).
+
         Returns
         -------
         np.ndarray | None
@@ -67,4 +72,35 @@ class VideoSource(CV2CaptureSource):
             )  # Sleep for 90% of the remaining time to avoid overshooting
 
         self.last_frame_time = time.perf_counter()
-        return super().read_frame()
+
+        frame = super().read_frame()
+        if frame is None:
+            if not self.loop:
+                return None
+
+            if not self._rewind():
+                return None
+            logging.debug("Video looped back to the start")
+            self.last_frame_time = time.perf_counter()
+            frame = super().read_frame()
+            if frame is None:
+                # Nothing could be read after rewinding, stop instead of looping
+                # forever on an empty/unreadable video.
+                self.loop = False
+
+        return frame
+
+    def _rewind(self) -> bool:
+        """
+        Seek back to the start of the video so it can be replayed.
+
+        Returns
+        -------
+        bool
+            True if the capture was successfully rewound, False otherwise.
+        """
+        if self.cap is None or not self.cap.isOpened():
+            return False
+
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        return not self.cap.get(cv2.CAP_PROP_POS_FRAMES) > 0
