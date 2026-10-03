@@ -204,7 +204,9 @@ class LegAnnotationHandler:
         )
 
         if image is not None:
-            cv2.imwrite(str(directory / f"image.jpg"), image)
+            cv2.imwrite(
+                str(directory / f"image.jpg"), cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            )
 
         annotation.save(directory)
 
@@ -293,7 +295,9 @@ class LegAnnotationHandler:
                 )
             annotation.save(directory)
         if image is not None:
-            cv2.imwrite(str(directory / "image.jpg"), image)
+            cv2.imwrite(
+                str(directory / "image.jpg"), cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            )
 
         return Sample(
             annotation

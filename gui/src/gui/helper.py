@@ -7,6 +7,15 @@ from pathlib import Path
 
 def center_dialog(window: tk.Toplevel, parent: tk.Misc) -> None:
     """Center *window* over *parent* on screen."""
+    # 1. Inform the Window Manager / Wayland compositor that this is a child dialog
+    window.transient(parent)
+
+    # 2. Set window type hint for XWayland/Linux WMs
+    try:
+        window.wm_attributes("-type", "dialog")
+    except tk.TclError:
+        pass  # Platform doesn't support -type attribute
+
     window.update_idletasks()
     window_w, window_h = window.winfo_width(), window.winfo_height()
 
@@ -21,6 +30,8 @@ def center_dialog(window: tk.Toplevel, parent: tk.Misc) -> None:
 
     x_pos = x + max(0, (parent_w - window_w) // 2)
     y_pos = y + max(0, (parent_h - window_h) // 2)
+
+    # Geometry positioning (works via XWayland when transient is set)
     window.geometry(f"+{x_pos}+{y_pos}")
 
 

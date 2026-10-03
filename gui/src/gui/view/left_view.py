@@ -24,12 +24,17 @@ class LeftView(ttk.Frame):
         """Rebuild the left-side stack so only visible panes are packed."""
         for frame in (self.dartboard_frame, self.source_view):
             frame.pack_forget()
-
-        if self._dartboard_visible:
-            self.dartboard_frame.pack(side="top", fill="x")
-
-        if self._source_visible:
+        if self._source_visible and self._dartboard_visible:
+            # 1. Source view is packed at the bottom first, taking only its requested height
+            self.source_view.pack(side="bottom", fill="x")
+            # 2. Dartboard frame occupies the top and expands to fill all remaining space
+            self.dartboard_frame.pack(side="top", fill="both", expand=True)
+        elif self._source_visible:
+            # If source view is alone, let it expand to fill the entire area
             self.source_view.pack(side="top", fill="both", expand=True)
+        elif self._dartboard_visible:
+            # If dartboard is alone, let it expand to fill the entire area
+            self.dartboard_frame.pack(side="top", fill="both", expand=True)
 
     def set_dartboard_visible(self, visible: bool) -> None:
         self._dartboard_visible = visible
