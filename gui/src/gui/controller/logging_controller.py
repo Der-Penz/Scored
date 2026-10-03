@@ -58,6 +58,8 @@ class LoggingController(BaseController):
     def __init__(self, view: AppView, model: AppModel, event_channel: EventChannel):
         super().__init__(view, model, event_channel)
 
+        set_log_level(model.config.log_level)
+
         self._records: queue.Queue[str] = queue.Queue(maxsize=QUEUE_SIZE)
         self._handler = QueueLogHandler(self._records)
         self._log_window: LoggingView | None = None

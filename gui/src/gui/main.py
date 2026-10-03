@@ -14,35 +14,6 @@ from gui.model.model import AppModel
 from gui.view.app_view import AppView
 
 
-def get_args() -> AppConfig:
-    """
-    Parses command line arguments for the application.
-
-    Returns
-    -------
-    AppConfig
-        The parsed command line arguments populated into a dataclass.
-    """
-    parser = argparse.ArgumentParser(description="Run the Scored GUI application.")
-
-    parser.add_argument(
-        "--source",
-        "-s",
-        type=str,
-        help="Specify the initial video source: a number for webcam, a path to a video file, or a URL for an HTTP stream.",
-    )
-    parser.add_argument(
-        "--data-dir",
-        "-d",
-        type=Path,
-        help="Specify the directory to store data during game sessions.",
-    )
-
-    args = parser.parse_args()
-
-    return AppConfig(**vars(args))
-
-
 def main() -> None:
     parser = ArgumentParser()
     parser.add_arguments(AppConfig, dest="config")
@@ -74,14 +45,14 @@ def main() -> None:
             root.update_idletasks()
 
             # With ttkbootstrap, the root winfo_id maps directly to the target window handle
-            hwnd = ctypes.windll.user32.GetParent(root.winfo_id())
+            hwnd = ctypes.windll.user32.GetParent(root.winfo_id())  # type: ignore
             if not hwnd:
                 hwnd = root.winfo_id()
 
             # DWMWA_USE_IMMERSIVE_DARK_MODE attribute code
             # 20 is standard for Windows 11 / recent Win 10 builds
             value = ctypes.c_int(1)
-            ctypes.windll.dwmapi.DwmSetWindowAttribute(
+            ctypes.windll.dwmapi.DwmSetWindowAttribute(  # type: ignore
                 hwnd, 20, ctypes.byref(value), ctypes.sizeof(value)
             )
         except Exception:
