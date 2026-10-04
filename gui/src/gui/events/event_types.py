@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
+
+from gui.model.layout import Panel
 from scored_lib.dart.dart_throw import DartThrow
 from scored_lib.game.dart_leg import ThrowResult
 from scored_lib.game.player import Player
@@ -90,3 +92,16 @@ class FrameCapturedEvent:
     """Carries the captured frame (too transient for model storage)."""
 
     frame: np.ndarray
+
+
+@dataclass(frozen=True)
+class PanelRebound:
+    """
+    Notification that a panel's widgets were rebuilt in a new dock position.
+
+    Tk cannot move an existing widget to another window, so docking a panel
+    somewhere new recreates its widgets. Controllers holding a reference to the
+    old widget use this to re-acquire it and repaint from the model.
+    """
+
+    panel: Panel

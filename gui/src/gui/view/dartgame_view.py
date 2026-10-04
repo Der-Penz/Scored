@@ -11,8 +11,9 @@ class DartGameView(ttk.Frame):
     """View for playing a single dart leg."""
 
     def __init__(self, master: tk.Misc):
-        super().__init__(master, style="Card.TFrame", padding=5)
-        self.pack(fill="both", expand=True)
+        # Geometry is owned by the PanelManager, so this only lays out its
+        # children. Padding comes from the column this view is docked in.
+        super().__init__(master, style="Card.TFrame", padding=0)
 
         self._create_widgets()
 

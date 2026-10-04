@@ -83,6 +83,7 @@ source = { editable = "gui" }
 dependencies = [
     { name = "darkdetect" },
     { name = "pillow" },
+    { name = "platformdirs" },
     { name = "scored-lib" },
     { name = "simple-parsing" },
     { name = "ttkbootstrap" },
@@ -92,6 +93,7 @@ dependencies = [
 requires-dist = [
     { name = "darkdetect", specifier = ">=0.8.0" },
     { name = "pillow", specifier = ">=12.3.0" },
+    { name = "platformdirs", specifier = ">=4.0.0" },
     { name = "scored-lib", editable = "scored_lib" },
     { name = "simple-parsing", specifier = ">=0.1.8" },
     { name = "ttkbootstrap", specifier = ">=2.2.0" },

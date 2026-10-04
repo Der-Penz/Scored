@@ -4,14 +4,15 @@ from gui.controller.camera_feed_controller import CameraFeedController
 from gui.controller.dartboard_controller import DartboardController
 from gui.controller.dartgame_controller import DartGameController
 from gui.controller.data_collection_controller import DataCollectionController
+from gui.controller.layout_controller import LayoutController
 from gui.controller.logging_controller import LoggingController
 from gui.controller.menu_controller import MenuController
 from gui.controller.player_controller import PlayerController
 from gui.controller.scorecard_controller import ScorecardController
 from gui.controller.scorepad_controller import ScorepadController
 from gui.controller.source_controller import SourceController
-from gui.events.event_channel import EventChannel
 from gui.model.args import AppConfig
+from gui.model.layout import Panel
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
@@ -23,27 +24,26 @@ class AppController(BaseController):
     """
 
     def __init__(self, view: AppView, model: AppModel, config: AppConfig):
-        super().__init__(view, model, EventChannel())
+        # The view owns the channel, because the panel manager announces panel
+        # rebuilds on it while the controllers are still being constructed.
+        super().__init__(view, model, view.event_channel)
 
         self.config = config
         self.source_controller = SourceController(view, model, self._event_channel)
-        self.dartboard_controller = DartboardController(
-            view, model, self._event_channel
-        )
+        self.layout_controller = LayoutController(view, model, self._event_channel)
+        self.dartboard_controller = DartboardController(view, model, self._event_channel)
         self.dartgame_controller = DartGameController(view, model, self._event_channel)
         self.player_controller = PlayerController(view, model, self._event_channel)
-        self.camera_feed_controller = CameraFeedController(
-            view, model, self._event_channel
-        )
+        self.camera_feed_controller = CameraFeedController(view, model, self._event_channel)
         self.scorepad_controller = ScorepadController(view, model, self._event_channel)
         self.menu_controller = MenuController(view, model, self._event_channel)
-        self.scorecard_controller = ScorecardController(
-            view, model, self._event_channel
-        )
-        self.data_collection_controller = DataCollectionController(
-            view, model, self._event_channel
-        )
+        self.scorecard_controller = ScorecardController(view, model, self._event_channel)
+        self.data_collection_controller = DataCollectionController(view, model, self._event_channel)
         self.logging_controller = LoggingController(view, model, self._event_channel)
+
+        self.layout_controller.add_visibility_listener(
+            Panel.SOURCE, self.camera_feed_controller.set_active
+        )
 
         self.bind_menu()
         self.bind_components()
@@ -53,8 +53,7 @@ class AppController(BaseController):
         self.source_controller.bind_menu(source_menu)
 
         view_menu = self._create_menu("View")
-        self.dartboard_controller.bind_menu(view_menu)
-        self.camera_feed_controller.bind_menu(view_menu)
+        self.layout_controller.bind_menu(view_menu)
 
         game_menu = self._create_menu("Game")
         self.dartgame_controller.bind_menu(game_menu)
@@ -91,6 +90,7 @@ class AppController(BaseController):
         self.dartgame_controller.start()
         self.player_controller.start()
         self.scorepad_controller.start()
+        self.layout_controller.start()
         self.menu_controller.start()
         self.scorecard_controller.start()
         self.data_collection_controller.start()

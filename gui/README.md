@@ -35,7 +35,14 @@ The `dartboard` view can be used to see the dart drawn in a canvas to visualize 
 
 The 'camera feed` view shows the current image from the source, use it for debugging and to see if the images are captured correctly. 
 
-Both views can be toggled by clicking on the "View" button and selecting the desired view.
+All three views can be rearranged from the "View" menu:
+
+- **Show Dartboard / Camera Feed / Control Panel** toggles a single view. Showing a hidden view puts it back in the column it was last in.
+- **Left Column / Right Column** sets exactly which views that column holds, either stacked or empty. A column holds at most two views.
+- **Swap Columns** exchanges the two sides.
+- **Reset Layout** returns to the default: dartboard and camera feed on the left, control panel on the right.
+
+The layout is remembered between sessions and stored in `layout.json` in the OS user state directory.
 
 ## Data Collection
 
