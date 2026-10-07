@@ -4,7 +4,6 @@ from gui.events.event_channel import EventChannel
 from gui.events.event_types import (
     GameStarted,
     GameStateChanged,
-    PanelRebound,
     PlayerAdded,
     PlayerRemoved,
     TurnChanged,
@@ -13,21 +12,21 @@ from gui.model.layout import Panel
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
-from gui.view.dartgame_view import DartGameView
 from gui.view.player_view import PlayerView
 
 
 class PlayerController(BaseController):
     """Thin controller for the PlayerView to keep scores displayed correctly"""
 
-    def __init__(self, view: AppView, model: AppModel, event_channel: EventChannel) -> None:
+    def __init__(
+        self, view: AppView, model: AppModel, event_channel: EventChannel
+    ) -> None:
         super().__init__(view, model, event_channel)
-        self._game_view: DartGameView = view.game_view
 
     @property
     def player_view(self) -> PlayerView:
-        """The live player view; the control panel is rebuilt when it moves."""
-        return self._game_view.player_view
+        """The live player view; the control panel is rebuilt when it changes host."""
+        return self._view.game_view.player_view
 
     def bind_menu(self, menu: tk.Menu) -> None:
         pass
@@ -38,7 +37,7 @@ class PlayerController(BaseController):
         self._event_channel.subscribe(GameStateChanged, self._on_game_state_changed)
         self._event_channel.subscribe(TurnChanged, self._on_turn_changed)
         self._event_channel.subscribe(GameStarted, self._on_game_started)
-        self._event_channel.subscribe(PanelRebound, self._on_panel_rebound)
+        self.on_panel_rebound(Panel.CONTROL, self._restore_players)
 
     def _on_player_added(self, event: PlayerAdded) -> None:
         self.player_view.add_player(event.player)
@@ -55,14 +54,6 @@ class PlayerController(BaseController):
             self.player_view.set_current(game.current_player)
 
     def _on_game_started(self, _event: GameStarted) -> None:
-        self._restore_players()
-
-    def _on_panel_rebound(self, event: PanelRebound) -> None:
-        """Re-acquire the control panel after it was rebuilt in a new column."""
-        if event.panel is not Panel.CONTROL:
-            return
-
-        self._game_view = self._view.game_view
         self._restore_players()
 
     def _restore_players(self) -> None:

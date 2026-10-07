@@ -31,14 +31,22 @@ class AppController(BaseController):
         self.config = config
         self.source_controller = SourceController(view, model, self._event_channel)
         self.layout_controller = LayoutController(view, model, self._event_channel)
-        self.dartboard_controller = DartboardController(view, model, self._event_channel)
+        self.dartboard_controller = DartboardController(
+            view, model, self._event_channel
+        )
         self.dartgame_controller = DartGameController(view, model, self._event_channel)
         self.player_controller = PlayerController(view, model, self._event_channel)
-        self.camera_feed_controller = CameraFeedController(view, model, self._event_channel)
+        self.camera_feed_controller = CameraFeedController(
+            view, model, self._event_channel
+        )
         self.scorepad_controller = ScorepadController(view, model, self._event_channel)
         self.menu_controller = MenuController(view, model, self._event_channel)
-        self.scorecard_controller = ScorecardController(view, model, self._event_channel)
-        self.data_collection_controller = DataCollectionController(view, model, self._event_channel)
+        self.scorecard_controller = ScorecardController(
+            view, model, self._event_channel
+        )
+        self.data_collection_controller = DataCollectionController(
+            view, model, self._event_channel
+        )
         self.logging_controller = LoggingController(view, model, self._event_channel)
 
         self.layout_controller.add_visibility_listener(
@@ -69,6 +77,7 @@ class AppController(BaseController):
         self.logging_controller.bind_menu(log_menu)
 
     def bind_components(self) -> None:
+        self.layout_controller.bind_components()
         self.source_controller.bind_components()
         self.dartboard_controller.bind_components()
         self.camera_feed_controller.bind_components()

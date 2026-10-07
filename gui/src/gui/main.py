@@ -32,7 +32,7 @@ def main() -> None:
     model = AppModel(config=args.config)
     root = ttk.Window(
         title="Scored GUI",
-        minsize=(600, 500),
+        minsize=None,
         theme=f"bootstrap-{'dark' if darkdetect.isDark() else 'light'}",
     )
     is_dark = darkdetect.isDark()

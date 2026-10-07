@@ -1,6 +1,8 @@
 import logging
 
 import ttkbootstrap as ttk
+from scored_lib.game.game_leg import GameLeg
+from scored_lib.game.player import Player
 
 from gui.events.event_channel import EventChannel
 from gui.events.event_types import (
@@ -8,7 +10,6 @@ from gui.events.event_types import (
     GameEnded,
     GameStarted,
     GameStateChanged,
-    PanelRebound,
     PlayerAdded,
     PlayerRemoved,
     ThrowRecorded,
@@ -20,55 +21,54 @@ from gui.model.layout import Panel
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
-from gui.view.dartgame_view import DartGameView
 from gui.view.turn_end_overlay import TurnEndOverlay
 from gui.view.turn_view import TurnView
 from gui.view.widgets.dartgame_dialogs import ask_game_settings, ask_remove_player
-from scored_lib.game.game_leg import GameLeg
-from scored_lib.game.player import Player
 
 
 class DartGameController(BaseController):
     def __init__(self, view: AppView, model: AppModel, event_channel: EventChannel):
         super().__init__(view, model, event_channel)
-        self._game_view: DartGameView = view.game_view
         self._turn_pending = False
 
     @property
     def turn_view(self) -> TurnView:
-        """The live turn view; the control panel is rebuilt when it moves."""
-        return self._game_view.turn_view
+        """The live turn view; the control panel is rebuilt when it changes host."""
+        return self._view.game_view.turn_view
 
     @property
     def turn_overlay(self) -> TurnEndOverlay:
-        """The live turn end overlay; the control panel is rebuilt when it moves."""
-        return self._game_view.scorepad_view.turn_overlay
+        """The live turn end overlay; rebuilt with the control panel."""
+        return self._view.game_view.scorepad_view.turn_overlay
 
     def bind_menu(self, menu: ttk.Menu) -> None:
-        menu.add_command(label="Add Player", command=self._add_player, accelerator="Ctrl+P")
+        menu.add_command(
+            label="Add Player", command=self._add_player, accelerator="Ctrl+P"
+        )
         menu.add_command(label="Remove Player", command=self._remove_player)
         menu.add_separator()
-        menu.add_command(label="Start Game", command=self._start_game, accelerator="Ctrl+G")
+        menu.add_command(
+            label="Start Game", command=self._start_game, accelerator="Ctrl+G"
+        )
 
     def bind_components(self) -> None:
         self._view.master.bind_all("<Control-p>", lambda _: self._add_player())
         self._view.master.bind_all("<Control-g>", lambda _: self._start_game())
         self._event_channel.subscribe(DartThrowEvent, self._on_dart_throw)
-        self._event_channel.subscribe(GameStateChanged, lambda _: self._refresh_current_turn())
+        self._event_channel.subscribe(
+            GameStateChanged, lambda _: self._refresh_current_turn()
+        )
         self._event_channel.subscribe(UndoRequested, lambda e: self._undo_throw())
-        self._event_channel.subscribe(PanelRebound, self._on_panel_rebound)
-        self.turn_overlay.bind_callbacks(on_next=self._on_turn_next, on_undo=self._on_turn_undo)
+        self.on_panel_rebound(Panel.CONTROL, self._restore_control_panel)
 
-    def _on_panel_rebound(self, event: PanelRebound) -> None:
-        """Re-acquire the control panel after it was rebuilt in a new column."""
-        if event.panel is not Panel.CONTROL:
-            return
-
-        self._game_view = self._view.game_view
-        self.turn_overlay.bind_callbacks(on_next=self._on_turn_next, on_undo=self._on_turn_undo)
+    def _restore_control_panel(self) -> None:
+        """Put a rebuilt control panel back into the state the game is in."""
+        self.turn_overlay.bind_callbacks(
+            on_next=self._on_turn_next, on_undo=self._on_turn_undo
+        )
         self._refresh_current_turn()
         if self._turn_pending:
-            # A move can happen while waiting for the turn to be confirmed.
+            # A layout change can happen while waiting for the turn to be confirmed.
             self.turn_overlay.show()
 
     def _on_dart_throw(self, event: DartThrowEvent) -> None:
@@ -169,7 +169,7 @@ class DartGameController(BaseController):
             self.turn_view.set_throw(idx + 1, str(throw_result.dart_throw.short_label))
 
     def start(self) -> None:
-        pass
+        self._restore_control_panel()
 
     def _add_player(self) -> None:
         """Prompt for a player name and add them to the player list."""

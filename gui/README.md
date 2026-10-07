@@ -35,12 +35,14 @@ The `dartboard` view can be used to see the dart drawn in a canvas to visualize 
 
 The 'camera feed` view shows the current image from the source, use it for debugging and to see if the images are captured correctly. 
 
-All three views can be rearranged from the "View" menu:
+All three views can be rearranged from the "View" menu. Every view has its own entry with a submenu of four options:
 
-- **Show Dartboard / Camera Feed / Control Panel** toggles a single view. Showing a hidden view puts it back in the column it was last in.
-- **Left Column / Right Column** sets exactly which views that column holds, either stacked or empty. A column holds at most two views.
-- **Swap Columns** exchanges the two sides.
-- **Reset Layout** returns to the default: dartboard and camera feed on the left, control panel on the right.
+- **Left** shows the view in the left column.
+- **Right** shows the view in the right column.
+- **Floating** gives the view a window of its own, which stays on top of the main window. Closing that window hides the view.
+- **Hidden** takes the view off screen.
+
+The window is split into a left and a right column with a draggable divider that cannot be squeezed below what the panels need. A column with no views disappears and the other one takes the whole width. Views in the same column share the height equally.
 
 The layout is remembered between sessions and stored in `layout.json` in the OS user state directory.
 

@@ -3,11 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
-
-from gui.model.layout import Panel
 from scored_lib.dart.dart_throw import DartThrow
 from scored_lib.game.dart_leg import ThrowResult
 from scored_lib.game.player import Player
+
+from gui.model.layout import Panel
 
 
 @dataclass(frozen=True)
@@ -97,11 +97,18 @@ class FrameCapturedEvent:
 @dataclass(frozen=True)
 class PanelRebound:
     """
-    Notification that a panel's widgets were rebuilt in a new dock position.
+    Notification that a panel's widgets were built again for a new host.
 
-    Tk cannot move an existing widget to another window, so docking a panel
-    somewhere new recreates its widgets. Controllers holding a reference to the
-    old widget use this to re-acquire it and repaint from the model.
+    Tk cannot move an existing widget to another parent, so a panel that changes
+    column or is floated has to be recreated. Controllers holding a reference to
+    the old widget use this to re-acquire it and repaint from the model.
     """
+
+    panel: Panel
+
+
+@dataclass(frozen=True)
+class PanelClosed:
+    """Notification that the user closed the window of a floating panel."""
 
     panel: Panel

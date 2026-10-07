@@ -1,11 +1,11 @@
 import tkinter as tk
-from typing import Sequence
+from collections.abc import Sequence
 
 import ttkbootstrap as ttk
 from PIL import Image, ImageTk
+from scored_lib.game.dart_leg import ThrowResult
 
 from gui.protocols.dartboard_protocol import DartboardProtocol
-from scored_lib.game.dart_leg import ThrowResult
 
 
 class SourceView(ttk.Frame, DartboardProtocol):
@@ -36,7 +36,7 @@ class SourceView(ttk.Frame, DartboardProtocol):
             return
 
         image = pil_image.copy()
-        image.thumbnail((width, height), Image.LANCZOS)
+        image.thumbnail((width, height), Image.Resampling.LANCZOS)
 
         self._photo_image = ImageTk.PhotoImage(image)
         self.image_label.config(image=self._photo_image)

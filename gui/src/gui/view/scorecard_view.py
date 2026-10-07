@@ -1,20 +1,24 @@
 import tkinter as tk
 
 import ttkbootstrap as ttk
-from ttkbootstrap import Tableview
-
-from gui.helper import center_dialog
 from scored_lib.game.dart_leg import DartLeg
 from scored_lib.game.game_leg import GameLeg
 from scored_lib.game.player import Player
+from ttkbootstrap import Tableview
+
+from gui.view.top_level_view import TopLevelView
 
 
-class ScorecardView(ttk.Toplevel):
+class ScorecardView(TopLevelView):
     """
     Snapshot scorecard window showing each player's throw history for the
     current game. The data is captured at construction time and never updated
     live; reopen the window to see fresh data.
     """
+
+    TITLE = "Scorecard"
+    GEOMETRY = "580x420"
+    MIN_SIZE = (420, 280)
 
     def __init__(
         self,
@@ -23,12 +27,6 @@ class ScorecardView(ttk.Toplevel):
         game: GameLeg | None,
     ) -> None:
         super().__init__(master)
-        self.title("Scorecard")
-        self.transient(master)
-        self.geometry("580x420")
-        self.minsize(420, 280)
-        center_dialog(self, self.master)
-
         self._tables: dict[Player, Tableview] = {}
 
         if not players:
@@ -61,7 +59,7 @@ class ScorecardView(ttk.Toplevel):
             ],
             rowdata=self._build_rows(leg) if leg is not None else [],
             autofit=True,
-            stripecolor=(colors.light, colors.bg),
+            stripecolor=(colors.light, colors.bg),  # type: ignore
         )
 
     def _build_rows(self, leg: DartLeg) -> list[tuple]:

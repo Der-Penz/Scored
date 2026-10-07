@@ -1,4 +1,5 @@
 import tkinter as tk
+from typing import TypeVar
 
 import ttkbootstrap as ttk
 
@@ -9,14 +10,16 @@ from gui.view.dartgame_view import DartGameView
 from gui.view.panel_manager import PanelManager
 from gui.view.source_view import SourceView
 
+T = TypeVar("T")
+
 
 class AppView(ttk.Frame):
     """
     The main application view that contains all other views.
 
     The window is a menu bar followed by a :class:`PanelManager`, which decides
-    which of the dartboard, camera feed and control panel are visible and where
-    each of them is docked.
+    where each of the dartboard, camera feed and control panel is shown: in the
+    left or right column, in a window of its own, or not at all.
     """
 
     def __init__(self, master: tk.Tk):
@@ -24,7 +27,6 @@ class AppView(ttk.Frame):
         self.master = master
 
         self._event_channel = EventChannel()
-        self._layout = load_layout()
 
         self.create_widgets()
 
@@ -43,40 +45,47 @@ class AppView(ttk.Frame):
 
         self.pack(fill="both", expand=True)
 
-        self.panel_manager = PanelManager(self, self._event_channel)
+        self.panel_manager = PanelManager(
+            self,
+            self._event_channel,
+            {
+                Panel.DARTBOARD: DartboardView,
+                Panel.SOURCE: SourceView,
+                Panel.CONTROL: DartGameView,
+            },
+        )
         self.panel_manager.pack(fill="both", expand=True)
-        self.panel_manager.register(Panel.DARTBOARD, DartboardView)
-        self.panel_manager.register(Panel.SOURCE, SourceView)
-        self.panel_manager.register(Panel.CONTROL, DartGameView)
-        self.panel_manager.build(self._layout)
+        self.panel_manager.apply(load_layout())
 
     @property
     def layout(self) -> Layout:
         """Return the layout currently on screen."""
-        return self._layout
+        return self.panel_manager.layout
 
     def apply_layout(self, layout: Layout) -> None:
         """Dock the panels according to *layout*."""
-        self._layout = layout
         self.panel_manager.apply(layout)
+
+    def _panel_view(self, panel: Panel, kind: type[T]) -> T:
+        """Return the live widget of *panel*, which is rebuilt when it changes host."""
+        widget = self.panel_manager.widget(panel)
+        if not isinstance(widget, kind):
+            raise TypeError(
+                f"Panel {panel.label} is a {type(widget).__name__}, not a {kind.__name__}"
+            )
+        return widget
 
     @property
     def dartboard_view(self) -> DartboardView:
-        """The live dartboard panel, which moves when the layout changes."""
-        widget = self.panel_manager.widget(Panel.DARTBOARD)
-        assert isinstance(widget, DartboardView)
-        return widget
+        """The live dartboard panel."""
+        return self._panel_view(Panel.DARTBOARD, DartboardView)
 
     @property
     def source_view(self) -> SourceView:
-        """The live camera feed panel, which moves when the layout changes."""
-        widget = self.panel_manager.widget(Panel.SOURCE)
-        assert isinstance(widget, SourceView)
-        return widget
+        """The live camera feed panel."""
+        return self._panel_view(Panel.SOURCE, SourceView)
 
     @property
     def game_view(self) -> DartGameView:
-        """The live control panel, which moves when the layout changes."""
-        widget = self.panel_manager.widget(Panel.CONTROL)
-        assert isinstance(widget, DartGameView)
-        return widget
+        """The live control panel."""
+        return self._panel_view(Panel.CONTROL, DartGameView)

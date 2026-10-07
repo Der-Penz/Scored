@@ -1,11 +1,16 @@
 import logging
 import tkinter as tk
 
+from scored_lib.dart.constants import Position
+from scored_lib.dart.dart_throw import PositionSource
+from scored_lib.dart.scoring import score_dart_throw
+from scored_lib.game.dart_leg import ThrowResult
+from scored_lib.util.position import canvas_to_relative_position
+
 from gui.events.event_channel import EventChannel
 from gui.events.event_types import (
     DartThrowEvent,
     GameStateChanged,
-    PanelRebound,
     ThrowEdited,
     TurnChanged,
 )
@@ -13,12 +18,6 @@ from gui.model.layout import Panel
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
-from gui.view.dartboard_view import DartboardView
-from scored_lib.dart.constants import Position
-from scored_lib.dart.dart_throw import PositionSource
-from scored_lib.dart.scoring import score_dart_throw
-from scored_lib.game.dart_leg import ThrowResult
-from scored_lib.util.position import canvas_to_relative_position
 
 DRAG_RELEASE_DEBOUNCE_MS = 150
 
@@ -26,7 +25,6 @@ DRAG_RELEASE_DEBOUNCE_MS = 150
 class DartboardController(BaseController):
     def __init__(self, view: AppView, model: AppModel, event_channel: EventChannel):
         super().__init__(view, model, event_channel)
-        self._dartboard_view: DartboardView | None = None
         self._darts: list[ThrowResult] = []
         self._debounce_after_id: str | None = None
 
@@ -36,13 +34,12 @@ class DartboardController(BaseController):
     def bind_components(self) -> None:
         self._event_channel.subscribe(TurnChanged, lambda _: self.clear())
         self._event_channel.subscribe(GameStateChanged, self.on_game_state_changed)
-        self._event_channel.subscribe(PanelRebound, self._on_panel_rebound)
+        self.on_panel_rebound(Panel.DARTBOARD, self._restore_board)
 
     def clear(self) -> None:
         self._cancel_debounce()
         self._darts.clear()
-        if self._dartboard_view is not None:
-            self._dartboard_view.clear()
+        self._view.dartboard_view.clear()
 
     def on_game_state_changed(self, _: GameStateChanged) -> None:
         if self._model.game is None:
@@ -53,8 +50,7 @@ class DartboardController(BaseController):
         self._redraw_darts()
 
     def _redraw_darts(self) -> None:
-        if self._dartboard_view is not None:
-            self._dartboard_view.draw_darts(self._darts)
+        self._view.dartboard_view.draw_darts(self._darts)
 
     def _on_board_resized(self) -> None:
         """Re-draw the current dart list at the new board geometry."""
@@ -89,7 +85,9 @@ class DartboardController(BaseController):
         scored = score_dart_throw(scoring_position, PositionSource.MANUAL)
 
         previous = self._darts[index].dart_throw
-        result = self._model.game.current_leg.edit_current_throw(scored, throw=index + 1)
+        result = self._model.game.current_leg.edit_current_throw(
+            scored, throw=index + 1
+        )
 
         logging.info(f"Edited throw: {previous} -> {scored}")
 
@@ -108,20 +106,17 @@ class DartboardController(BaseController):
             self._debounce_after_id = None
 
     def start(self) -> None:
-        self._bind_view()
+        self._restore_board()
 
-    def _bind_view(self) -> None:
-        """Point at the live dartboard panel and hook up its callbacks."""
-        self._dartboard_view = self._view.dartboard_view
-        self._dartboard_view.set_resize_callback(self._on_board_resized)
-        self._dartboard_view.set_drag_release_callback(self._on_drag_release)
-        self._dartboard_view.set_board_click_callback(self._on_board_click)
+    def _bind_callbacks(self) -> None:
+        """Point the live dartboard panel at this controller."""
+        board = self._view.dartboard_view
+        board.set_resize_callback(self._on_board_resized)
+        board.set_drag_release_callback(self._on_drag_release)
+        board.set_board_click_callback(self._on_board_click)
 
-    def _on_panel_rebound(self, event: PanelRebound) -> None:
-        """Re-acquire the dartboard after it was rebuilt in a new column."""
-        if event.panel is not Panel.DARTBOARD:
-            return
-
+    def _restore_board(self) -> None:
+        """Hook up and repaint the dartboard after it was rebuilt."""
         self._cancel_debounce()
-        self._bind_view()
+        self._bind_callbacks()
         self._redraw_darts()

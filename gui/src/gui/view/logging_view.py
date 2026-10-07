@@ -6,7 +6,7 @@ from tkinter import font as tkfont
 
 import ttkbootstrap as ttk
 
-from gui.helper import center_dialog
+from gui.view.top_level_view import TopLevelView
 
 LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")
 POLL_INTERVAL_MS = 100
@@ -20,7 +20,7 @@ CONTROL_KEYS = frozenset({"c", "a", "f"})
 CONTROL_MASK = 0x0004
 
 
-class LoggingView(ttk.Toplevel):
+class LoggingView(TopLevelView):
     """
     Scrollable window showing the log records emitted by the application.
 
@@ -30,6 +30,10 @@ class LoggingView(ttk.Toplevel):
     keeps all Tk calls on the main thread.
     """
 
+    TITLE = "Application Logs"
+    GEOMETRY = "820x460"
+    MIN_SIZE = (520, 300)
+
     def __init__(
         self,
         master: tk.Misc,
@@ -38,11 +42,6 @@ class LoggingView(ttk.Toplevel):
         on_open_folder: Callable[[], None] | None = None,
     ) -> None:
         super().__init__(master)
-        self.title("Application Logs")
-        self.transient(master)
-        self.geometry("820x460")
-        self.minsize(520, 300)
-        center_dialog(self, self.master)
 
         self._on_level_change = on_level_change
         self._on_open_folder = on_open_folder
@@ -90,11 +89,11 @@ class LoggingView(ttk.Toplevel):
             borderwidth=1,
             relief="solid",
             highlightthickness=0,
-            background=colors.inputbg,
-            foreground=colors.inputfg,
-            insertbackground=colors.inputfg,
-            selectbackground=colors.selectbg,
-            selectforeground=colors.selectfg,
+            background=colors.inputbg,  # type: ignore
+            foreground=colors.inputfg,  # type: ignore
+            insertbackground=colors.inputfg,  # type: ignore
+            selectbackground=colors.selectbg,  # type: ignore
+            selectforeground=colors.selectfg,  # type: ignore
         )
         vertical = ttk.Scrollbar(body, orient="vertical", command=self._text.yview)
         horizontal = ttk.Scrollbar(body, orient="horizontal", command=self._text.xview)
@@ -192,7 +191,7 @@ class LoggingView(ttk.Toplevel):
 
     def _block_editing(self, event: tk.Event) -> str | None:
         """Prevent editing the log area while still allowing copy and select."""
-        if event.state & CONTROL_MASK and (event.keysym or "").lower() in CONTROL_KEYS:
+        if event.state & CONTROL_MASK and (event.keysym or "").lower() in CONTROL_KEYS:  # type: ignore
             return None
 
         if event.keysym in NAVIGATION_KEYS:

@@ -1,8 +1,11 @@
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 
 import ttkbootstrap as ttk
 
 from gui.events.event_channel import EventChannel
+from gui.events.event_types import PanelRebound
+from gui.model.layout import Panel
 from gui.model.model import AppModel
 from gui.view.app_view import AppView
 
@@ -26,6 +29,17 @@ class BaseController(ABC):
         self._view = view
         self._model = model
         self._event_channel = event_channel
+
+    def on_panel_rebound(self, panel: Panel, handler: Callable[[], None]) -> None:
+        """
+        Call *handler* whenever *panel* is rebuilt because it changed host.
+
+        Use this to re-acquire the live widgets of *panel* from the view and to
+        put them back into the state the model is in.
+        """
+        self._event_channel.subscribe(
+            PanelRebound, lambda event: handler() if event.panel is panel else None
+        )
 
     @abstractmethod
     def bind_menu(self, menu: ttk.Menu) -> None:
