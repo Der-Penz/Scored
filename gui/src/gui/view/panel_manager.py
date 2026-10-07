@@ -142,6 +142,7 @@ class PanelManager(ttk.Frame):
 
         self.bind("<Configure>", self._on_configure)
         self._panes.bind("<B1-Motion>", self._clamp_sash)
+        self._panes.bind("<Configure>", self._clamp_sash)
 
     def _read_window_minimum(self) -> tuple[int, int]:
         """
@@ -205,9 +206,7 @@ class PanelManager(ttk.Frame):
             self._widget_for(panel)
 
         for placement, panels in layout.docks():
-            self._docks[placement].dock(
-                panels, [self._widgets[panel] for panel in panels]
-            )
+            self._docks[placement].dock(panels, [self._widgets[panel] for panel in panels])
 
         for panel in layout.panels_at(Placement.FLOATING):
             self._widgets[panel].pack(
@@ -217,8 +216,13 @@ class PanelManager(ttk.Frame):
         self._sync_columns()
 
         # A pane added while the panedwindow is still measuring itself is laid
-        # out against a collapsed size and never recovers, so let the geometry
-        # settle before the minimum size is worked out.
+        # out against a collapsed size and never recovers, so the geometry is
+        # settled first. The panedwindow then gives the fresh pane whatever the
+        # others leave over - in a narrow window that can be nothing at all -
+        # so the split is put back into the range both columns can live in,
+        # which the panedwindow only accepts once its panes have been laid out.
+        self.update_idletasks()
+        self._clamp_sash()
         self.update_idletasks()
         self._apply_window_minimum()
 
@@ -350,9 +354,10 @@ class PanelManager(ttk.Frame):
 
     def _clamp_sash(self, _event: tk.Event | None = None) -> None:
         """
-        Pull the sash back if a drag would push a column below its minimum.
+        Pull the sash back if a column would end up below its minimum.
 
-        This runs on every button motion inside the panels, so it leaves the
+        This runs on every button motion inside the panels, on every relayout
+        of the panedwindow and after a layout is applied, so it leaves the
         sash alone unless it is actually out of bounds.
         """
         docks = [self._docks[placement] for placement, _ in self._layout.docks()]

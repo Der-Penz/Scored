@@ -13,7 +13,7 @@ class SourceView(ttk.Frame, DartboardProtocol):
     def __init__(self, master: tk.Misc):
         super().__init__(master)
         self.image_label = ttk.Label(self, anchor="center")
-        self.image_label.pack(fill="both", expand=True)
+        self.image_label.pack(fill="both")
         self._photo_image = None
 
     def draw_darts(self, throws: Sequence[ThrowResult]) -> None:
@@ -29,8 +29,9 @@ class SourceView(ttk.Frame, DartboardProtocol):
             self._photo_image = None
             return
 
-        width = self.master.winfo_width()
-        height = self.master.winfo_height()
+        # Fit the image to this panel, not to the column it is docked in.
+        width = self.winfo_width()
+        height = self.winfo_height()
         if width <= 1 or height <= 1:
             return
 

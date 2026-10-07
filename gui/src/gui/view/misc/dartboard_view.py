@@ -19,6 +19,7 @@ from scored_lib.util.position import (
 DART_TAG = "dart_marker"
 BOTTOM_Y_NORMALIZED = 0.92
 DART_RADIUS = 10
+CANVAS_REQUEST_HEIGHT = 160
 
 DragReleaseCallback = Callable[[int, Position], None]
 
@@ -28,7 +29,9 @@ class DartboardView(tk.Frame, DartboardProtocol):
 
     def __init__(self, master: tk.Misc):
         super().__init__(master, bg="black")
-        self.canvas = ttk.Canvas(self, highlightthickness=0, bg="black")
+        self.canvas = ttk.Canvas(
+            self, highlightthickness=0, bg="black", height=CANVAS_REQUEST_HEIGHT
+        )
         self.canvas.pack(fill="both", expand=True)
 
         self._on_resize: Callable[[], None] | None = None
@@ -57,10 +60,8 @@ class DartboardView(tk.Frame, DartboardProtocol):
     def set_board_click_callback(self, callback: Callable[[Position], None]) -> None:
         self._on_board_click = callback
 
-    def _on_canvas_resize(self, event: tk.Event) -> None:
-        # Keep the drawing area square so the board fills the full canvas.
-        if event.width > 1 and self.canvas.winfo_height() != event.width:
-            self.canvas.configure(height=event.width)
+    def _on_canvas_resize(self, _event: tk.Event) -> None:
+
         self.redraw()
         if self._on_resize is not None:
             self._on_resize()
@@ -89,9 +90,7 @@ class DartboardView(tk.Frame, DartboardProtocol):
             color = DART_COLORS[index % len(DART_COLORS)]
             label = str(throw_result.throw)
 
-            pos = self._marker_pixel_position(
-                throw_result.dart_throw, index, len(throws)
-            )
+            pos = self._marker_pixel_position(throw_result.dart_throw, index, len(throws))
             px, py = self._normalized_to_pixel(pos)
             draw_dart_marker(
                 self.canvas,
@@ -103,17 +102,13 @@ class DartboardView(tk.Frame, DartboardProtocol):
                 tag=(DART_TAG, f"{DART_TAG}_{index}"),
             )
 
-    def _marker_pixel_position(
-        self, dart_throw: DartThrow, index: int, count: int
-    ) -> Position:
+    def _marker_pixel_position(self, dart_throw: DartThrow, index: int, count: int) -> Position:
         """Return the pixel position for a marker based on its throw's position."""
         position = dart_throw.position
         if position is not None:
             return relative_to_canvas_position(position)
 
-        if (
-            dart_throw.is_miss
-        ):  # place missed darts evenly along the bottom of the board
+        if dart_throw.is_miss:  # place missed darts evenly along the bottom of the board
             spacing = 1.0 / (count + 1)
             x = spacing * (index + 1)
             return relative_to_canvas_position((x, BOTTOM_Y_NORMALIZED))
