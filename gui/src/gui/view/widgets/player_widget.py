@@ -1,9 +1,8 @@
-import ttkbootstrap as ttk
-from scored_lib.game.player import Player
-
-
 import tkinter as tk
 from tkinter import font as tkfont
+
+import ttkbootstrap as ttk
+from scored_lib.game.player import Player
 
 ACTIVE_STYLE = "info"
 INACTIVE_STYLE = "secondary"

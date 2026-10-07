@@ -2,10 +2,9 @@ import tkinter as tk
 from collections.abc import Sequence
 
 import ttkbootstrap as ttk
+from gui.protocols.dartboard_protocol import DartboardProtocol
 from PIL import Image, ImageTk
 from scored_lib.game.dart_leg import ThrowResult
-
-from gui.protocols.dartboard_protocol import DartboardProtocol
 
 
 class SourceView(ttk.Frame, DartboardProtocol):

@@ -4,7 +4,7 @@ from gui.events.event_channel import EventChannel
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
-from gui.view.scorecard_view import ScorecardView
+from gui.view.game.scorecard_view import ScorecardView
 
 
 class ScorecardController(BaseController):

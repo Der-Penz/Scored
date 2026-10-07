@@ -1,8 +1,8 @@
 from abc import ABC
 
 import cv2
-from gui.services.images.source import ImageSource
 import numpy as np
+from gui.services.images.source import ImageSource
 
 
 class CV2CaptureSource(ImageSource, ABC):

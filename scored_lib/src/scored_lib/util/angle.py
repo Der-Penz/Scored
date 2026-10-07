@@ -1,4 +1,5 @@
 import math
+
 from scored_lib.dart.constants import Position
 
 

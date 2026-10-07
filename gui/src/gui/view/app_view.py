@@ -5,10 +5,10 @@ import ttkbootstrap as ttk
 
 from gui.events.event_channel import EventChannel
 from gui.model.layout import Layout, Panel, load_layout
-from gui.view.dartboard_view import DartboardView
-from gui.view.dartgame_view import DartGameView
+from gui.view.game.dartgame_view import DartGameView
+from gui.view.misc.dartboard_view import DartboardView
+from gui.view.misc.source_view import SourceView
 from gui.view.panel_manager import PanelManager
-from gui.view.source_view import SourceView
 
 T = TypeVar("T")
 

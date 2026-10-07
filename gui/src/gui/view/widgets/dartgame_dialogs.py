@@ -1,7 +1,6 @@
 import tkinter as tk
 
 import ttkbootstrap as ttk
-
 from gui.helper import center_dialog
 from scored_lib.game.player import Player
 from scored_lib.game.rule import FinishRule, StartRule

@@ -1,8 +1,7 @@
 import tkinter as tk
 
 import ttkbootstrap as ttk
-
-from gui.view.turn_end_overlay import TurnEndOverlay
+from gui.view.game.turn_end_overlay import TurnEndOverlay
 from scored_lib.dart.multiplier import Multiplier
 
 

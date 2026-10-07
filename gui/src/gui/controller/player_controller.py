@@ -12,7 +12,7 @@ from gui.model.layout import Panel
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
-from gui.view.player_view import PlayerView
+from gui.view.game.player_view import PlayerView
 
 
 class PlayerController(BaseController):

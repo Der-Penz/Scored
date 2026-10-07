@@ -1,8 +1,7 @@
 import tkinter as tk
 
-from gui.view.widgets.player_widget import PlayerWidget, CARD_MIN_WIDTH
 import ttkbootstrap as ttk
-
+from gui.view.widgets.player_widget import CARD_MIN_WIDTH, PlayerWidget
 from scored_lib.game.player import Player
 
 

@@ -2,19 +2,18 @@ import tkinter as tk
 from collections.abc import Callable, Sequence
 
 import ttkbootstrap as ttk
+from gui.protocols.dartboard_protocol import DartboardProtocol
+from gui.view.drawing.dartboard import (
+    DART_COLORS,
+    draw_dart_marker,
+    draw_dartboard,
+)
 from scored_lib.dart.constants import Position
 from scored_lib.dart.dart_throw import DartThrow
 from scored_lib.game.dart_leg import ThrowResult
 from scored_lib.util.position import (
     get_segment_default_position,
     relative_to_canvas_position,
-)
-
-from gui.protocols.dartboard_protocol import DartboardProtocol
-from gui.view.drawing.dartboard import (
-    DART_COLORS,
-    draw_dart_marker,
-    draw_dartboard,
 )
 
 DART_TAG = "dart_marker"

@@ -1,3 +1,5 @@
+import math
+
 from scored_lib.dart.constants import (
     BED_ANGLE_DEGREES,
     DARTBOARD_NUMBERS,
@@ -5,7 +7,6 @@ from scored_lib.dart.constants import (
     Position,
 )
 from scored_lib.dart.multiplier import Multiplier
-import math
 
 
 def get_segment_default_position(number: int, multiplier: Multiplier) -> Position:

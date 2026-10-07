@@ -1,7 +1,8 @@
 import tkinter as tk
-from scored_lib.dart.dart_throw import DartThrow
-import ttkbootstrap as ttk
 from tkinter import font as tkfont
+
+import ttkbootstrap as ttk
+from scored_lib.dart.dart_throw import DartThrow
 
 EMPTY_THROW = "➜"
 

@@ -5,7 +5,6 @@ from collections.abc import Callable
 from tkinter import font as tkfont
 
 import ttkbootstrap as ttk
-
 from gui.view.top_level_view import TopLevelView
 
 LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")

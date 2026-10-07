@@ -7,19 +7,19 @@ import tkinter as tk
 from collections import deque
 
 import ttkbootstrap as ttk
-
-from gui.events.event_channel import EventChannel
-from gui.helper import open_in_file_manager
-from gui.model.model import AppModel
-from gui.protocols.controller import BaseController
-from gui.view.app_view import AppView
-from gui.view.logging_view import LoggingView
 from scored_lib.logging_setup import (
     create_formatter,
     get_log_file,
     resolve_caller,
     set_log_level,
 )
+
+from gui.events.event_channel import EventChannel
+from gui.helper import open_in_file_manager
+from gui.model.model import AppModel
+from gui.protocols.controller import BaseController
+from gui.view.app_view import AppView
+from gui.view.misc.logging_view import LoggingView
 
 QUEUE_SIZE = 5000
 PRELOAD_LINES = 500

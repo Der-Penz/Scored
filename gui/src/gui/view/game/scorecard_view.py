@@ -1,12 +1,11 @@
 import tkinter as tk
 
 import ttkbootstrap as ttk
+from gui.view.top_level_view import TopLevelView
 from scored_lib.game.dart_leg import DartLeg
 from scored_lib.game.game_leg import GameLeg
 from scored_lib.game.player import Player
 from ttkbootstrap import Tableview
-
-from gui.view.top_level_view import TopLevelView
 
 
 class ScorecardView(TopLevelView):

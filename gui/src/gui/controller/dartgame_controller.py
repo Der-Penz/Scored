@@ -21,8 +21,8 @@ from gui.model.layout import Panel
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
-from gui.view.turn_end_overlay import TurnEndOverlay
-from gui.view.turn_view import TurnView
+from gui.view.game.turn_end_overlay import TurnEndOverlay
+from gui.view.game.turn_view import TurnView
 from gui.view.widgets.dartgame_dialogs import ask_game_settings, ask_remove_player
 
 

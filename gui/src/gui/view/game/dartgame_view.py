@@ -1,10 +1,9 @@
 import tkinter as tk
 
 import ttkbootstrap as ttk
-
-from gui.view.player_view import PlayerView
-from gui.view.scorepad_view import ScorepadView
-from gui.view.turn_view import TurnView
+from gui.view.game.player_view import PlayerView
+from gui.view.game.scorepad_view import ScorepadView
+from gui.view.game.turn_view import TurnView
 
 
 class DartGameView(ttk.Frame):
