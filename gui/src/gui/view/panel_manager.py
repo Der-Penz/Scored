@@ -20,29 +20,20 @@ from gui.model.layout import (
 from gui.view.top_level_view import TopLevelView
 
 PADDING = 5
-
-# ttk's panedwindow has no option for the sash, so its thickness is only known
-# to its layout engine. Four pixels is its usual value and close enough for the
-# minimum window size.
 SASH = 4
 
-# The smallest size at which a panel is still usable, as (width, height) in
-# pixels. The dartboard draws a fixed square board, the feed needs enough room
-# to aim a dart by eye, and the control panel has to fit the scorepad and the
-# turn.
+
 MIN_PANEL_SIZE: Mapping[Panel, tuple[int, int]] = {
     Panel.DARTBOARD: (320, 320),
     Panel.SOURCE: (240, 160),
     Panel.CONTROL: (280, 260),
+    Panel.ANNOTATION: (480, 320),
 }
 
-# Floor for the window, so the menu bar and separators never squeeze the panels.
 MIN_WINDOW_SIZE = (400, 300)
 
 FLOAT_SIZE = "640x480"
 
-# How a panel gets built: given the parent to build into, return the widget.
-# The view classes themselves are the factories, so they only take a master.
 PanelFactory = Callable[[tk.Misc], tk.Misc]
 
 
@@ -210,9 +201,9 @@ class PanelManager(ttk.Frame):
             )
 
         for panel in layout.panels_at(Placement.FLOATING):
-            self._widgets[panel].pack(
+            self._widgets[panel].pack(  # type: ignore
                 fill="both", expand=True, padx=PADDING, pady=PADDING
-            )  # type: ignore
+            )
 
         self._sync_columns()
 

@@ -5,6 +5,7 @@ import ttkbootstrap as ttk
 
 from gui.events.event_channel import EventChannel
 from gui.model.layout import Layout, Panel, load_layout
+from gui.view.annotation.annotation_view import AnnotationView
 from gui.view.game.dartgame_view import DartGameView
 from gui.view.misc.dartboard_view import DartboardView
 from gui.view.misc.source_view import SourceView
@@ -18,8 +19,8 @@ class AppView(ttk.Frame):
     The main application view that contains all other views.
 
     The window is a menu bar followed by a :class:`PanelManager`, which decides
-    where each of the dartboard, camera feed and control panel is shown: in the
-    left or right column, in a window of its own, or not at all.
+    where each of the dartboard, camera feed, control panel and annotation view
+    is shown: in the left or right column, in a window of its own, or not at all.
     """
 
     def __init__(self, master: tk.Tk):
@@ -52,6 +53,7 @@ class AppView(ttk.Frame):
                 Panel.DARTBOARD: DartboardView,
                 Panel.SOURCE: SourceView,
                 Panel.CONTROL: DartGameView,
+                Panel.ANNOTATION: AnnotationView,
             },
         )
         self.panel_manager.pack(fill="both", expand=True)
@@ -89,3 +91,8 @@ class AppView(ttk.Frame):
     def game_view(self) -> DartGameView:
         """The live control panel."""
         return self._panel_view(Panel.CONTROL, DartGameView)
+
+    @property
+    def annotation_view(self) -> AnnotationView:
+        """The live annotation panel."""
+        return self._panel_view(Panel.ANNOTATION, AnnotationView)

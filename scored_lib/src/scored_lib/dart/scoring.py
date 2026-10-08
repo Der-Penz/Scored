@@ -1,13 +1,12 @@
 import math
 
-from scored_lib.annotation.throw_annotation import PositionSource
 from scored_lib.dart.constants import (
     BED_ANGLE_DEGREES,
     DARTBOARD_NUMBERS,
     RING_RADIUS_NORMALIZED,
     Position,
 )
-from scored_lib.dart.dart_throw import DartThrow
+from scored_lib.dart.dart_throw import DartThrow, PositionSource
 from scored_lib.dart.multiplier import Multiplier
 from scored_lib.util.angle import get_clockwise_angle
 

@@ -7,9 +7,9 @@ from tkinter import filedialog
 
 import numpy as np
 import ttkbootstrap as ttk
+from scored_lib.annotation.image_annotation import ImageAnnotation
 from scored_lib.annotation.leg_annotation import LegAnnotation
 from scored_lib.annotation.leg_annotation_handler import LegAnnotationHandler
-from scored_lib.annotation.throw_annotation import DartThrowAnnotation
 
 from gui.events.event_channel import EventChannel, Subscription
 from gui.events.event_types import (
@@ -131,11 +131,10 @@ class DataCollectionController(BaseController):
 
     def _annotation_for(
         self, event: ThrowRecorded | ThrowEdited, leg_id: str
-    ) -> DartThrowAnnotation:
+    ) -> ImageAnnotation:
         """Build the on-disk annotation for a recorded or edited throw."""
         result = event.result
-        return DartThrowAnnotation(
-            throw_data=result.dart_throw,
+        return ImageAnnotation(
             is_bust=result.bust,
             leg_id=leg_id,
             round=result.round,

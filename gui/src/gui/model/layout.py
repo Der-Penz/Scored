@@ -7,6 +7,7 @@ from dataclasses import dataclass, field, replace
 from enum import Enum
 from pathlib import Path
 
+from dataclasses_json import DataClassJsonMixin, config, dataclass_json
 from platformdirs import user_state_dir
 
 APP_NAME = "scored"
@@ -18,6 +19,7 @@ class Panel(str, Enum):
     DARTBOARD = "dartboard"
     SOURCE = "source"
     CONTROL = "control"
+    ANNOTATION = "annotation"
 
     @property
     def label(self) -> str:
@@ -48,6 +50,7 @@ _PANEL_LABELS = {
     Panel.DARTBOARD: "Dartboard",
     Panel.SOURCE: "Camera Feed",
     Panel.CONTROL: "Control Panel",
+    Panel.ANNOTATION: "Annotation",
 }
 
 _PLACEMENT_LABELS = {
@@ -60,18 +63,57 @@ _PLACEMENT_LABELS = {
 # Where a panel goes when the layout does not say.
 DEFAULT_PLACEMENT = Placement.LEFT
 
+# Panels that stay out of the way until the user turns them on, so a saved
+# layout from an older version does not suddenly take up room.
+_PANEL_DEFAULTS = {
+    Panel.ANNOTATION: Placement.HIDDEN,
+}
 
+
+def default_placement_of(panel: Panel) -> Placement:
+    """Return where *panel* goes when the layout does not mention it."""
+    return _PANEL_DEFAULTS.get(panel, DEFAULT_PLACEMENT)
+
+
+def _encode_placements(placements: Mapping[Panel, Placement]) -> dict[str, str]:
+    """Serialize panel/placement enum mapping into string keys/values for JSON."""
+    return {panel.value: placement.value for panel, placement in placements.items()}
+
+
+def _decode_placements(data: object) -> dict[Panel, Placement]:
+    """Deserialize JSON data back into panel/placement mappings, skipping unknowns."""
+    if not isinstance(data, dict):
+        raise TypeError("layout must be an object")
+
+    placements: dict[Panel, Placement] = {}
+    for key, value in data.items():
+        try:
+            panel = Panel(key)
+            placement = Placement(value)
+        except ValueError:
+            continue
+        placements[panel] = placement
+    return placements
+
+
+@dataclass_json
 @dataclass(frozen=True)
-class Layout:
+class Layout(DataClassJsonMixin):
     """
     Where every panel is shown.
 
     ``placements`` maps every panel to its :class:`Placement`. Entries the
-    caller leaves out count as :data:`DEFAULT_PLACEMENT`, which keeps a saved
-    layout usable after a new panel is added.
+    caller leaves out count as :func:`default_placement_of`, which keeps a
+    saved layout usable after a new panel is added.
     """
 
-    placements: Mapping[Panel, Placement] = field(default_factory=dict)
+    placements: Mapping[Panel, Placement] = field(
+        default_factory=dict,
+        metadata=config(
+            encoder=_encode_placements,
+            decoder=_decode_placements,
+        ),
+    )
 
     def __post_init__(self) -> None:
         given = {
@@ -81,10 +123,8 @@ class Layout:
         object.__setattr__(
             self,
             "placements",
-            {panel: given.get(panel, DEFAULT_PLACEMENT) for panel in Panel},
+            {panel: given.get(panel, default_placement_of(panel)) for panel in Panel},
         )
-
-    # -- queries ----------------------------------------------------------
 
     def placement_of(self, panel: Panel) -> Placement:
         """Return where *panel* is shown."""
@@ -106,47 +146,12 @@ class Layout:
                 if panels:
                     yield placement, panels
 
-    # -- transitions ------------------------------------------------------
-
     def with_placement(self, panel: Panel, placement: Placement) -> Layout:
         """Return a layout that shows *panel* at *placement*."""
         return replace(
             self,
             placements={**self.placements, Panel(panel): Placement(placement)},
         )
-
-    # -- serialisation ----------------------------------------------------
-
-    def to_dict(self) -> dict[str, str]:
-        """Return a JSON serializable representation of the layout."""
-        return {
-            panel.value: placement.value for panel, placement in self.placements.items()
-        }
-
-    @classmethod
-    def from_dict(cls, data: object) -> Layout:
-        """Build a layout from :meth:`to_dict` output.
-
-        Entries naming an unknown panel are skipped, so a file written by a
-        different version of the application still loads.
-
-        Raises
-        ------
-        ValueError
-            If *data* is not an object or holds an unusable placement, which
-            lets the caller fall back to the default layout.
-        """
-        if not isinstance(data, dict):
-            raise TypeError("layout must be an object")
-
-        placements: dict[Panel, Placement] = {}
-        for key, value in data.items():
-            try:
-                panel = Panel(key)
-            except ValueError:
-                continue
-            placements[panel] = Placement(value)
-        return cls(placements=placements)
 
 
 def default_layout() -> Layout:
@@ -183,7 +188,7 @@ def load_layout(path: Path | None = None) -> Layout:
         logging.warning(f"Could not read layout from {target}: {exc}")
         return default_layout()
     try:
-        return Layout.from_dict(json.loads(raw))
+        return Layout.from_json(raw)
     except (json.JSONDecodeError, TypeError, ValueError) as exc:
         logging.warning(f"Ignoring unusable layout in {target}: {exc}")
         return default_layout()
@@ -194,6 +199,6 @@ def save_layout(layout: Layout, path: Path | None = None) -> None:
     target = path or _layout_path()
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(json.dumps(layout.to_dict(), indent=2), encoding="utf-8")
+        target.write_text(layout.to_json(indent=2), encoding="utf-8")
     except OSError as exc:
         logging.warning(f"Could not save layout to {target}: {exc}")
