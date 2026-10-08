@@ -2,6 +2,8 @@ import math
 from dataclasses import dataclass, field
 from enum import Enum
 
+from dataclasses_json import DataClassJsonMixin, dataclass_json
+
 from scored_lib.dart.constants import PolarPosition, Position
 from scored_lib.dart.multiplier import Multiplier
 
@@ -14,8 +16,9 @@ class PositionSource(str, Enum):
     AI = "ai"
 
 
+@dataclass_json
 @dataclass(frozen=True, eq=True)
-class DartThrow:
+class DartThrow(DataClassJsonMixin):
     """
     Represents a dart throw on the dartboard.
 

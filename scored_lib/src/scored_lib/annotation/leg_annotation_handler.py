@@ -7,13 +7,17 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from time import time
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
 import cv2
 import numpy as np
 
+from scored_lib.annotation.image_annotation import ImageAnnotation
 from scored_lib.annotation.leg_annotation import LegAnnotation
-from scored_lib.annotation.throw_annotation import DartThrowAnnotation
+
+LEG_JSON = "leg.json"
+ANNOTATION_JSON = "annotation.json"
+IMAGE_FILE = "image.jpg"
 
 DELETED_MARKER = "d"
 DELETED_SUFFIX = f"_{DELETED_MARKER}"
@@ -25,8 +29,8 @@ _REMOVED_DIR_PATTERN = re.compile(r"^(\d+)_(\d+)(?:_d+)$")
 class Sample(NamedTuple):
     """A single stored sample: its annotation and the linked camera frame."""
 
-    annotation: DartThrowAnnotation
-    image_path: Path | None
+    annotation: ImageAnnotation
+    image_path: Path
 
 
 def _parse_sample_dir(name: str) -> tuple[int, int] | None:
@@ -109,7 +113,7 @@ class LegAnnotationHandler:
 
     def __post_init__(self) -> None:
         self.directory.mkdir(parents=True, exist_ok=True)
-        self.info.save(self.directory)
+        self._save_leg_info()
 
     @property
     def sample_count(self) -> int:
@@ -142,6 +146,12 @@ class LegAnnotationHandler:
                 continue
             yield self.read(*index)
 
+    def _save_leg_info(self) -> None:
+        """Write the leg info to disk."""
+        self.directory.joinpath(LEG_JSON).write_text(
+            self.info.to_json(), encoding="utf-8"
+        )
+
     def end_leg(self, is_won: bool) -> None:
         """Finalize the leg by updating the leg info and writing it to disk.
 
@@ -151,7 +161,7 @@ class LegAnnotationHandler:
             Whether the player won the leg
         """
         self.info.end(time(), is_won)
-        self.info.save(self.directory)
+        self._save_leg_info()
 
     def sample_directory(self, round: int, throw: int, create: bool = False) -> Path:
         """Get the folder of a single sample.
@@ -180,16 +190,13 @@ class LegAnnotationHandler:
             directory.mkdir(parents=True, exist_ok=True)
         return directory
 
-    def add(self, annotation: DartThrowAnnotation, image: np.ndarray) -> Sample:
-        """Add a new sample for a throw.
-
-        The sample folder is created, the image is written into it and the
-        annotation is saved next to it, linked to that image.
+    def save(self, annotation: ImageAnnotation, image: np.ndarray) -> Sample:
+        """Save a new ImageAnnotation
 
         Parameters
         ----------
-        annotation : DartThrowAnnotation
-            The annotation to store, it carries the ``(round, throw)`` coordinates.
+        annotation : ImageAnnotation
+            The annotation to store.
         image : np.ndarray
             The camera frame to store alongside the annotation. Accepts a numpy
             array representing the image.
@@ -205,15 +212,17 @@ class LegAnnotationHandler:
 
         if image is not None:
             cv2.imwrite(
-                str(directory / f"image.jpg"), cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+                str(directory / IMAGE_FILE), cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
             )
 
-        annotation.save(directory)
+        directory.joinpath(ANNOTATION_JSON).write_text(
+            annotation.to_json(), encoding="utf-8"
+        )
 
         logging.debug(
             f"Stored sample {annotation.round}_{annotation.throw} in {self.directory}"
         )
-        return Sample(annotation, directory / "image.jpg")
+        return Sample(annotation, directory / IMAGE_FILE)
 
     def read(self, round: int, throw: int) -> Sample:
         """Read the sample of a throw.
@@ -231,7 +240,9 @@ class LegAnnotationHandler:
             The stored sample with its annotation and linked image path.
         """
         directory = self.sample_directory(round, throw)
-        return Sample(DartThrowAnnotation.load(directory), directory / "image.jpg")
+        return Sample(
+            ImageAnnotation.from_json(directory.read_text()), directory / IMAGE_FILE
+        )
 
     def exists(self, round: int, throw: int) -> bool:
         """Check whether a sample exists for a throw.
@@ -249,62 +260,6 @@ class LegAnnotationHandler:
             True if a sample folder exists for the given throw, False otherwise.
         """
         return self.sample_directory(round, throw).exists()
-
-    def edit(
-        self,
-        round: int,
-        throw: int,
-        annotation: DartThrowAnnotation | None = None,
-        image: Any = None,
-    ) -> Sample:
-        """Edit an existing sample, either its annotation or its image.
-
-        Passing only one of ``annotation`` or ``image`` keeps the other part of
-        the sample as it is, including the image link of the annotation.
-
-        Parameters
-        ----------
-        round : int
-            One-based index of the round within the leg.
-        throw : int
-            One-based index of the throw within the round.
-        annotation : DartThrowAnnotation | None, optional
-            The replacement annotation, by default None. It has to be located
-            at the same ``(round, throw)`` coordinates as the sample. When it
-            carries no ``image_filename`` the existing image link is kept.
-        image : Any, optional
-            The replacement camera frame, by default None. Accepts a numpy array,
-            the encoded bytes of an image, or a path to an image file. Passing
-            an image replaces the linked one, the old file is removed.
-
-        Returns
-        -------
-        Sample
-            The updated sample.
-        """
-        if annotation is None and image is None:
-            raise ValueError("Provide an annotation, an image, or both.")
-
-        directory = self.sample_directory(round, throw)
-
-        if annotation is not None:
-            if annotation.index != (round, throw):
-                raise ValueError(
-                    f"Annotation is located at round {annotation.round} throw {annotation.throw} "
-                    f"but is being edited as round {round} throw {throw}."
-                )
-            annotation.save(directory)
-        if image is not None:
-            cv2.imwrite(
-                str(directory / "image.jpg"), cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-            )
-
-        return Sample(
-            annotation
-            if annotation is not None
-            else DartThrowAnnotation.load(directory),
-            directory / "image.jpg",
-        )
 
     def remove(self, round: int, throw: int) -> None:
         """
