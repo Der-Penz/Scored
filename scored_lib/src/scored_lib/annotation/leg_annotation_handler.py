@@ -319,6 +319,32 @@ class LegAnnotationHandler:
         logging.debug(f"Marked sample {round}_{throw} as removed in {target}")
         return target
 
+    def save_round(
+        self, round: int, annotations: list[ImageAnnotation], images: list[np.ndarray]
+    ) -> None:
+        """Save all throws of a round.
+
+        Parameters
+        ----------
+        round : int
+            One-based index of the round within the leg.
+        annotations : list[ImageAnnotation]
+            The annotations to store for the throws of the round.
+        images : list[np.ndarray]
+            The images to store for the throws of the round.
+        """
+        for i, (annotation, image) in enumerate(zip(annotations, images)):
+            if annotation.round != round:
+                raise ValueError(
+                    f"annotation round {annotation.round} does not match {round}"
+                )
+            if annotation.throw != i + 1:
+                raise ValueError(
+                    f"annotation throw {annotation.throw} does not match {i + 1}"
+                )
+
+            self.save(annotation, image)
+
     def _sample_directories(self) -> list[Path]:
         """Collect the live sample folders of the leg in round and throw order.
 
