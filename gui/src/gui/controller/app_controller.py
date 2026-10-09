@@ -3,7 +3,7 @@ import ttkbootstrap as ttk
 from gui.controller.camera_feed_controller import CameraFeedController
 from gui.controller.dartboard_controller import DartboardController
 from gui.controller.dartgame_controller import DartGameController
-from gui.controller.data_collection_controller import DataCollectionController
+from gui.controller.image_collection_controller import ImageCollectionController
 from gui.controller.layout_controller import LayoutController
 from gui.controller.logging_controller import LoggingController
 from gui.controller.menu_controller import MenuController
@@ -44,7 +44,7 @@ class AppController(BaseController):
         self.scorecard_controller = ScorecardController(
             view, model, self._event_channel
         )
-        self.data_collection_controller = DataCollectionController(
+        self.data_collection_controller = ImageCollectionController(
             view, model, self._event_channel
         )
         self.logging_controller = LoggingController(view, model, self._event_channel)
@@ -69,9 +69,6 @@ class AppController(BaseController):
         self.menu_controller.bind_menu(game_menu)
         self.scorecard_controller.bind_menu(game_menu)
         self.player_controller.bind_menu(game_menu)
-
-        data_menu = self._create_menu("Data")
-        self.data_collection_controller.bind_menu(data_menu)
 
         log_menu = self._create_menu("Logs")
         self.logging_controller.bind_menu(log_menu)
