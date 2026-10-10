@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 from dataclasses_json import DataClassJsonMixin, dataclass_json
@@ -22,3 +24,17 @@ class AnnotatedThrow(DataClassJsonMixin):
 
     throw_data: DartThrow
     keypoints: DartKeypoints | None = None
+
+    def make_copy(self) -> AnnotatedThrow:
+        """Make a copy of this AnnotatedThrow."""
+
+        if self.keypoints is not None:
+            keypoints = DartKeypoints(
+                tip=self.keypoints.tip,
+                flight=self.keypoints.flight,
+                copied=True,
+            )
+        else:
+            keypoints = None
+
+        return AnnotatedThrow(throw_data=self.throw_data, keypoints=keypoints)

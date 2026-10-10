@@ -54,6 +54,18 @@ class GameLeg:
         return self.players[self._current_player]
 
     @property
+    def last_player(self) -> Player:
+        """
+        Returns the player who threw most recently.
+
+        If no throw has been registered yet, returns the starting player.
+        """
+        owner = self._owner_of_last_throw()
+        if owner is None:
+            return self.players[self.starting_player]
+        return self.players[owner]
+
+    @property
     def winner(self) -> Player | None:
         return self._winner
 

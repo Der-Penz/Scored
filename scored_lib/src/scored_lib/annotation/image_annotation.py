@@ -27,8 +27,6 @@ class ImageAnnotation(DataClassJsonMixin):
         One-based index of the round (visit) within the leg.
     throw : int
         One-based index of the throw within the round (1, 2, or 3).
-    leg_id: str
-        Unique identifier for the leg session this throw belongs to.
     timestamp : float
         POSIX timestamp recording when the throw occurred.
     is_bust : bool
@@ -39,7 +37,6 @@ class ImageAnnotation(DataClassJsonMixin):
 
     round: int
     throw: int
-    leg_id: str
     timestamp: float = field(default_factory=lambda: time())
     is_bust: bool = False
     throws: list[AnnotatedThrow] = field(default_factory=list)

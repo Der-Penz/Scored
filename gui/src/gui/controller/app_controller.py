@@ -1,5 +1,6 @@
 import ttkbootstrap as ttk
 
+from gui.controller.annotation_controller import AnnotationController
 from gui.controller.camera_feed_controller import CameraFeedController
 from gui.controller.dartboard_controller import DartboardController
 from gui.controller.dartgame_controller import DartGameController
@@ -44,7 +45,10 @@ class AppController(BaseController):
         self.scorecard_controller = ScorecardController(
             view, model, self._event_channel
         )
-        self.data_collection_controller = ImageCollectionController(
+        self.image_collection_controller = ImageCollectionController(
+            view, model, self._event_channel
+        )
+        self.annotation_controller = AnnotationController(
             view, model, self._event_channel
         )
         self.logging_controller = LoggingController(view, model, self._event_channel)
@@ -83,7 +87,8 @@ class AppController(BaseController):
         self.scorepad_controller.bind_components()
         self.menu_controller.bind_components()
         self.scorecard_controller.bind_components()
-        self.data_collection_controller.bind_components()
+        self.image_collection_controller.bind_components()
+        self.annotation_controller.bind_components()
         self.logging_controller.bind_components()
 
     def start(self):
@@ -99,7 +104,8 @@ class AppController(BaseController):
         self.layout_controller.start()
         self.menu_controller.start()
         self.scorecard_controller.start()
-        self.data_collection_controller.start()
+        self.image_collection_controller.start()
+        self.annotation_controller.start()
         self.logging_controller.start()
 
         # start the main loop of the Tkinter application
