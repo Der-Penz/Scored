@@ -10,6 +10,7 @@ dependencies = [
     "pytorch-lightning>=2.6.6",
     "scikit-image>=0.26.0",
     "scored-lib",
+    "timm>=1.0.30",
     "torch>=2.14.1",
     "torchvision>=0.29.1",
 ]
