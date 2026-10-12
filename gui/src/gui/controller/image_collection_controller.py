@@ -39,14 +39,12 @@ class ImageCollectionController(BaseController):
 
     def _on_throw_captured(self, event: events.ThrowRecorded) -> None:
         if self._current_frame is not None and self._model.game is not None:
-            num_throws_this_round = len(
-                self._model.game.current_leg.current_turn_throws
-            )
+            num_throws_this_round = len(self._model.game.current_leg.current_turn_throws)
             if num_throws_this_round == 0:
                 num_annotations = len(self._model.annotations)
-                assert num_annotations == 0, (
-                    "There should be no annotations if there are no throws."
-                )
+                assert (
+                    num_annotations == 0
+                ), "There should be no annotations if there are no throws."
 
             if self._model.annotations:
                 previous_annotation, _ = self._model.annotations[-1]
@@ -73,18 +71,30 @@ class ImageCollectionController(BaseController):
             self._current_frame = None
 
     def _on_throw_edited(self, event: events.ThrowEdited) -> None:
-        if self._model.annotations and len(self._model.annotations) > 0:
-            throw_number = event.result.throw
-            annotation, _ = self._model.annotations[throw_number - 1]
+        if not self._model.annotations:
+            return
 
-            annotation.throws[throw_number - 1] = AnnotatedThrow(
-                throw_data=event.result.dart_throw,
-                keypoints=annotation.throws[throw_number - 1].keypoints,
-            )
+        throw_number = event.result.throw
+        if not 1 <= throw_number <= len(self._model.annotations):
+            return
+        annotation, _ = self._model.annotations[throw_number - 1]
 
+        for index, entry in enumerate(annotation.throws):
+            if entry.throw_data == event.previous:
+                annotation.throws[index] = AnnotatedThrow(
+                    throw_data=event.result.dart_throw,
+                    keypoints=entry.keypoints,
+                )
+                break
+        else:
             logging.debug(
-                f"Edited annotation for round {annotation.round}, throw {annotation.throw}. Updated throw data to {event.result.dart_throw}."
+                f"Edited annotation for round {annotation.round}, throw {throw_number}: no entry matched the previous throw."
             )
+            return
+
+        logging.debug(
+            f"Edited annotation for round {annotation.round}, throw {throw_number}. Updated throw data to {event.result.dart_throw}."
+        )
 
     def _on_throw_removed(self, _: events.ThrowRemoved) -> None:
         if self._model.annotations and len(self._model.annotations) > 0:
