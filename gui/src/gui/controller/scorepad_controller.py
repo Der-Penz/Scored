@@ -39,7 +39,7 @@ class ScorepadController(BaseController):
             "<Shift_L>", lambda _: self.set_multiplier(Multiplier.DOUBLE)
         )
         self._view.master.bind(
-            "<Control_L>", lambda _: self.set_multiplier(Multiplier.TRIPLE)
+            "<Alt_L>", lambda _: self.set_multiplier(Multiplier.TRIPLE)
         )
 
         self.on_panel_rebound(Panel.CONTROL, self._restore_scorepad)
