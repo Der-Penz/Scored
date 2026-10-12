@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from dataclasses_json import DataClassJsonMixin, dataclass_json
+from dataclasses_json import DataClassJsonMixin, config, dataclass_json
 
 from scored_lib.dart.constants import Position
 
@@ -21,6 +21,6 @@ class DartKeypoints(DataClassJsonMixin):
         instead of being placed by hand.
     """
 
-    tip: Position
-    flight: Position
+    tip: Position = field(metadata=config(encoder=list, decoder=tuple))
+    flight: Position = field(metadata=config(encoder=list, decoder=tuple))
     copied: bool = False

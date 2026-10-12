@@ -2,7 +2,7 @@ import math
 from dataclasses import dataclass, field
 from enum import Enum
 
-from dataclasses_json import DataClassJsonMixin, dataclass_json
+from dataclasses_json import DataClassJsonMixin, config, dataclass_json
 
 from scored_lib.dart.constants import PolarPosition, Position
 from scored_lib.dart.multiplier import Multiplier
@@ -37,7 +37,9 @@ class DartThrow(DataClassJsonMixin):
 
     number: int
     multiplier: Multiplier
-    position: Position | None = field(compare=False, default=None)
+    position: Position | None = field(
+        compare=False, default=None, metadata=config(encoder=list, decoder=tuple)
+    )
     source: PositionSource = field(compare=False, default=PositionSource.NONE)
 
     def __post_init__(self) -> None:

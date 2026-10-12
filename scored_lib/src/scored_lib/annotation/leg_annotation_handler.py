@@ -148,9 +148,7 @@ class LegAnnotationHandler:
 
     def _save_leg_info(self) -> None:
         """Write the leg info to disk."""
-        self.directory.joinpath(LEG_JSON).write_text(
-            self.info.to_json(), encoding="utf-8"
-        )
+        self.directory.joinpath(LEG_JSON).write_text(self.info.to_json(), encoding="utf-8")
 
     def end_leg(self, is_won: bool) -> None:
         """Finalize the leg by updating the leg info and writing it to disk.
@@ -206,22 +204,14 @@ class LegAnnotationHandler:
         Sample
             The stored sample.
         """
-        directory = self.sample_directory(
-            annotation.round, annotation.throw, create=True
-        )
+        directory = self.sample_directory(annotation.round, annotation.throw, create=True)
 
         if image is not None:
-            cv2.imwrite(
-                str(directory / IMAGE_FILE), cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-            )
+            cv2.imwrite(str(directory / IMAGE_FILE), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 
-        directory.joinpath(ANNOTATION_JSON).write_text(
-            annotation.to_json(), encoding="utf-8"
-        )
+        directory.joinpath(ANNOTATION_JSON).write_text(annotation.to_json(), encoding="utf-8")
 
-        logging.debug(
-            f"Stored sample {annotation.round}_{annotation.throw} in {self.directory}"
-        )
+        logging.debug(f"Stored sample {annotation.round}_{annotation.throw} in {self.directory}")
         return Sample(annotation, directory / IMAGE_FILE)
 
     def read(self, round: int, throw: int) -> Sample:
@@ -241,7 +231,8 @@ class LegAnnotationHandler:
         """
         directory = self.sample_directory(round, throw)
         return Sample(
-            ImageAnnotation.from_json(directory.read_text()), directory / IMAGE_FILE
+            ImageAnnotation.from_json((directory / ANNOTATION_JSON).read_text()),
+            directory / IMAGE_FILE,
         )
 
     def exists(self, round: int, throw: int) -> bool:
@@ -319,9 +310,7 @@ class LegAnnotationHandler:
         logging.debug(f"Marked sample {round}_{throw} as removed in {target}")
         return target
 
-    def save_round(
-        self, annotations: list[ImageAnnotation], images: list[np.ndarray]
-    ) -> None:
+    def save_round(self, annotations: list[ImageAnnotation], images: list[np.ndarray]) -> None:
         """Save all throws of a round.
 
         Parameters
@@ -334,13 +323,9 @@ class LegAnnotationHandler:
         round = -1
         for i, (annotation, image) in enumerate(zip(annotations, images)):
             if round != -1 and annotation.round != round:
-                raise ValueError(
-                    f"annotation round {annotation.round} does not match {round}"
-                )
+                raise ValueError(f"annotation round {annotation.round} does not match {round}")
             if annotation.throw != i + 1:
-                raise ValueError(
-                    f"annotation throw {annotation.throw} does not match {i + 1}"
-                )
+                raise ValueError(f"annotation throw {annotation.throw} does not match {i + 1}")
 
             self.save(annotation, image)
             round = annotation.round
