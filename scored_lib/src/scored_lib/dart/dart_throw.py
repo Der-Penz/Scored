@@ -39,7 +39,12 @@ class DartThrow(DataClassJsonMixin):
     number: int
     multiplier: Multiplier
     position: Position | None = field(
-        compare=False, default=None, metadata=config(encoder=list, decoder=tuple)
+        compare=False,
+        default=None,
+        metadata=config(
+            encoder=lambda position: list(position) if position is not None else None,
+            decoder=lambda position: tuple(position) if position is not None else None,
+        ),
     )
     source: PositionSource = field(compare=False, default=PositionSource.NONE)
 

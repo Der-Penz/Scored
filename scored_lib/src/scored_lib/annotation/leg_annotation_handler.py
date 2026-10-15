@@ -206,10 +206,10 @@ class LegAnnotationHandler:
         """
         directory = self.sample_directory(annotation.round, annotation.throw, create=True)
 
+        annotation_json = annotation.to_json()
         if image is not None:
             cv2.imwrite(str(directory / IMAGE_FILE), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-
-        directory.joinpath(ANNOTATION_JSON).write_text(annotation.to_json(), encoding="utf-8")
+        directory.joinpath(ANNOTATION_JSON).write_text(annotation_json, encoding="utf-8")
 
         logging.debug(f"Stored sample {annotation.round}_{annotation.throw} in {self.directory}")
         return Sample(annotation, directory / IMAGE_FILE)
