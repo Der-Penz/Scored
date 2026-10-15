@@ -15,7 +15,7 @@ class AppConfig:
     data_dir: Path | None = field(
         default=None,
         metadata={
-            "help": "Specify the directory to store annotated data during game sessions."
+            "help": "Enable data collection and store annotated data in this directory during game sessions. Leave unset to start with data collection disabled."
         },
     )
     log_dir: Path | None = field(

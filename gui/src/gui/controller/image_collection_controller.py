@@ -32,12 +32,19 @@ class ImageCollectionController(BaseController):
         self._event_channel.subscribe(events.ThrowRecorded, self._on_throw_captured)
         self._event_channel.subscribe(events.ThrowEdited, self._on_throw_edited)
         self._event_channel.subscribe(events.ThrowRemoved, self._on_throw_removed)
+        self._event_channel.subscribe(
+            events.DataCollectionChanged, self._on_data_collection_changed
+        )
 
     def _save_frame(self, event: events.FrameCapturedEvent) -> None:
+        if not self._model.data_collection_enabled:
+            return
         if event.frame is not None:
             self._current_frame = event.frame
 
     def _on_throw_captured(self, event: events.ThrowRecorded) -> None:
+        if not self._model.data_collection_enabled:
+            return
         if self._current_frame is not None and self._model.game is not None:
             num_throws_this_round = len(self._model.game.current_leg.current_turn_throws)
             if num_throws_this_round == 0:
@@ -71,6 +78,8 @@ class ImageCollectionController(BaseController):
             self._current_frame = None
 
     def _on_throw_edited(self, event: events.ThrowEdited) -> None:
+        if not self._model.data_collection_enabled:
+            return
         if not self._model.annotations:
             return
 
@@ -97,8 +106,15 @@ class ImageCollectionController(BaseController):
         )
 
     def _on_throw_removed(self, _: events.ThrowRemoved) -> None:
+        if not self._model.data_collection_enabled:
+            return
         if self._model.annotations and len(self._model.annotations) > 0:
             self._model.annotations.pop()
             logging.debug(
                 f"Removed last annotation. Remaining annotations: {len(self._model.annotations)}."
             )
+
+    def _on_data_collection_changed(self, event: events.DataCollectionChanged) -> None:
+        """Drop the frame held for the next throw when collection stops."""
+        if not event.enabled:
+            self._current_frame = None

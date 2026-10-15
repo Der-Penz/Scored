@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 from scored_lib.annotation.image_annotation import ImageAnnotation
 from scored_lib.game.game_leg import GameLeg
@@ -14,3 +16,9 @@ class AppModel:
         self.players: list[Player] = []
         self.game: GameLeg | None = None
         self.annotations: list[tuple[ImageAnnotation, np.ndarray]] = []
+        self.data_dir: Path | None = config.data_dir
+
+    @property
+    def data_collection_enabled(self) -> bool:
+        """Whether captured frames and their labels are being collected."""
+        return self.data_dir is not None
