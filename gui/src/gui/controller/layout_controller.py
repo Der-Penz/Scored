@@ -30,16 +30,12 @@ class LayoutController(BaseController):
 
     def __init__(self, view: AppView, model: AppModel, event_channel: EventChannel):
         super().__init__(view, model, event_channel)
-        self._listeners: dict[Panel, list[VisibilityListener]] = {
-            panel: [] for panel in Panel
-        }
+        self._listeners: dict[Panel, list[VisibilityListener]] = {panel: [] for panel in Panel}
         self._vars: dict[Panel, tk.StringVar] = {}
 
     # -- setup ------------------------------------------------------------
 
-    def add_visibility_listener(
-        self, panel: Panel, listener: VisibilityListener
-    ) -> None:
+    def add_visibility_listener(self, panel: Panel, listener: VisibilityListener) -> None:
         """
         Call *listener* whenever *panel* becomes visible or hidden.
 
@@ -92,9 +88,7 @@ class LayoutController(BaseController):
         self._sync(layout)
         logging.debug(
             "Layout: "
-            + ", ".join(
-                f"{panel.label} {layout.placement_of(panel).label}" for panel in Panel
-            )
+            + ", ".join(f"{panel.label} {layout.placement_of(panel).label}" for panel in Panel)
         )
 
     def _sync(self, layout: Layout) -> None:

@@ -60,7 +60,7 @@ class TurnView(ttk.Frame):
             self.highlight_throw(None)
 
     def set_ghostpath(self, path: tuple[DartThrow, ...]) -> None:
-        for label, throw in zip(self._throw_value_labels, path):
+        for label, throw in zip(self._throw_value_labels, path, strict=False):
             label.config(
                 text=throw.short_label,
                 font=tkfont.Font(size=16, weight="normal", slant="italic"),

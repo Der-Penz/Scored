@@ -9,13 +9,15 @@ class AppConfig:
     source: str | None = field(
         default=None,
         metadata={
-            "help": "Specify the initial video source: a number for webcam, a path to a video file, or a URL for an HTTP stream."
+            "help": "Specify the initial video source: a number for webcam, "
+            "a path to a video file, or a URL for an HTTP stream."
         },
     )
     data_dir: Path | None = field(
         default=None,
         metadata={
-            "help": "Enable data collection and store annotated data in this directory during game sessions. Leave unset to start with data collection disabled."
+            "help": "Enable data collection and store annotated data in this directory"
+            "during game sessions. Leave unset to start with data collection disabled."
         },
     )
     log_dir: Path | None = field(

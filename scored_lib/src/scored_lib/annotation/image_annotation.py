@@ -51,7 +51,7 @@ class ImageAnnotation(DataClassJsonMixin):
             The round index and the throw index within that round.
         """
         return (self.round, self.throw)
-    
+
     def add_throw(self, dart_throw: DartThrow, keypoints: DartKeypoints | None) -> None:
         """Add a new throw to the annotation.
 
@@ -64,7 +64,7 @@ class ImageAnnotation(DataClassJsonMixin):
         """
         annotated_throw = AnnotatedThrow(dart_throw, keypoints)
         self.throws.append(annotated_throw)
-        
+
     def remove_throw(self, annotated_throw: AnnotatedThrow) -> None:
         """Remove a throw from the annotation.
 

@@ -4,7 +4,7 @@ import json
 import logging
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field, replace
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 
 from dataclasses_json import DataClassJsonMixin, config, dataclass_json
@@ -13,7 +13,7 @@ from platformdirs import user_state_dir
 APP_NAME = "scored"
 
 
-class Panel(str, Enum):
+class Panel(StrEnum):
     """A dockable view of the application."""
 
     DARTBOARD = "dartboard"
@@ -27,7 +27,7 @@ class Panel(str, Enum):
         return _PANEL_LABELS[self]
 
 
-class Placement(str, Enum):
+class Placement(StrEnum):
     """Where a panel is shown."""
 
     LEFT = "left"
@@ -116,10 +116,7 @@ class Layout(DataClassJsonMixin):
     )
 
     def __post_init__(self) -> None:
-        given = {
-            Panel(panel): Placement(spot)
-            for panel, spot in dict(self.placements).items()
-        }
+        given = {Panel(panel): Placement(spot) for panel, spot in dict(self.placements).items()}
         object.__setattr__(
             self,
             "placements",

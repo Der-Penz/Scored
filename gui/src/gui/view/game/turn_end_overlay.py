@@ -1,7 +1,6 @@
 import tkinter as tk
-from tkinter import font as tkfont
-from tkinter import ttk as _ttk
-from typing import Callable
+from collections.abc import Callable
+from tkinter import font as tkfont, ttk as _ttk
 
 import ttkbootstrap as ttk
 
@@ -52,18 +51,14 @@ class TurnEndOverlay(ttk.Frame):
             NEXT_STYLE,
             **{name: style.configure(source, name) for name in style.configure(source)},
         )
-        style.map(
-            NEXT_STYLE, **{name: style.map(source, name) for name in style.map(source)}
-        )
+        style.map(NEXT_STYLE, **{name: style.map(source, name) for name in style.map(source)})
         style.configure(
             NEXT_STYLE,
             font=tkfont.Font(size=20, weight="bold"),
             padding=(18, 12),
         )
 
-    def bind_callbacks(
-        self, on_next: Callable[[], None], on_undo: Callable[[], None]
-    ) -> None:
+    def bind_callbacks(self, on_next: Callable[[], None], on_undo: Callable[[], None]) -> None:
         """Register the callbacks for the next/undo actions."""
         self._on_next = on_next
         self._on_undo = on_undo
@@ -113,9 +108,7 @@ class TurnEndOverlay(ttk.Frame):
             y = self.master.winfo_rooty()
             image = ImageGrab.grab((x, y, x + width, y + height)).convert("RGB")
             black = Image.new("RGB", image.size, (0, 0, 0))
-            self._background_photo = ImageTk.PhotoImage(
-                Image.blend(image, black, DIM_ALPHA)
-            )
+            self._background_photo = ImageTk.PhotoImage(Image.blend(image, black, DIM_ALPHA))
         except Exception:
             self._background_photo = None
         self._redraw_background()

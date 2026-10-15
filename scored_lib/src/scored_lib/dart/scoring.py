@@ -57,15 +57,11 @@ def get_scored_multiplier(rel_pos: Position) -> Multiplier:
     elif distance <= RING_RADIUS_NORMALIZED["outer_bull"]:
         return Multiplier.OUTER_BULL
     elif (
-        RING_RADIUS_NORMALIZED["triple_inner"]
-        < distance
-        <= RING_RADIUS_NORMALIZED["triple_outer"]
+        RING_RADIUS_NORMALIZED["triple_inner"] < distance <= RING_RADIUS_NORMALIZED["triple_outer"]
     ):
         return Multiplier.TRIPLE
     elif (
-        RING_RADIUS_NORMALIZED["double_inner"]
-        < distance
-        <= RING_RADIUS_NORMALIZED["double_outer"]
+        RING_RADIUS_NORMALIZED["double_inner"] < distance <= RING_RADIUS_NORMALIZED["double_outer"]
     ):
         return Multiplier.DOUBLE
     elif distance > RING_RADIUS_NORMALIZED["double_outer"]:
@@ -95,6 +91,4 @@ def score_dart_throw(
     number = get_scored_number(rel_pos)
     multiplier = get_scored_multiplier(rel_pos)
 
-    return DartThrow(
-        number=number, multiplier=multiplier, position=rel_pos, source=source
-    )
+    return DartThrow(number=number, multiplier=multiplier, position=rel_pos, source=source)

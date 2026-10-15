@@ -157,9 +157,7 @@ def stamp_filename(filename: str, start_time: datetime | None = None) -> str:
     str
         For example ``2026-10-01_18-58-41_512720_gui_scored.log``.
     """
-    return (
-        f"{session_timestamp(start_time)}_{Path(filename).stem}{Path(filename).suffix}"
-    )
+    return f"{session_timestamp(start_time)}_{Path(filename).stem}{Path(filename).suffix}"
 
 
 def list_sessions(base_dir: Path, filename: str) -> list[tuple[str, list[Path]]]:
@@ -198,9 +196,7 @@ def list_sessions(base_dir: Path, filename: str) -> list[tuple[str, list[Path]]]
     return sorted(sessions.items())
 
 
-def prune_sessions(
-    base_dir: Path, filename: str, keep: int = DEFAULT_MAX_SESSIONS
-) -> list[Path]:
+def prune_sessions(base_dir: Path, filename: str, keep: int = DEFAULT_MAX_SESSIONS) -> list[Path]:
     """
     Delete the oldest session logs so at most *keep* of them remain.
 
@@ -330,9 +326,7 @@ def setup_logging(
         logging.getLogger(name).setLevel(logging.WARNING)
 
     if file_error is not None:
-        logging.warning(
-            f"File logging disabled, cannot write to {base_dir}: {file_error}"
-        )
+        logging.warning(f"File logging disabled, cannot write to {base_dir}: {file_error}")
 
     for log in removed_logs:
         logging.info(f"Removed old log file {log.name}")

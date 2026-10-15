@@ -18,9 +18,7 @@ from gui.view.game.scorepad_view import ScorepadView
 class ScorepadController(BaseController):
     """Thin controller for the ScorepadView to keep multiplier state and expose on_throw."""
 
-    def __init__(
-        self, view: AppView, model: AppModel, event_channel: EventChannel
-    ) -> None:
+    def __init__(self, view: AppView, model: AppModel, event_channel: EventChannel) -> None:
         super().__init__(view, model, event_channel)
         self.multiplier = Multiplier.SINGLE
 
@@ -35,12 +33,8 @@ class ScorepadController(BaseController):
     def bind_components(self) -> None:
         self._view.master.bind("<BackSpace>", lambda _: self._undo_throw())
 
-        self._view.master.bind(
-            "<Shift_L>", lambda _: self.set_multiplier(Multiplier.DOUBLE)
-        )
-        self._view.master.bind(
-            "<Alt_L>", lambda _: self.set_multiplier(Multiplier.TRIPLE)
-        )
+        self._view.master.bind("<Shift_L>", lambda _: self.set_multiplier(Multiplier.DOUBLE))
+        self._view.master.bind("<Alt_L>", lambda _: self.set_multiplier(Multiplier.TRIPLE))
 
         self.on_panel_rebound(Panel.CONTROL, self._restore_scorepad)
 
@@ -51,18 +45,10 @@ class ScorepadController(BaseController):
         for num, btn in scorepad.number_buttons.items():
             btn.config(command=lambda n=num: self.on_number_press(n))
 
-        scorepad.double_btn.config(
-            command=lambda: self.set_multiplier(Multiplier.DOUBLE)
-        )
-        scorepad.triple_btn.config(
-            command=lambda: self.set_multiplier(Multiplier.TRIPLE)
-        )
-        scorepad.bull25.config(
-            command=lambda: self.on_special_press(Multiplier.OUTER_BULL)
-        )
-        scorepad.bull50.config(
-            command=lambda: self.on_special_press(Multiplier.INNER_BULL)
-        )
+        scorepad.double_btn.config(command=lambda: self.set_multiplier(Multiplier.DOUBLE))
+        scorepad.triple_btn.config(command=lambda: self.set_multiplier(Multiplier.TRIPLE))
+        scorepad.bull25.config(command=lambda: self.on_special_press(Multiplier.OUTER_BULL))
+        scorepad.bull50.config(command=lambda: self.on_special_press(Multiplier.INNER_BULL))
         scorepad.miss.config(command=lambda: self.on_special_press(Multiplier.MISS))
 
     def _restore_scorepad(self) -> None:

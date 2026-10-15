@@ -178,13 +178,12 @@ def draw_dartboard(canvas: tk.Canvas, size: float) -> None:
     r_bo = RING_RADIUS_NORMALIZED["outer_bull"] * size / 2
     r_bi = RING_RADIUS_NORMALIZED["inner_bull"] * size / 2
     r_edge = RING_RADIUS_NORMALIZED["edge"] * size / 2
-    r_text = (
-        r_edge * 0.9
-    )  # Position text slightly inside the edge for better visibility
+    r_text = r_edge * 0.9  # Position text slightly inside the edge for better visibility
 
     draw_circle(canvas, center_x, center_y, r_edge, "black", "silver")
 
-    offset = 4  # Offset to align with the defined numbers since degrees start at number 6 but the numbers at 1
+    offset = 4  # Offset to align with the defined numbers since
+    # degrees start at number 6 but the numbers at 1
     for i, number in enumerate(DARTBOARD_NUMBERS):
         # Calculate the center of the segment
         center_angle_logic = (i - offset) * BED_ANGLE_DEGREES
@@ -224,9 +223,7 @@ def draw_dartboard(canvas: tk.Canvas, size: float) -> None:
             BED_ANGLE_DEGREES,
             color_double_triple,
         )
-        draw_arc(
-            canvas, center_x, center_y, r_di, arc_start, BED_ANGLE_DEGREES, color_single
-        )
+        draw_arc(canvas, center_x, center_y, r_di, arc_start, BED_ANGLE_DEGREES, color_single)
         draw_arc(
             canvas,
             center_x,
@@ -236,13 +233,7 @@ def draw_dartboard(canvas: tk.Canvas, size: float) -> None:
             BED_ANGLE_DEGREES,
             color_double_triple,
         )
-        draw_arc(
-            canvas, center_x, center_y, r_ti, arc_start, BED_ANGLE_DEGREES, color_single
-        )
+        draw_arc(canvas, center_x, center_y, r_ti, arc_start, BED_ANGLE_DEGREES, color_single)
 
-    draw_circle(
-        canvas, center_x, center_y, r_bo, EVEN_COLOR_MULTIPLIER, "silver"
-    )  # Outer bulls
-    draw_circle(
-        canvas, center_x, center_y, r_bi, ODD_COLOR_MULTIPLIER, "silver"
-    )  # Inner bulls
+    draw_circle(canvas, center_x, center_y, r_bo, EVEN_COLOR_MULTIPLIER, "silver")  # Outer bulls
+    draw_circle(canvas, center_x, center_y, r_bi, ODD_COLOR_MULTIPLIER, "silver")  # Inner bulls

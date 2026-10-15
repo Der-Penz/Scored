@@ -18,9 +18,7 @@ from gui.view.game.player_view import PlayerView
 class PlayerController(BaseController):
     """Thin controller for the PlayerView to keep scores displayed correctly"""
 
-    def __init__(
-        self, view: AppView, model: AppModel, event_channel: EventChannel
-    ) -> None:
+    def __init__(self, view: AppView, model: AppModel, event_channel: EventChannel) -> None:
         super().__init__(view, model, event_channel)
 
     @property

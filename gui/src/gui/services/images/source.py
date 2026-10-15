@@ -8,11 +8,6 @@ class ImageSource(ABC):
     A base class for streaming frames to the application from different sources
     """
 
-    def __init__(self):
-        """
-        Init the stream source
-        """
-
     @classmethod
     def get_name(cls) -> str:
         """

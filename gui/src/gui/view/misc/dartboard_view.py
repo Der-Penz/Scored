@@ -89,9 +89,7 @@ class DartboardView(tk.Frame, DartboardProtocol):
             color = DART_COLORS[index % len(DART_COLORS)]
             label = str(throw_result.throw)
 
-            pos = self._marker_pixel_position(
-                throw_result.dart_throw, index, len(throws)
-            )
+            pos = self._marker_pixel_position(throw_result.dart_throw, index, len(throws))
             px, py = self._normalized_to_pixel(pos)
             draw_dart_marker(
                 self.canvas,
@@ -103,17 +101,13 @@ class DartboardView(tk.Frame, DartboardProtocol):
                 tag=(DART_TAG, f"{DART_TAG}_{index}"),
             )
 
-    def _marker_pixel_position(
-        self, dart_throw: DartThrow, index: int, count: int
-    ) -> Position:
+    def _marker_pixel_position(self, dart_throw: DartThrow, index: int, count: int) -> Position:
         """Return the pixel position for a marker based on its throw's position."""
         position = dart_throw.position
         if position is not None:
             return relative_to_canvas_position(position)
 
-        if (
-            dart_throw.is_miss
-        ):  # place missed darts evenly along the bottom of the board
+        if dart_throw.is_miss:  # place missed darts evenly along the bottom of the board
             spacing = 1.0 / (count + 1)
             x = spacing * (index + 1)
             return relative_to_canvas_position((x, BOTTOM_Y_NORMALIZED))

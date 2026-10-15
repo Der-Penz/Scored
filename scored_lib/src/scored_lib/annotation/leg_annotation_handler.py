@@ -321,7 +321,7 @@ class LegAnnotationHandler:
             The images to store for the throws of the round.
         """
         round = -1
-        for i, (annotation, image) in enumerate(zip(annotations, images)):
+        for i, (annotation, image) in enumerate(zip(annotations, images, strict=False)):
             if round != -1 and annotation.round != round:
                 raise ValueError(f"annotation round {annotation.round} does not match {round}")
             if annotation.throw != i + 1:

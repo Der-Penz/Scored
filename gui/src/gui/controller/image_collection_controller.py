@@ -49,9 +49,9 @@ class ImageCollectionController(BaseController):
             num_throws_this_round = len(self._model.game.current_leg.current_turn_throws)
             if num_throws_this_round == 0:
                 num_annotations = len(self._model.annotations)
-                assert (
-                    num_annotations == 0
-                ), "There should be no annotations if there are no throws."
+                assert num_annotations == 0, (
+                    "There should be no annotations if there are no throws."
+                )
 
             if self._model.annotations:
                 previous_annotation, _ = self._model.annotations[-1]
@@ -71,7 +71,9 @@ class ImageCollectionController(BaseController):
                 throws=current_throws,
             )
             logging.debug(
-                f"Adding annotation for round {annotation.round}, throw {annotation.throw} with {len(annotation.throws)} throws. {len(previous_annotated_throws)} previous throws."
+                f"Adding annotation for round {annotation.round}, throw {annotation.throw} "
+                f"with {len(annotation.throws)} throws. "
+                f"{len(previous_annotated_throws)} previous throws."
             )
 
             self._model.annotations.append((annotation, self._current_frame))
@@ -97,12 +99,14 @@ class ImageCollectionController(BaseController):
                 break
         else:
             logging.debug(
-                f"Edited annotation for round {annotation.round}, throw {throw_number}: no entry matched the previous throw."
+                f"Edited annotation for round {annotation.round}, throw {throw_number}:"
+                "no entry matched the previous throw."
             )
             return
 
         logging.debug(
-            f"Edited annotation for round {annotation.round}, throw {throw_number}. Updated throw data to {event.result.dart_throw}."
+            f"Edited annotation for round {annotation.round}, throw {throw_number}."
+            f"Updated throw data to {event.result.dart_throw}."
         )
 
     def _on_throw_removed(self, _: events.ThrowRemoved) -> None:

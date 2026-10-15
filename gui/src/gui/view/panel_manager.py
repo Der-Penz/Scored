@@ -196,9 +196,7 @@ class PanelManager(ttk.Frame):
             self._widget_for(panel)
 
         for placement, panels in layout.docks():
-            self._docks[placement].dock(
-                panels, [self._widgets[panel] for panel in panels]
-            )
+            self._docks[placement].dock(panels, [self._widgets[panel] for panel in panels])
 
         for panel in layout.panels_at(Placement.FLOATING):
             self._widgets[panel].pack(  # type: ignore

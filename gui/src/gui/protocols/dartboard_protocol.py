@@ -1,4 +1,5 @@
-from typing import Protocol, Sequence
+from collections.abc import Sequence
+from typing import Protocol
 
 from scored_lib.game.dart_leg import ThrowResult
 

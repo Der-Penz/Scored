@@ -11,9 +11,7 @@ from gui.view.app_view import AppView
 
 
 class BaseController(ABC):
-    def __init__(
-        self, view: AppView, model: AppModel, event_channel: EventChannel
-    ) -> None:
+    def __init__(self, view: AppView, model: AppModel, event_channel: EventChannel) -> None:
         """
         Initialize the controller with the given view and model.
 
@@ -62,6 +60,7 @@ class BaseController(ABC):
     def start(self) -> None:
         """
         Start any background processes or threads required by the controller.
-        This must be non-blocking and should return immediately. The controller should handle its own threading if necessary.
+        This must be non-blocking and should return immediately.
+        The controller should handle its own threading if necessary.
         """
         ...

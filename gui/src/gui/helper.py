@@ -1,3 +1,4 @@
+import contextlib
 import os
 import platform
 import subprocess
@@ -11,10 +12,8 @@ def center_dialog(window: tk.Toplevel, parent: tk.Misc) -> None:
     window.transient(parent)
 
     # 2. Set window type hint for XWayland/Linux WMs
-    try:
+    with contextlib.suppress(tk.TclError):
         window.wm_attributes("-type", "dialog")
-    except tk.TclError:
-        pass  # Platform doesn't support -type attribute
 
     window.update_idletasks()
     window_w, window_h = window.winfo_width(), window.winfo_height()

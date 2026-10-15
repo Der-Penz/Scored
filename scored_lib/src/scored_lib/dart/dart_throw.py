@@ -1,6 +1,6 @@
 import math
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 from dataclasses_json import DataClassJsonMixin, config, dataclass_json
 
@@ -8,7 +8,7 @@ from scored_lib.dart.constants import PolarPosition, Position
 from scored_lib.dart.multiplier import Multiplier
 
 
-class PositionSource(str, Enum):
+class PositionSource(StrEnum):
     """Source indicating how the dart coordinates were obtained."""
 
     MANUAL = "manual"
@@ -29,7 +29,8 @@ class DartThrow(DataClassJsonMixin):
     multiplier : Multiplier
         The multiplier of the segment hit by the dart.
     position : Position | None
-        The position of the dart on the dartboard in normalized coordinates where (0,0) is the center if available.
+        The position of the dart on the dartboard in normalized coordinates
+        where (0,0) is the center if available.
     source : PositionSource | None
         The source of the position. Defaults to PositionSource.MANUAL if position is provided,
         or PositionSource.NONE if position is None.
@@ -94,7 +95,7 @@ class DartThrow(DataClassJsonMixin):
             return "D" + str(self.number)
         if self.multiplier == Multiplier.TRIPLE:
             return "T" + str(self.number)
-        assert False, f"Unhandled multiplier: {self.multiplier}"
+        raise AssertionError(f"Unhandled multiplier: {self.multiplier}")
 
     @property
     def label(self) -> str:
@@ -110,12 +111,13 @@ class DartThrow(DataClassJsonMixin):
             return "Double " + str(self.number)
         if self.multiplier == Multiplier.TRIPLE:
             return "Triple " + str(self.number)
-        assert False, f"Unhandled multiplier: {self.multiplier}"
+        raise AssertionError(f"Unhandled multiplier: {self.multiplier}")
 
     @property
     def polar(self) -> PolarPosition:
         """
-        Returns the polar coordinates (r, theta) of the dart throw based on its position on the dartboard.
+        Returns the polar coordinates (r, theta) of the dart throw based on
+        its position on the dartboard.
 
         r: normalized distance from center (0.0-1.0)
 

@@ -59,16 +59,12 @@ def ask_game_settings(parent: tk.Misc) -> tuple[int, StartRule, FinishRule] | No
     center_dialog(dialog, parent)
     dialog.focus_force()
 
-    ttk.Label(dialog, text="Starting Score:").grid(
-        row=0, column=0, sticky="w", padx=6, pady=6
-    )
+    ttk.Label(dialog, text="Starting Score:").grid(row=0, column=0, sticky="w", padx=6, pady=6)
     start_entry = ttk.Entry(dialog)
     start_entry.insert(0, "501")
     start_entry.grid(row=0, column=1, padx=6, pady=6)
 
-    ttk.Label(dialog, text="Start Rule:").grid(
-        row=1, column=0, sticky="w", padx=6, pady=6
-    )
+    ttk.Label(dialog, text="Start Rule:").grid(row=1, column=0, sticky="w", padx=6, pady=6)
     start_var = tk.StringVar(value=StartRule.ANY.name)
     start_combo = ttk.Combobox(
         dialog,
@@ -78,9 +74,7 @@ def ask_game_settings(parent: tk.Misc) -> tuple[int, StartRule, FinishRule] | No
     )
     start_combo.grid(row=1, column=1, padx=6, pady=6)
 
-    ttk.Label(dialog, text="Finish Rule:").grid(
-        row=2, column=0, sticky="w", padx=6, pady=6
-    )
+    ttk.Label(dialog, text="Finish Rule:").grid(row=2, column=0, sticky="w", padx=6, pady=6)
     finish_var = tk.StringVar(value=FinishRule.DOUBLE.name)
     finish_combo = ttk.Combobox(
         dialog,
@@ -112,9 +106,7 @@ def ask_game_settings(parent: tk.Misc) -> tuple[int, StartRule, FinishRule] | No
 
     btnframe = ttk.Frame(dialog)
     btnframe.grid(row=3, column=0, columnspan=2, pady=10)
-    ttk.Button(btnframe, text="OK", command=on_ok, bootstyle="primary").pack(
-        side="left", padx=6
-    )
+    ttk.Button(btnframe, text="OK", command=on_ok, bootstyle="primary").pack(side="left", padx=6)
     ttk.Button(btnframe, text="Cancel", command=on_cancel).pack(side="left", padx=6)
 
     parent.wait_window(dialog)
