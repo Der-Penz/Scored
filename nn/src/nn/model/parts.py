@@ -81,18 +81,21 @@ class YoloHead(nn.Module, ABC):
         The number of keypoints to predict
     channels : tuple[int, ...]
         The number of channels in each feature map
-
+    reg_max : int
+        The maximum value for the regression output. This is used to determine the number of bins for the distribution focal loss (DFL).
+    
     Notes
     -----
     This is a base class for all yolo styled heads.
     """
 
-    def __init__(self, n_classes: int, num_kpts: int, channels: tuple[int, ...]):
+    def __init__(self, n_classes: int, num_kpts: int, reg_max: int, channels: tuple[int, ...]):
         super().__init__()
 
         self.n_classes = n_classes
         self.num_kpts = num_kpts
         self.channels = channels
+        self.reg_max = reg_max
 
     @abstractmethod
     def forward(
@@ -120,7 +123,7 @@ class YoloHead(nn.Module, ABC):
 
 type BackboneFactory = Callable[[], YoloBackbone]
 type NeckFactory = Callable[[tuple[int, ...]], YoloNeck]
-type HeadFactory = Callable[[int, int, tuple[int, ...]], YoloHead]
+type HeadFactory = Callable[[int, int, int, tuple[int, ...]], YoloHead]
 
 
 @dataclass(frozen=True)
@@ -136,6 +139,7 @@ class YoloParts:
         self,
         n_classes: int,
         num_kpts: int,
+        reg_max: int,
         include_aux_head: bool,
     ) -> tuple[YoloBackbone, YoloNeck, YoloHead, YoloHead | None]:
         backbone = self.backbone()
@@ -145,8 +149,8 @@ class YoloParts:
 
         neck_channels = neck.get_neck_channels()
 
-        head = self.head(n_classes, num_kpts, neck_channels)
+        head = self.head(n_classes, num_kpts, reg_max, neck_channels)
         aux_head = None
         if include_aux_head and self.aux_head is not None:
-            aux_head = self.aux_head(n_classes, num_kpts, neck_channels)
+            aux_head = self.aux_head(n_classes, num_kpts, reg_max, neck_channels)
         return backbone, neck, head, aux_head

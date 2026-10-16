@@ -116,13 +116,12 @@ class MobileYoloNeck(YoloNeck):
 class MobileYoloHead(YoloHead):
     """Decoupled head producing classification, box regression, and keypoints."""
 
-    def __init__(self, n_classes: int, num_kpts: int, channels: tuple[int, ...], reg_k: int = 16):
-        super().__init__(n_classes, num_kpts, channels)
+    def __init__(self, n_classes: int, num_kpts: int, reg_max: int, channels: tuple[int, ...]):
+        super().__init__(n_classes, num_kpts, reg_max, channels)
 
         self.cls_heads = nn.ModuleList()
         self.reg_heads = nn.ModuleList()
         self.kpt_heads = nn.ModuleList()
-        self.reg_k = reg_k
 
         assert num_kpts >= 0, "Number of keypoints must be non-negative and above zero."
 
@@ -138,7 +137,7 @@ class MobileYoloHead(YoloHead):
             self.reg_heads.append(
                 nn.Sequential(
                     DepthwiseSeparableConv(c, c),
-                    nn.Conv2d(c, 4 * reg_k, kernel_size=1),
+                    nn.Conv2d(c, 4 * self.reg_max, kernel_size=1),
                 )
             )
             self.kpt_heads.append(

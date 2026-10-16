@@ -21,6 +21,7 @@ class YoloV10(torch.nn.Module):
         self,
         n_classes: int,
         num_kpts: int,
+        reg_max: int,
         parts: YoloParts,
         include_aux_head: bool = True,
     ):
@@ -30,7 +31,7 @@ class YoloV10(torch.nn.Module):
             self.neck,
             self.head,
             self.aux_head,
-        ) = parts.build_parts(n_classes, num_kpts, include_aux_head=include_aux_head)
+        ) = parts.build_parts(n_classes, num_kpts, reg_max, include_aux_head=include_aux_head)
 
     def forward(self, x) -> TrainingPredictions | DecodedPredictions:
         assert isinstance(x, torch.Tensor), (
