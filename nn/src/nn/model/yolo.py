@@ -1,13 +1,14 @@
 from typing import NamedTuple, TypedDict
 
-from nn.util import make_anchors
 import torch
 import torch.nn.functional as F
+from nn.box_util import XYXYBox
 from nn.model.parts import YoloParts
+from nn.util import make_anchors
 
 
 class DecodedPredictions(TypedDict):
-    boxes: torch.Tensor  # (B, Total_Anchors, 4)
+    boxes: XYXYBox  # (B, Total_Anchors, 4)
     scores: torch.Tensor  # (B, Total_Anchors, n_classes)
     keypoints: torch.Tensor  # (B, Total_Anchors, num_kpts, 3)
 
