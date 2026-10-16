@@ -14,7 +14,7 @@ DEFAULT_FORMAT = "%(asctime)s [%(levelname)-8s] %(filename)s:%(lineno)-4d %(mess
 DEFAULT_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 DEFAULT_MAX_BYTES = 2_000_000
 DEFAULT_BACKUP_COUNT = 5
-DEFAULT_MAX_SESSIONS = 20
+DEFAULT_MAX_SESSIONS = 5
 SESSION_TIME_FORMAT = "%Y-%m-%d_%H-%M-%S_%f"
 
 # Third party loggers that are too chatty for the file handler.
