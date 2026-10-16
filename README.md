@@ -18,7 +18,7 @@ startup and then use `import logging` anywhere:
 ```python
 from scored_lib.logging_setup import setup_logging
 
-setup_logging()                      # ./logs/<start time>/scored.log + stderr
+setup_logging()  # ./logs/<start time>/scored.log + stderr
 setup_logging("logs", "my.log", "DEBUG")
 ```
 

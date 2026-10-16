@@ -1,4 +1,4 @@
-from functools import lru_cache
+from functools import cache
 
 from scored_lib.dart.dart_throw import DartThrow
 from scored_lib.dart.multiplier import Multiplier
@@ -33,10 +33,8 @@ def _direct_checkout_paths(score: int) -> tuple[tuple[DartThrow, ...], ...]:
     return tuple(candidates)
 
 
-@lru_cache(maxsize=None)
-def get_best_checkout_path(
-    score: int, finish_rule: FinishRule
-) -> tuple[DartThrow, ...] | None:
+@cache
+def get_best_checkout_path(score: int, finish_rule: FinishRule) -> tuple[DartThrow, ...] | None:
     if score <= 0:
         return None
 

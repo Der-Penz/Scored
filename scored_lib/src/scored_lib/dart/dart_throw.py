@@ -1,12 +1,14 @@
 import math
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
+
+from dataclasses_json import DataClassJsonMixin, config, dataclass_json
 
 from scored_lib.dart.constants import PolarPosition, Position
 from scored_lib.dart.multiplier import Multiplier
 
 
-class PositionSource(str, Enum):
+class PositionSource(StrEnum):
     """Source indicating how the dart coordinates were obtained."""
 
     MANUAL = "manual"
@@ -14,8 +16,9 @@ class PositionSource(str, Enum):
     AI = "ai"
 
 
+@dataclass_json
 @dataclass(frozen=True, eq=True)
-class DartThrow:
+class DartThrow(DataClassJsonMixin):
     """
     Represents a dart throw on the dartboard.
 
@@ -26,7 +29,8 @@ class DartThrow:
     multiplier : Multiplier
         The multiplier of the segment hit by the dart.
     position : Position | None
-        The position of the dart on the dartboard in normalized coordinates where (0,0) is the center if available.
+        The position of the dart on the dartboard in normalized coordinates
+        where (0,0) is the center if available.
     source : PositionSource | None
         The source of the position. Defaults to PositionSource.MANUAL if position is provided,
         or PositionSource.NONE if position is None.
@@ -34,7 +38,14 @@ class DartThrow:
 
     number: int
     multiplier: Multiplier
-    position: Position | None = field(compare=False, default=None)
+    position: Position | None = field(
+        compare=False,
+        default=None,
+        metadata=config(
+            encoder=lambda position: list(position) if position is not None else None,
+            decoder=lambda position: tuple(position) if position is not None else None,
+        ),
+    )
     source: PositionSource = field(compare=False, default=PositionSource.NONE)
 
     def __post_init__(self) -> None:
@@ -89,7 +100,7 @@ class DartThrow:
             return "D" + str(self.number)
         if self.multiplier == Multiplier.TRIPLE:
             return "T" + str(self.number)
-        assert False, f"Unhandled multiplier: {self.multiplier}"
+        raise AssertionError(f"Unhandled multiplier: {self.multiplier}")
 
     @property
     def label(self) -> str:
@@ -105,12 +116,13 @@ class DartThrow:
             return "Double " + str(self.number)
         if self.multiplier == Multiplier.TRIPLE:
             return "Triple " + str(self.number)
-        assert False, f"Unhandled multiplier: {self.multiplier}"
+        raise AssertionError(f"Unhandled multiplier: {self.multiplier}")
 
     @property
     def polar(self) -> PolarPosition:
         """
-        Returns the polar coordinates (r, theta) of the dart throw based on its position on the dartboard.
+        Returns the polar coordinates (r, theta) of the dart throw based on
+        its position on the dartboard.
 
         r: normalized distance from center (0.0-1.0)
 

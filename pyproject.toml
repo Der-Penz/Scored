@@ -21,18 +21,35 @@ gui = { workspace = true }
 
 [dependency-groups]
 dev = [
-    "black>=26.3.1",
-    "isort>=8.0.1",
+    "pre-commit>=4.7.0",
+    "ruff>=0.9.0",
 ]
 
-[tool.black]
+[tool.ruff]
 line-length = 100
-target-version = ['py313']
-
-[tool.isort]
-profile = "black"
-line_length = 100
+target-version = "py313"
 
 [tool.ruff.lint]
-# Add the specific rule code to your ignore list
+# Selected rule suites
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # Pyflakes
+    "I",    # isort (import sorting replacement)
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade (upgrades code to Python 3.13+ syntax)
+    "SIM",  # flake8-simplify
+    "LOG",  # flake8-logging
+]
 ignore = ["LOG015"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
+[tool.ruff.format]
+# Formatter settings replacing Black
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true

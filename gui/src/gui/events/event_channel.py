@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import logging
 import threading
 from collections.abc import Callable
@@ -39,9 +40,7 @@ class EventChannel:
         self._lock = threading.Lock()
         self._subscribers: dict[type, list[Callable[..., Any]]] = {}
 
-    def subscribe(
-        self, event_type: type[T], callback: Callable[[T], None]
-    ) -> Subscription:
+    def subscribe(self, event_type: type[T], callback: Callable[[T], None]) -> Subscription:
         """
         Register *callback* to be called whenever an event of *event_type* is emitted.
 
@@ -70,7 +69,8 @@ class EventChannel:
                 cb(event)
             except Exception:
                 logging.exception(
-                    f"Subscriber {getattr(cb, '__qualname__', cb)} failed while handling {event_type.__name__}",
+                    f"Subscriber {getattr(cb, '__qualname__', cb)} "
+                    f"failed while handling {event_type.__name__}",
                 )
 
     def _unsubscribe(self, event_type: type, callback: Callable[..., Any]) -> None:
@@ -78,7 +78,5 @@ class EventChannel:
         with self._lock:
             cbs = self._subscribers.get(event_type)
             if cbs is not None:
-                try:
+                with contextlib.suppress(ValueError):
                     cbs.remove(callback)
-                except ValueError:
-                    pass

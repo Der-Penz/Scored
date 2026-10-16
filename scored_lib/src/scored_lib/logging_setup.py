@@ -14,7 +14,7 @@ DEFAULT_FORMAT = "%(asctime)s [%(levelname)-8s] %(filename)s:%(lineno)-4d %(mess
 DEFAULT_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 DEFAULT_MAX_BYTES = 2_000_000
 DEFAULT_BACKUP_COUNT = 5
-DEFAULT_MAX_SESSIONS = 20
+DEFAULT_MAX_SESSIONS = 5
 SESSION_TIME_FORMAT = "%Y-%m-%d_%H-%M-%S_%f"
 
 # Third party loggers that are too chatty for the file handler.
@@ -157,9 +157,7 @@ def stamp_filename(filename: str, start_time: datetime | None = None) -> str:
     str
         For example ``2026-10-01_18-58-41_512720_gui_scored.log``.
     """
-    return (
-        f"{session_timestamp(start_time)}_{Path(filename).stem}{Path(filename).suffix}"
-    )
+    return f"{session_timestamp(start_time)}_{Path(filename).stem}{Path(filename).suffix}"
 
 
 def list_sessions(base_dir: Path, filename: str) -> list[tuple[str, list[Path]]]:
@@ -198,9 +196,7 @@ def list_sessions(base_dir: Path, filename: str) -> list[tuple[str, list[Path]]]
     return sorted(sessions.items())
 
 
-def prune_sessions(
-    base_dir: Path, filename: str, keep: int = DEFAULT_MAX_SESSIONS
-) -> list[Path]:
+def prune_sessions(base_dir: Path, filename: str, keep: int = DEFAULT_MAX_SESSIONS) -> list[Path]:
     """
     Delete the oldest session logs so at most *keep* of them remain.
 
@@ -330,9 +326,7 @@ def setup_logging(
         logging.getLogger(name).setLevel(logging.WARNING)
 
     if file_error is not None:
-        logging.warning(
-            f"File logging disabled, cannot write to {base_dir}: {file_error}"
-        )
+        logging.warning(f"File logging disabled, cannot write to {base_dir}: {file_error}")
 
     for log in removed_logs:
         logging.info(f"Removed old log file {log.name}")

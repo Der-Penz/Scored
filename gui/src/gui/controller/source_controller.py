@@ -34,7 +34,7 @@ class SourceController(BaseController):
         for source, accel in SOURCES:
             menu.add_command(
                 label=source.get_name(),
-                command=lambda src=source.get_name(): self.on_select_source(src),
+                command=lambda src=source: self.on_select_source(src.get_name()),
                 accelerator=accel,
             )
 
@@ -120,9 +120,7 @@ class SourceController(BaseController):
                     time.sleep(0.01)
         except Exception:
             # Prevent background thread crash from corrupting state
-            logging.exception(
-                f"Capture loop of {self._current_source} stopped unexpectedly"
-            )
+            logging.exception(f"Capture loop of {self._current_source} stopped unexpectedly")
         finally:
             if self._current_source is not None:
                 self._current_source.close()

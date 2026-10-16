@@ -17,19 +17,13 @@ class MenuController(BaseController):
 
     def bind_components(self) -> None:
         self._event_channel.subscribe(GameStarted, lambda _: self.set_normal_status())
-        self._event_channel.subscribe(
-            GameStateChanged, lambda _: self.set_normal_status()
-        )
+        self._event_channel.subscribe(GameStateChanged, lambda _: self.set_normal_status())
         self._event_channel.subscribe(TurnChanged, lambda _: self.set_normal_status())
         self._event_channel.subscribe(GameEnded, lambda _: self.on_game_ended())
 
     def on_game_ended(self) -> None:
-        assert self._model.game is not None, (
-            "GameEnded event received but no game is active"
-        )
-        assert self._model.game.winner is not None, (
-            "GameEnded event received but no winner is set"
-        )
+        assert self._model.game is not None, "GameEnded event received but no game is active"
+        assert self._model.game.winner is not None, "GameEnded event received but no winner is set"
         self.set_status(
             f"{self._model.game.winner.name} finished the game! Waiting for new game to start..."
         )
@@ -41,11 +35,16 @@ class MenuController(BaseController):
         self.status_label.config(text=msg)
 
     def set_normal_status(self) -> None:
-        assert self._model.game is not None, (
-            "GameEnded event received but no game is active"
-        )
+        assert self._model.game is not None, "GameEnded event received but no game is active"
 
-        round = f"Round: {self._model.game.current_leg.round} | Throw: {self._model.game.current_leg.throw}"
-        rule = f"Opening: {self._model.game.start_rule.value} | Finish: {self._model.game.finish_rule.value} | Starting: {self._model.game.starting_score}"
+        round = (
+            f"Round: {self._model.game.current_leg.round} |"
+            f"Throw: {self._model.game.current_leg.throw}"
+        )
+        rule = (
+            f"Opening: {self._model.game.start_rule.value} |"
+            f"Finish: {self._model.game.finish_rule.value} |"
+            f"Starting: {self._model.game.starting_score}"
+        )
         msg = f"{rule} | {round}"
         self.status_label.config(text=msg)

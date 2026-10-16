@@ -27,14 +27,10 @@ def get_segment_default_position(number: int, multiplier: Multiplier) -> Positio
     if multiplier is Multiplier.INNER_BULL:
         radius, angle_rad = 0.0, 0.0
     elif multiplier is Multiplier.OUTER_BULL:
-        radius = (
-            RING_RADIUS_NORMALIZED["inner_bull"] + RING_RADIUS_NORMALIZED["outer_bull"]
-        ) / 2
+        radius = (RING_RADIUS_NORMALIZED["inner_bull"] + RING_RADIUS_NORMALIZED["outer_bull"]) / 2
         angle_rad = 0.0
     elif multiplier is Multiplier.MISS:
-        radius = (
-            RING_RADIUS_NORMALIZED["double_outer"] + RING_RADIUS_NORMALIZED["edge"]
-        ) / 2
+        radius = (RING_RADIUS_NORMALIZED["double_outer"] + RING_RADIUS_NORMALIZED["edge"]) / 2
         angle_rad = 0.0
     else:
         if multiplier == Multiplier.SINGLE:
@@ -44,12 +40,8 @@ def get_segment_default_position(number: int, multiplier: Multiplier) -> Positio
         elif multiplier == Multiplier.TRIPLE:
             inner_key, outer_key = "triple_inner", "triple_outer"
 
-        radius = (
-            RING_RADIUS_NORMALIZED[inner_key] + RING_RADIUS_NORMALIZED[outer_key]
-        ) / 2
-        angle_rad = math.radians(
-            ((DARTBOARD_NUMBERS.index(number) - 4) * BED_ANGLE_DEGREES) % 360
-        )
+        radius = (RING_RADIUS_NORMALIZED[inner_key] + RING_RADIUS_NORMALIZED[outer_key]) / 2
+        angle_rad = math.radians(((DARTBOARD_NUMBERS.index(number) - 4) * BED_ANGLE_DEGREES) % 360)
 
     return (
         radius * math.cos(angle_rad),

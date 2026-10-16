@@ -1,13 +1,12 @@
 import math
 
-from scored_lib.annotation.throw_annotation import PositionSource
 from scored_lib.dart.constants import (
     BED_ANGLE_DEGREES,
     DARTBOARD_NUMBERS,
     RING_RADIUS_NORMALIZED,
     Position,
 )
-from scored_lib.dart.dart_throw import DartThrow
+from scored_lib.dart.dart_throw import DartThrow, PositionSource
 from scored_lib.dart.multiplier import Multiplier
 from scored_lib.util.angle import get_clockwise_angle
 
@@ -58,15 +57,11 @@ def get_scored_multiplier(rel_pos: Position) -> Multiplier:
     elif distance <= RING_RADIUS_NORMALIZED["outer_bull"]:
         return Multiplier.OUTER_BULL
     elif (
-        RING_RADIUS_NORMALIZED["triple_inner"]
-        < distance
-        <= RING_RADIUS_NORMALIZED["triple_outer"]
+        RING_RADIUS_NORMALIZED["triple_inner"] < distance <= RING_RADIUS_NORMALIZED["triple_outer"]
     ):
         return Multiplier.TRIPLE
     elif (
-        RING_RADIUS_NORMALIZED["double_inner"]
-        < distance
-        <= RING_RADIUS_NORMALIZED["double_outer"]
+        RING_RADIUS_NORMALIZED["double_inner"] < distance <= RING_RADIUS_NORMALIZED["double_outer"]
     ):
         return Multiplier.DOUBLE
     elif distance > RING_RADIUS_NORMALIZED["double_outer"]:
@@ -96,6 +91,4 @@ def score_dart_throw(
     number = get_scored_number(rel_pos)
     multiplier = get_scored_multiplier(rel_pos)
 
-    return DartThrow(
-        number=number, multiplier=multiplier, position=rel_pos, source=source
-    )
+    return DartThrow(number=number, multiplier=multiplier, position=rel_pos, source=source)

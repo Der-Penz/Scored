@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 from scored_lib.dart.dart_throw import DartThrow
@@ -92,6 +93,18 @@ class FrameCapturedEvent:
     """Carries the captured frame (too transient for model storage)."""
 
     frame: np.ndarray
+
+
+@dataclass(frozen=True)
+class DataCollectionChanged:
+    """Notification that data collection was enabled or disabled.
+
+    The collection is enabled exactly when a directory to store the collected
+    data in is set, so ``directory`` is ``None`` whenever ``enabled`` is False.
+    """
+
+    enabled: bool
+    directory: Path | None
 
 
 @dataclass(frozen=True)

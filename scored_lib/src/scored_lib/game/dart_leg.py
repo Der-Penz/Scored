@@ -143,12 +143,10 @@ class DartLeg:
         if len(last_throws) == 0:
             return self.starting_score
 
-        for throw_result in last_throws[
-            ::-1
-        ]:  # Iterate in reverse to find the last non-None throw
+        for throw_result in last_throws[::-1]:  # Iterate in reverse to find the last non-None throw
             if throw_result is not None:
                 return throw_result.score_after
-        assert False, (
+        raise AssertionError(
             "Should never reach here; there should be at least one non-None throw in the last turn."
         )
 
@@ -219,7 +217,8 @@ class DartLeg:
         Returns
         -------
         ThrowResult or None
-                the result of the throw at the specified round and throw index, or None if the slot is a bust placeholder
+                the result of the throw at the specified round and throw index,
+                or None if the slot is a bust placeholder
         """
         if round < 1 or round > len(self._results):
             raise IndexError("round index out of range")
@@ -246,9 +245,7 @@ class DartLeg:
             raise ValueError("Cannot start a new turn in a finished leg.")
 
         if self.throws_left > 0:
-            raise ValueError(
-                "Cannot start a new turn before finishing the current turn."
-            )
+            raise ValueError("Cannot start a new turn before finishing the current turn.")
 
         self._results.append([])
 
@@ -264,14 +261,16 @@ class DartLeg:
         Returns
         -------
         tuple[ThrowResult, bool]
-            The computed result of the throw and a boolean indicating whether a new round should be started.
+            The computed result of the throw and a boolean indicating
+            whether a new round should be started.
         """
         if self.is_finished:
             raise ValueError("Cannot add throw to a finished leg.")
 
         if self.throws_left == 0:
             raise ValueError(
-                "Cannot add throw; the current turn is already complete. Call next_turn() to start a new turn."
+                "Cannot add throw; the current turn is already complete. Call next_turn() "
+                "to start a new turn."
             )
 
         score_before = self.score
@@ -310,11 +309,8 @@ class DartLeg:
             if first_throw_in_turn:
                 score_after = score_before
             else:
-                l = self._results[-1][0]
-                if l is None:
-                    score_after = score_before
-                else:
-                    score_after = l.score_before
+                last = self._results[-1][0]
+                score_after = score_before if last is None else last.score_before
 
         throw_result = ThrowResult(
             dart_throw=dart_throw,
@@ -372,9 +368,7 @@ class DartLeg:
         if removed is None:
             return None
 
-        throws = [
-            tr.dart_throw for turn in self._results for tr in turn if tr is not None
-        ]
+        throws = [tr.dart_throw for turn in self._results for tr in turn if tr is not None]
         throws.pop()
 
         rebuilt = DartLeg(
@@ -420,12 +414,8 @@ class DartLeg:
         if old_throw_result is None:
             raise ValueError("Cannot edit a bust placeholder.")
 
-        throws = [
-            tr.dart_throw for turn in self._results for tr in turn if tr is not None
-        ]
-        offset = sum(
-            len([tr for tr in turn if tr is not None]) for turn in self._results[:-1]
-        )
+        throws = [tr.dart_throw for turn in self._results for tr in turn if tr is not None]
+        offset = sum(len([tr for tr in turn if tr is not None]) for turn in self._results[:-1])
         if offset + (throw - 1) >= len(throws):
             raise IndexError("throw index out of range")
         throws[offset + (throw - 1)] = dart_throw
@@ -515,7 +505,8 @@ class DartLeg:
     def __repr__(self) -> str:
         """Generate a structured visual log of the game rounds and score state."""
         lines = [
-            f"DartLeg(Starting: {self.starting_score}, Rules: In-{self.start_rule.name}/Out-{self.finish_rule.name})"
+            f"DartLeg(Starting: {self.starting_score}, "
+            f"Rules: In-{self.start_rule.name}/Out-{self.finish_rule.name})"
         ]
         for i, round in enumerate(self._results):
             throw_strings = []

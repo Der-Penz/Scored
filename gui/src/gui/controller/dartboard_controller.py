@@ -85,9 +85,7 @@ class DartboardController(BaseController):
         scored = score_dart_throw(scoring_position, PositionSource.MANUAL)
 
         previous = self._darts[index].dart_throw
-        result = self._model.game.current_leg.edit_current_throw(
-            scored, throw=index + 1
-        )
+        result = self._model.game.current_leg.edit_current_throw(scored, throw=index + 1)
 
         logging.info(f"Edited throw: {previous} -> {scored}")
 

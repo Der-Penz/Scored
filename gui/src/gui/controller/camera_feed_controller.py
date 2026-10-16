@@ -1,3 +1,4 @@
+import contextlib
 import tkinter as tk
 
 from PIL import Image
@@ -78,10 +79,8 @@ class CameraFeedController(BaseController):
 
     def _stop_rendering(self) -> None:
         if self._after_id is not None:
-            try:
+            with contextlib.suppress(tk.TclError):
                 self._view.after_cancel(self._after_id)
-            except tk.TclError:
-                pass
             self._after_id = None
 
     def _render_image(self) -> None:

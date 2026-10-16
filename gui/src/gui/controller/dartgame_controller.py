@@ -42,30 +42,22 @@ class DartGameController(BaseController):
         return self._view.game_view.scorepad_view.turn_overlay
 
     def bind_menu(self, menu: ttk.Menu) -> None:
-        menu.add_command(
-            label="Add Player", command=self._add_player, accelerator="Ctrl+P"
-        )
+        menu.add_command(label="Add Player", command=self._add_player, accelerator="Ctrl+P")
         menu.add_command(label="Remove Player", command=self._remove_player)
         menu.add_separator()
-        menu.add_command(
-            label="Start Game", command=self._start_game, accelerator="Ctrl+G"
-        )
+        menu.add_command(label="Start Game", command=self._start_game, accelerator="Ctrl+G")
 
     def bind_components(self) -> None:
         self._view.master.bind_all("<Control-p>", lambda _: self._add_player())
         self._view.master.bind_all("<Control-g>", lambda _: self._start_game())
         self._event_channel.subscribe(DartThrowEvent, self._on_dart_throw)
-        self._event_channel.subscribe(
-            GameStateChanged, lambda _: self._refresh_current_turn()
-        )
+        self._event_channel.subscribe(GameStateChanged, lambda _: self._refresh_current_turn())
         self._event_channel.subscribe(UndoRequested, lambda e: self._undo_throw())
         self.on_panel_rebound(Panel.CONTROL, self._restore_control_panel)
 
     def _restore_control_panel(self) -> None:
         """Put a rebuilt control panel back into the state the game is in."""
-        self.turn_overlay.bind_callbacks(
-            on_next=self._on_turn_next, on_undo=self._on_turn_undo
-        )
+        self.turn_overlay.bind_callbacks(on_next=self._on_turn_next, on_undo=self._on_turn_undo)
         self._refresh_current_turn()
         if self._turn_pending:
             # A layout change can happen while waiting for the turn to be confirmed.
