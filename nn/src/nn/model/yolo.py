@@ -1,5 +1,6 @@
 from typing import NamedTuple, TypedDict
 
+from nn.util import make_anchors
 import torch
 import torch.nn.functional as F
 from nn.model.parts import YoloParts
@@ -115,17 +116,8 @@ class YoloV10(torch.nn.Module):
             # Classification Scores -> Apply Sigmoid
             # Shape: (B, H * W, n_classes)
             scores = c.permute(0, 2, 3, 1).reshape(B, H * W, -1).sigmoid()
-
-            # Build Grid Centers (Anchor Points) in Grid Space
-            grid_y, grid_x = torch.meshgrid(
-                torch.arange(H, device=c.device, dtype=c.dtype),
-                torch.arange(W, device=c.device, dtype=c.dtype),
-                indexing="ij",
-            )
-            # Center of each grid cell: (1, H * W, 2) -> [x_center, y_center]
-            grid_points = torch.stack([grid_x, grid_y], dim=-1).reshape(-1, 2) + 0.5
-            anchors = grid_points.unsqueeze(0)
-
+            
+            anchors = make_anchors(H, W, c.device, c.dtype).unsqueeze(0)            
             # Decode Bounding Boxes
             # Distribution Focal Loss (DFL) decoding: (B, 4 * reg_max, H, W)
             reg_max = r.shape[1] // 4
