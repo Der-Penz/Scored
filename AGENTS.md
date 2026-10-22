@@ -42,13 +42,13 @@ No test suite and no CI.
   the root `pyproject.toml`): double quotes, spaces, docstring code formatting.
   Run `uv run ruff format .`.
 - Linting: `ruff check` with `[tool.ruff.lint]` in the root `pyproject.toml`
-  (`select = ["E", "W", "F", "I", "B", "UP", "SIM", "LOG"]`, `ignore = ["LOG015"]`,
+  (`select = ["E", "W", "F", "I", "B", "UP", "SIM", "LOG", "T10"]`, `ignore = ["LOG015"]`,
   `combine-as-imports = true`). Import sorting, pyupgrade, bugbear and simplify rules
   all come from ruff — there is no separate isort/black. Run `uv run ruff check --fix .`.
 - pre-commit (`.pre-commit-config.yaml`) enforces this on every commit: ruff check
   with `--fix`, then ruff format, plus file hygiene (trailing whitespace, final
-  newline, LF line endings, yaml/toml/json/xml checks, no large files, no debug
-  statements, no private keys, no commits to `main`).
+  newline, LF line endings, yaml/toml checks, no large files, no commits to `main`).
+  Hooks run only on staged files.
 - Do not add decorative/banner comments (`# ----`, `# =====`, `# Section`) to
   structure the code. Comments explain *why*, they are not headings.
 - Do not wrap one-liners in functions, and do not split simple logic into helpers
