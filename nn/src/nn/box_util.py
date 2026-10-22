@@ -1,3 +1,5 @@
+import math
+
 import torch
 
 type XYXYBox = torch.Tensor  # [x1, y1, x2, y2]
@@ -11,9 +13,9 @@ def bbox_iou(box1: XYXYBox, box2: XYXYBox, eps: float = 1e-7, c_iou: bool = True
     Parameters
     ----------
     box1 : XYXYBox
-        A tensor of shape (N, 4) representing N boxes in the format [x1, y1, x2, y2].
+        A tensor of shape (..., N, 4) representing N boxes in the format [x1, y1, x2, y2].
     box2 : XYXYBox
-        A tensor of shape (M, 4) representing M boxes in the format [x1, y1, x2, y2].
+        A tensor of shape (..., M, 4) representing M boxes in the format [x1, y1, x2, y2].
     eps : float
         A small value to avoid division by zero.
     c_iou : bool
@@ -22,10 +24,15 @@ def bbox_iou(box1: XYXYBox, box2: XYXYBox, eps: float = 1e-7, c_iou: bool = True
     Returns
     -------
     torch.Tensor
-        A tensor of shape (N, M) containing the IoU or CIoU values between each pair of boxes.
+        A tensor of shape (..., N, M) containing the IoU or CIoU values between each pair of boxes.
     """
-    b1_x1, b1_y1, b1_x2, b1_y2 = box1[:, 0:1], box1[:, 1:2], box1[:, 2:3], box1[:, 3:4]
-    b2_x1, b2_y1, b2_x2, b2_y2 = box2[None, :, 0], box2[None, :, 1], box2[None, :, 2], box2[None, :, 3]
+
+    # Expand box1 to (..., N, 1, 4) and box2 to (..., 1, M, 4)
+    b1 = box1.unsqueeze(-2)  # (..., N, 1, 4)
+    b2 = box2.unsqueeze(-3)  # (..., 1, M, 4)
+
+    b1_x1, b1_y1, b1_x2, b1_y2 = b1[..., 0], b1[..., 1], b1[..., 2], b1[..., 3]
+    b2_x1, b2_y1, b2_x2, b2_y2 = b2[..., 0], b2[..., 1], b2[..., 2], b2[..., 3]
 
     inter_x1 = torch.max(b1_x1, b2_x1)
     inter_y1 = torch.max(b1_y1, b2_y1)
@@ -51,18 +58,17 @@ def bbox_iou(box1: XYXYBox, box2: XYXYBox, eps: float = 1e-7, c_iou: bool = True
     # Enclosing box (convex hull) dimensions for distance penalty
     cw = torch.max(b1_x2, b2_x2) - torch.min(b1_x1, b2_x1)
     ch = torch.max(b1_y2, b2_y2) - torch.min(b1_y1, b2_y1)
-    c2 = cw ** 2 + ch ** 2 + eps  # Enclosing diagonal squared
+    c2 = cw**2 + ch**2 + eps  # Enclosing diagonal squared
 
     # Center points distance squared
     b1_cx, b1_cy = (b1_x1 + b1_x2) / 2.0, (b1_y1 + b1_y2) / 2.0
     b2_cx, b2_cy = (b2_x1 + b2_x2) / 2.0, (b2_y1 + b2_y2) / 2.0
     rho2 = (b1_cx - b2_cx) ** 2 + (b1_cy - b2_cy) ** 2
 
-    # Aspect ratio consistency term v and weight parameter alpha
-    v = (4.0 / (torch.pi ** 2)) * torch.pow(torch.atan(w1 / (h1 + eps)) - torch.atan(w2 / (h2 + eps)), 2)
-
+    v = (4.0 / (math.pi**2)) * torch.pow(torch.atan(w1 / h1) - torch.atan(w2 / h2), 2)
     with torch.no_grad():
         alpha = v / (1.0 - iou + v + eps)
+    ciou = iou - (rho2 / c2 + alpha * v)
 
     # Complete IoU (CIoU) formula
     ciou = iou - (rho2 / c2 + alpha * v)

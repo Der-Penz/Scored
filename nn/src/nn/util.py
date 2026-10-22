@@ -22,7 +22,8 @@ def make_anchors(
     Returns
     -------
     torch.Tensor
-        A tensor of shape (h * w, 2) containing the anchor points in the shape [H, W, 2] where the last dimension represents (x, y) coordinates.
+        A tensor of shape (h * w, 2) containing the anchor points in the shape [H, W, 2] where the
+        last dimension represents (x, y) coordinates.
     """
     grid_y, grid_x = torch.meshgrid(
         torch.arange(h, device=device, dtype=dtype) + offset,
