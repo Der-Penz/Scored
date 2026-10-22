@@ -93,7 +93,8 @@ class YoloV10(torch.nn.Module):
         cls : list[torch.Tensor]
             Classification feature maps per scale. Shape: (B, n_classes, H_i, W_i)
         regs : list[torch.Tensor]
-            Box regression feature maps per scale. Shape: (B, 4, H_i, W_i) or (B, 4 * reg_max, H_i, W_i)
+            Box regression feature maps per scale.
+            Shape: (B, 4, H_i, W_i) or (B, 4 * reg_max, H_i, W_i)
         kpts : list[torch.Tensor]
             Keypoint feature maps per scale. Shape: (B, num_kpts * 3, H_i, W_i)
 
@@ -111,27 +112,24 @@ class YoloV10(torch.nn.Module):
         decoded_scores = []
         decoded_keypoints = []
 
-        for c, r, k, stride in zip(cls, regs, kpts, strides):
+        for c, r, k, stride in zip(cls, regs, kpts, strides, strict=False):
             B, _, H, W = c.shape
 
             # Classification Scores -> Apply Sigmoid
             # Shape: (B, H * W, n_classes)
             scores = c.permute(0, 2, 3, 1).reshape(B, H * W, -1).sigmoid()
-            
-            anchors = make_anchors(H, W, c.device, c.dtype).unsqueeze(0)            
+
+            anchors = make_anchors(H, W, c.device, c.dtype).unsqueeze(0)
             # Decode Bounding Boxes
             # Distribution Focal Loss (DFL) decoding: (B, 4 * reg_max, H, W)
             reg_max = r.shape[1] // 4
-            r_dist = r.view(B, 4, reg_max, H * W).permute(
-                0, 3, 1, 2
-            )  # (B, H*W, 4, reg_max)
+            r_dist = r.view(B, 4, reg_max, H * W).permute(0, 3, 1, 2)  # (B, H*W, 4, reg_max)
             r_dist = F.softmax(r_dist, dim=-1)
             proj = torch.arange(reg_max, device=r.device, dtype=r.dtype)
-            dist = (r_dist * proj).sum(
-                dim=-1
-            )  # (B, H*W, 4) -> [left, top, right, bottom]
+            dist = (r_dist * proj).sum(dim=-1)  # (B, H*W, 4) -> [left, top, right, bottom]
 
-            # Convert distances (l, t, r, b) from anchor center into (x1, y1, x2, y2) image coordinates
+            # Convert distances (l, t, r, b) from anchor center into (x1, y1, x2, y2)
+            # image coordinates
             x1y1 = (anchors - dist[..., :2]) * stride
             x2y2 = (anchors + dist[..., 2:]) * stride
             boxes = torch.cat([x1y1, x2y2], dim=-1)  # (B, H*W, 4)
@@ -153,8 +151,6 @@ class YoloV10(torch.nn.Module):
         # Concatenate across all feature map scales
         final_boxes = torch.cat(decoded_boxes, dim=1)  # (B, Total_Anchors, 4)
         final_scores = torch.cat(decoded_scores, dim=1)  # (B, Total_Anchors, n_classes)
-        final_kpts = torch.cat(
-            decoded_keypoints, dim=1
-        )  # (B, Total_Anchors, num_kpts, 3)
+        final_kpts = torch.cat(decoded_keypoints, dim=1)  # (B, Total_Anchors, num_kpts, 3)
 
         return {"boxes": final_boxes, "scores": final_scores, "keypoints": final_kpts}

@@ -153,7 +153,7 @@ class MobileYoloHead(YoloHead):
         cls_preds, reg_preds, kpt_preds = [], [], []
 
         for feat, cls_h, reg_h, kpt_h in zip(
-            x, self.cls_heads, self.reg_heads, self.kpt_heads
+            x, self.cls_heads, self.reg_heads, self.kpt_heads, strict=False
         ):
             cls_preds.append(cls_h(feat))
             reg_preds.append(reg_h(feat))

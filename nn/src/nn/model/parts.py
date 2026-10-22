@@ -82,8 +82,9 @@ class YoloHead(nn.Module, ABC):
     channels : tuple[int, ...]
         The number of channels in each feature map
     reg_max : int
-        The maximum value for the regression output. This is used to determine the number of bins for the distribution focal loss (DFL).
-    
+        The maximum value for the regression output.
+        This is used to determine the number of bins for the distribution focal loss (DFL).
+
     Notes
     -----
     This is a base class for all yolo styled heads.
@@ -107,12 +108,16 @@ class YoloHead(nn.Module, ABC):
         Parameters
         ----------
         x : list[torch.Tensor]
-            A list of feature maps from the neck. Each feature map should be a tensor of shape (batch_size, channels, height, width).
+            A list of feature maps from the neck. Each feature map should be a tensor
+            of shape (batch_size, channels, height, width).
 
         Returns
         -------
         tuple[list[torch.Tensor], list[torch.Tensor], list[torch.Tensor]]
-            A tuple containing three lists: cls, reg, kpts predictions. Each list contains the predictions for each scale starting from the lowest stride to the highest stride. Each prediction is a tensor of shape (batch_size, [attributes], height, width).
+            A tuple containing three lists: cls, reg, kpts predictions.
+            Each list contains the predictions for each scale starting from the lowest stride
+            to the highest stride. Each prediction is a tensor of
+            shape (batch_size, [attributes], height, width).
         """
 
     def __call__(
@@ -131,9 +136,7 @@ class YoloParts:
     backbone: BackboneFactory
     neck: NeckFactory
     head: HeadFactory  # Main one-to-one head
-    aux_head: HeadFactory | None = (
-        None  # Auxiliary one-to-many head only used for training
-    )
+    aux_head: HeadFactory | None = None  # Auxiliary one-to-many head only used for training
 
     def build_parts(
         self,
