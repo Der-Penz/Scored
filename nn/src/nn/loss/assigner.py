@@ -1,4 +1,5 @@
 import torch
+
 from nn.box_util import bbox_iou
 
 
@@ -55,7 +56,7 @@ def assign_box(
 
     # compute s to get boolean mask for valid predictions per anchor
     pred_cls_scores = compute_pred_scores(pred_scores, gt_labels)  # (B, M, N)
-    ious = bbox_iou(gt_boxes, pred_boxes)  # (B, M, N)
+    ious = bbox_iou(gt_boxes, pred_boxes, c_iou=False)  # (B, M, N)
     is_in_gts = compute_anchor_containment_mask(gt_boxes, anchors)  # (B, M, N)
 
     scores = is_in_gts.float() * (pred_cls_scores**alpha) * (ious**beta) * gt_mask  # (B, M, N)

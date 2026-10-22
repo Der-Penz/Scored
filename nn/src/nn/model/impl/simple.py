@@ -5,8 +5,6 @@ from nn.model.impl.util_modules import ConvBNAct, DepthwiseSeparableConv
 from nn.model.parts import YoloBackbone, YoloHead, YoloNeck
 from torch import nn
 
-# Assuming your abstract base classes (YoloBackbone, YoloNeck, YoloHead, YoloParts) are imported
-
 
 class TimmYoloBackbone(YoloBackbone):
     """
@@ -39,17 +37,17 @@ class TimmYoloBackbone(YoloBackbone):
             out_indices=out_indices,
         )
 
-        self._channels = tuple(self.backbone.feature_info.channels())
-        self._strides = tuple(self.backbone.feature_info.reduction())
+        self._channels = tuple(self.backbone.feature_info.channels())  # type: ignore
+        self._strides = tuple(self.backbone.feature_info.reduction())  # type: ignore
 
         if in_channels == 3:
-            first_conv: nn.Conv2d = self.backbone.conv_stem
+            first_conv: nn.Conv2d = self.backbone.conv_stem  # type: ignore
             new_conv = nn.Conv2d(
                 in_channels,
                 first_conv.out_channels,
-                kernel_size=first_conv.kernel_size,
-                stride=first_conv.stride,
-                padding=first_conv.padding,
+                kernel_size=first_conv.kernel_size,  # type: ignore
+                stride=first_conv.stride,  # type: ignore
+                padding=first_conv.padding,  # type: ignore
                 bias=first_conv.bias is not None,
             )
             self.backbone.conv_stem = new_conv
