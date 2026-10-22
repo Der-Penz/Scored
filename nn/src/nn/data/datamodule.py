@@ -1,4 +1,7 @@
+from pathlib import Path
+
 import pytorch_lightning as pl
+import torch
 from nn.data.config import DataModuleConfig
 from nn.data.dataset import DartKeypointDataset, DatasetConfig
 from nn.data.transform import Transform
@@ -19,15 +22,21 @@ class DartKeyPointDataModule(pl.LightningDataModule):
         if stage == "fit":
             self.train_set = DartKeypointDataset(
                 self.dataset.train,
+                self.dataset.path,
+                self.dataset.cls_dict,
                 [transform for transform in self.transforms if transform.train_only()],
             )
             self.val_set = DartKeypointDataset(
                 self.dataset.val,
+                self.dataset.path,
+                self.dataset.cls_dict,
                 [transform for transform in self.transforms if not transform.train_only()],
             )
         elif stage == "test":
             self.test_set = DartKeypointDataset(
                 self.dataset.test,
+                self.dataset.path,
+                self.dataset.cls_dict,
                 [transform for transform in self.transforms if not transform.train_only()],
             )
 
@@ -37,6 +46,7 @@ class DartKeyPointDataModule(pl.LightningDataModule):
             batch_size=self.config.batch_size,
             shuffle=True,
             num_workers=self.config.num_workers,
+            collate_fn=collate_fn,
         )
 
     def val_dataloader(self):
@@ -45,6 +55,7 @@ class DartKeyPointDataModule(pl.LightningDataModule):
             batch_size=self.config.batch_size,
             shuffle=False,
             num_workers=self.config.num_workers,
+            collate_fn=collate_fn,
         )
 
     def test_dataloader(self):
@@ -53,4 +64,31 @@ class DartKeyPointDataModule(pl.LightningDataModule):
             batch_size=self.config.batch_size,
             shuffle=False,
             num_workers=self.config.num_workers,
+            collate_fn=collate_fn,
         )
+
+
+def collate_fn(batch: list[tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, Path]]):
+    """
+    Custom collate function to handle batches of data.
+    """
+    images: list[torch.Tensor]
+    gt_boxes: list[torch.Tensor]
+    gt_labels: list[torch.Tensor]
+    gt_keypoints: list[torch.Tensor]
+    annotation_paths: list[Path]
+
+    images, gt_boxes, gt_labels, gt_keypoints, annotation_paths = map(
+        list, zip(*batch, strict=True)
+    )
+
+    image_batch = torch.stack(images, dim=0)
+    gt_boxes_padded = torch.nn.utils.rnn.pad_sequence(gt_boxes, batch_first=True, padding_value=0.0)
+    gt_labels_padded = torch.nn.utils.rnn.pad_sequence(
+        gt_labels, batch_first=True, padding_value=-1
+    )
+    gt_keypoints_padded = torch.nn.utils.rnn.pad_sequence(
+        gt_keypoints, batch_first=True, padding_value=0.0
+    )
+
+    return image_batch, gt_boxes_padded, gt_labels_padded, gt_keypoints_padded, annotation_paths
