@@ -33,6 +33,8 @@ class AnnotatedThrow(DataClassJsonMixin):
                 tip=self.keypoints.tip,
                 flight=self.keypoints.flight,
                 copied=True,
+                tip_visible=self.keypoints.tip_visible,
+                flight_visible=self.keypoints.flight_visible,
             )
         else:
             keypoints = None

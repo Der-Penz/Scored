@@ -18,6 +18,7 @@ SCORE_COLUMN = {"text": "Score", "anchor": "center", "width": 70, "stretch": Fal
 TIP_COLUMN = {"text": "Tip", "anchor": "center", "stretch": True}
 FLIGHT_COLUMN = {"text": "Flight", "anchor": "center", "stretch": True}
 SOURCE_COLUMN = {"text": "Source", "anchor": "center", "width": 80, "stretch": False}
+VISIBLE_COLUMN = {"text": "Visible", "anchor": "center", "width": 100, "stretch": False}
 
 VISIBLE_ROWS = 4
 
@@ -46,7 +47,7 @@ class AnnotationView(ttk.Frame):
     on_copy_clicked: Callable[[], None] = _noop
     on_delete_clicked: Callable[[], None] = _noop
     on_point_placed: Callable[[float, float], None] = _noop
-    on_point_selected: Callable[[int], None] = _noop
+    on_point_selected: Callable[[int, str | None], None] = _noop
     on_point_moved: Callable[[int, str, float, float], None] = _noop
 
     def __init__(
@@ -149,7 +150,7 @@ class AnnotationView(ttk.Frame):
         throw: int,
         image: np.ndarray | None,
         points: Sequence[AnnotationPoint],
-        rows: Sequence[tuple[str, str, str, str, str]],
+        rows: Sequence[tuple[str, str, str, str, str, str]],
         selected: int | None,
         metrics: str = "",
     ) -> None:
@@ -172,8 +173,8 @@ class AnnotationView(ttk.Frame):
         self._draft_active = any(point.index == -1 for point in points)
         self.canvas.set_points(points)
 
-    def set_rows(self, rows: Sequence[tuple[str, str, str, str, str]]) -> None:
-        """Replace the table with *rows* of ``(index, score, tip, flight, source)``."""
+    def set_rows(self, rows: Sequence[tuple[str, str, str, str, str, str]]) -> None:
+        """Replace the table with ``(index, score, tip, flight, source, visible)`` rows."""
         self._row_iids = {}
         self._iid_to_row = {}
         self._table.delete_rows()
@@ -252,7 +253,7 @@ class AnnotationView(ttk.Frame):
         if hit is not None:
             index, kind = hit
             self._drag = (index, kind, event.x, event.y)
-            self.on_point_selected(index)
+            self.on_point_selected(index, kind)
         else:
             point = self.canvas.to_image(event.x, event.y)
             if point is not None:
@@ -284,6 +285,7 @@ class AnnotationView(ttk.Frame):
                 TIP_COLUMN,
                 FLIGHT_COLUMN,
                 SOURCE_COLUMN,
+                VISIBLE_COLUMN,
             ],
             rowdata=[],
             height=VISIBLE_ROWS,
@@ -324,4 +326,4 @@ class AnnotationView(ttk.Frame):
         if index is None or index == self._selected_row:
             return
         self._selected_row = index
-        self.on_point_selected(index)
+        self.on_point_selected(index, None)

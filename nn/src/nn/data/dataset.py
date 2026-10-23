@@ -165,7 +165,13 @@ class DartKeypointDataset(torch.utils.data.Dataset):
 
             keypoints_tensor = torch.zeros((self.num_keypoints, 3), dtype=torch.float32)
 
-            actual_kpts = torch.tensor([keypoints.tip, keypoints.flight, 1], dtype=torch.float32)
+            actual_kpts = torch.tensor(
+                [
+                    [*keypoints.tip, float(keypoints.tip_visible)],
+                    [*keypoints.flight, float(keypoints.flight_visible)],
+                ],
+                dtype=torch.float32,
+            )
             num_actual = actual_kpts.shape[0]
             keypoints_tensor[:num_actual] = actual_kpts
 

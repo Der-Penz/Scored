@@ -19,6 +19,10 @@ POINT_OUTLINE = "black"
 POINT_LABEL_COLOR = "white"
 POINT_LABEL_FONT = ("Arial", 9, "bold")
 
+HIDDEN_POINT_COLOR = "#8A8A8A"
+HIDDEN_POINT_DASH = (2, 2)
+HIDDEN_LABEL_COLOR = "#B0B0B0"
+
 SELECTED_RADIUS = 10
 SELECTED_COLOR = "#FF001E"
 
@@ -57,6 +61,10 @@ class AnnotationPoint:
         Fill color of the marker.
     selected : bool
         True when the dart this point belongs to is selected.
+    visible : bool
+        True when the point is visible in the image. Hidden points are drawn
+        hollow and dashed in a muted color so they can still be selected and
+        toggled back on.
     """
 
     x: float
@@ -66,6 +74,7 @@ class AnnotationPoint:
     label: str = ""
     color: str = POINT_COLOR
     selected: bool = False
+    visible: bool = True
 
 
 class AnnotationCanvas(ttk.Frame):
@@ -361,22 +370,25 @@ class AnnotationCanvas(ttk.Frame):
         placed: list[tuple[AnnotationPoint, float, float]] = []
         ends: dict[int, dict[str, tuple[float, float]]] = {}
         colors: dict[int, str] = {}
+        visible: dict[int, dict[str, bool]] = {}
         for point in self._points:
             x, y = self._to_widget(point.x, point.y)
             placed.append((point, x, y))
             if point.index >= 0:
                 ends.setdefault(point.index, {})[point.kind] = (x, y)
                 colors[point.index] = point.color
+                visible.setdefault(point.index, {})[point.kind] = point.visible
 
-        self._draw_dart_lines(ends, colors)
+        self._draw_dart_lines(ends, colors, visible)
 
         for point, x, y in placed:
             draft = point.index < 0
+            color = point.color if point.visible else HIDDEN_POINT_COLOR
 
             if point.kind == "tip":
-                self._draw_cross(x, y, point.color, draft)
+                self._draw_cross(x, y, color, draft, point.visible)
             else:
-                self._draw_circle(x, y, point.color, draft)
+                self._draw_circle(x, y, color, draft, point.visible)
 
             if point.selected:
                 self.canvas.create_oval(
@@ -386,6 +398,7 @@ class AnnotationCanvas(ttk.Frame):
                     y + SELECTED_RADIUS,
                     outline=SELECTED_COLOR,
                     width=2,
+                    dash=None if point.visible else HIDDEN_POINT_DASH,
                     tag=POINT_TAG,
                 )
             if point.label:
@@ -393,7 +406,7 @@ class AnnotationCanvas(ttk.Frame):
                     x + POINT_LABEL_OFFSET,
                     y - POINT_LABEL_OFFSET,
                     text=point.label,
-                    fill=POINT_LABEL_COLOR,
+                    fill=POINT_LABEL_COLOR if point.visible else HIDDEN_LABEL_COLOR,
                     anchor="sw",
                     font=POINT_LABEL_FONT,
                     tag=POINT_TAG,
@@ -403,6 +416,7 @@ class AnnotationCanvas(ttk.Frame):
         self,
         ends: dict[int, dict[str, tuple[float, float]]],
         colors: dict[int, str],
+        visible: dict[int, dict[str, bool]],
     ) -> None:
         """Connect the tip and flight of every dart with a dotted line."""
         for index, points in ends.items():
@@ -410,20 +424,25 @@ class AnnotationCanvas(ttk.Frame):
             flight = points.get("flight")
             if tip is None or flight is None:
                 continue
+            flags = visible.get(index, {})
+            hidden = not flags.get("tip", True) or not flags.get("flight", True)
             self.canvas.create_line(
                 tip[0],
                 tip[1],
                 flight[0],
                 flight[1],
-                fill=colors[index],
+                fill=HIDDEN_POINT_COLOR if hidden else colors[index],
                 width=DART_LINE_WIDTH,
                 dash=DART_LINE_DASH,
                 tag=POINT_TAG,
             )
 
-    def _draw_cross(self, x: float, y: float, color: str, draft: bool) -> None:
-        """Draw the tip of a dart as a cross."""
+    def _draw_cross(
+        self, x: float, y: float, color: str, draft: bool, visible: bool = True
+    ) -> None:
+        """Draw the tip of a dart as a cross, dashed when it is hidden."""
         size = CROSS_SIZE + (2 if draft else 0)
+        dash = None if visible else HIDDEN_POINT_DASH
         self.canvas.create_line(
             x - size,
             y - size,
@@ -432,6 +451,7 @@ class AnnotationCanvas(ttk.Frame):
             fill=color,
             width=CROSS_WIDTH,
             capstyle="round",
+            dash=dash,
             tag=POINT_TAG,
         )
         self.canvas.create_line(
@@ -442,19 +462,23 @@ class AnnotationCanvas(ttk.Frame):
             fill=color,
             width=CROSS_WIDTH,
             capstyle="round",
+            dash=dash,
             tag=POINT_TAG,
         )
 
-    def _draw_circle(self, x: float, y: float, color: str, draft: bool) -> None:
-        """Draw the flight of a dart as a filled circle."""
+    def _draw_circle(
+        self, x: float, y: float, color: str, draft: bool, visible: bool = True
+    ) -> None:
+        """Draw the flight of a dart as a filled circle, hollow when hidden."""
         radius = POINT_RADIUS + 1 if draft else POINT_RADIUS
         self.canvas.create_oval(
             x - radius,
             y - radius,
             x + radius,
             y + radius,
-            fill=color,
-            outline=POINT_OUTLINE,
+            fill=color if visible else "",
+            outline=color if not visible else POINT_OUTLINE,
+            dash=None if visible else HIDDEN_POINT_DASH,
             tag=POINT_TAG,
         )
 

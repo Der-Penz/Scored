@@ -19,8 +19,15 @@ class DartKeypoints(DataClassJsonMixin):
     copied : bool
         True when the points were copied from the previous throw's image
         instead of being placed by hand.
+    tip_visible : bool
+        True when the tip is actually visible in the image. Invisible points
+        stay labeled but are not used as ground truth keypoints.
+    flight_visible : bool
+        True when the flight is actually visible in the image.
     """
 
     tip: Position = field(metadata=config(encoder=list, decoder=tuple))
     flight: Position = field(metadata=config(encoder=list, decoder=tuple))
     copied: bool = False
+    tip_visible: bool = True
+    flight_visible: bool = True

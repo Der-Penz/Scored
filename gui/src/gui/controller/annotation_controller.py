@@ -33,7 +33,11 @@ class AnnotationController(BaseController):
     frame. ``V`` copies the labels of the previous throw, the Delete key
     clears the label of the selected dart (keeping the dart with its score) or
     cancels an unfinished draft, ``1``/``2``/``3`` switch the throw tabs and
-    ``A``/``S``/``D`` select the first, second or third dart.
+    ``A``/``S``/``D`` select the first, second or third dart. Selecting a point
+    on the canvas and pressing ``H`` toggles whether that keypoint is visible;
+    without a point selected, ``H`` toggles both keypoints of the selected
+    dart. Hidden keypoints are drawn hollow and dashed, and are left out of
+    the ground truth keypoints.
 
     The labels stay in the model while the round is playing and are written to
     disk once the round is over: when the turn is confirmed, when the game
@@ -49,6 +53,7 @@ class AnnotationController(BaseController):
 
         self._selected_throw: int | None = None
         self._selected_entry: int | None = None
+        self._selected_kind: str | None = None
         self._draft_tip: Position | None = None
         self._follow_newest = True
         self._keys_bound = False
@@ -95,6 +100,8 @@ class AnnotationController(BaseController):
             self._select_dart({"a": 0, "s": 1, "d": 2}[key])
         elif key == "v":
             self._on_copy()
+        elif key == "h":
+            self._toggle_visibility()
         elif key in ("delete", "kp_delete"):
             self._on_delete()
         else:
@@ -130,6 +137,7 @@ class AnnotationController(BaseController):
             self._selected_throw = throw - 1
         self._follow_newest = False
         self._selected_entry = None
+        self._selected_kind = None
         self._draft_tip = None
         self._refresh()
 
@@ -140,7 +148,7 @@ class AnnotationController(BaseController):
 
     def _select_dart(self, index: int) -> None:
         """Select the dart at *index* (0, 1 or 2) in the current frame."""
-        self._on_point_selected(index)
+        self._on_point_selected(index, None)
 
     def _on_point_placed(self, x: float, y: float) -> None:
         annotation = self._current_annotation()
@@ -153,13 +161,15 @@ class AnnotationController(BaseController):
         if self._draft_tip is None:
             self._draft_tip = (x, y)
             self._selected_entry = None
+            self._selected_kind = None
         else:
             keypoints = DartKeypoints(tip=self._draft_tip, flight=(x, y))
             self._selected_entry = self._commit_keypoints(annotation, keypoints)
+            self._selected_kind = None
             self._draft_tip = None
         self._refresh()
 
-    def _on_point_selected(self, index: int) -> None:
+    def _on_point_selected(self, index: int, kind: str | None = None) -> None:
         annotation = self._current_annotation()
         if annotation is None:
             return
@@ -167,6 +177,7 @@ class AnnotationController(BaseController):
             return
         self._draft_tip = None
         self._selected_entry = index
+        self._selected_kind = kind if kind in ("tip", "flight") else None
         self._refresh()
 
     def _on_point_moved(self, index: int, kind: str, x: float, y: float) -> None:
@@ -179,9 +190,16 @@ class AnnotationController(BaseController):
 
         tip = entry.keypoints.tip if kind != "tip" else (x, y)
         flight = entry.keypoints.flight if kind != "flight" else (x, y)
-        keypoints = DartKeypoints(tip=tip, flight=flight, copied=entry.keypoints.copied)
+        keypoints = DartKeypoints(
+            tip=tip,
+            flight=flight,
+            copied=entry.keypoints.copied,
+            tip_visible=entry.keypoints.tip_visible,
+            flight_visible=entry.keypoints.flight_visible,
+        )
         annotation.throws[index] = AnnotatedThrow(entry.throw_data, keypoints)
         self._selected_entry = index
+        self._selected_kind = kind if kind in ("tip", "flight") else None
         self._refresh()
 
     def _commit_keypoints(self, annotation, keypoints: DartKeypoints) -> int | None:
@@ -248,10 +266,49 @@ class AnnotationController(BaseController):
             for entry in annotation.throws
         )
 
+    def _toggle_visibility(self) -> None:
+        """Toggle the visibility of the selected keypoint or dart."""
+        annotation = self._current_annotation()
+        if annotation is None or self._selected_entry is None:
+            return
+        if not 0 <= self._selected_entry < len(annotation.throws):
+            return
+        entry = annotation.throws[self._selected_entry]
+        keypoints = entry.keypoints
+        if keypoints is None:
+            return
+
+        tip_visible = keypoints.tip_visible
+        flight_visible = keypoints.flight_visible
+        if self._selected_kind in (None, "tip"):
+            tip_visible = not tip_visible
+        if self._selected_kind in (None, "flight"):
+            flight_visible = not flight_visible
+
+        annotation.throws[self._selected_entry] = AnnotatedThrow(
+            entry.throw_data,
+            DartKeypoints(
+                tip=keypoints.tip,
+                flight=keypoints.flight,
+                copied=keypoints.copied,
+                tip_visible=tip_visible,
+                flight_visible=flight_visible,
+            ),
+        )
+        if self._selected_kind is None:
+            message = "Keypoints visible." if tip_visible or flight_visible else "Keypoints hidden."
+        else:
+            visible = tip_visible if self._selected_kind == "tip" else flight_visible
+            name = "Tip" if self._selected_kind == "tip" else "Flight"
+            message = f"{name} visible." if visible else f"{name} hidden."
+        self._refresh()
+        self.annotation_view.set_status(message)
+
     def _on_delete(self) -> None:
         if self._draft_tip is not None:
             self._draft_tip = None
             self._selected_entry = None
+            self._selected_kind = None
             self._refresh()
             return
 
@@ -263,6 +320,7 @@ class AnnotationController(BaseController):
         entry = annotation.throws[self._selected_entry]
         annotation.throws[self._selected_entry] = AnnotatedThrow(entry.throw_data, None)
         self._selected_entry = None
+        self._selected_kind = None
         self._refresh()
 
     def _refresh(self) -> None:
@@ -276,6 +334,7 @@ class AnnotationController(BaseController):
             view.clear()
             self._selected_throw = None
             self._selected_entry = None
+            self._selected_kind = None
             self._draft_tip = None
             return
 
@@ -316,7 +375,8 @@ class AnnotationController(BaseController):
                     kind="tip",
                     label="T",
                     color=color,
-                    selected=selected,
+                    selected=selected and self._selected_kind in (None, "tip"),
+                    visible=entry.keypoints.tip_visible,
                 )
             )
             points.append(
@@ -327,19 +387,20 @@ class AnnotationController(BaseController):
                     kind="flight",
                     label="F",
                     color=color,
-                    selected=selected,
+                    selected=selected and self._selected_kind in (None, "flight"),
+                    visible=entry.keypoints.flight_visible,
                 )
             )
         if self._draft_tip is not None:
             points.append(AnnotationPoint(self._draft_tip[0], self._draft_tip[1], index=-1))
         return points
 
-    def _rows_for(self, annotation) -> list[tuple[str, str, str, str, str]]:
-        rows: list[tuple[str, str, str, str, str]] = []
+    def _rows_for(self, annotation) -> list[tuple[str, str, str, str, str, str]]:
+        rows: list[tuple[str, str, str, str, str, str]] = []
         for index, entry in enumerate(annotation.throws):
             score = entry.throw_data.short_label if entry.throw_data is not None else "—"
             if entry.keypoints is None:
-                rows.append((str(index + 1), score, "—", "—", "—"))
+                rows.append((str(index + 1), score, "—", "—", "—", "—"))
             else:
                 source = "copied" if entry.keypoints.copied else "manual"
                 rows.append(
@@ -349,9 +410,22 @@ class AnnotationController(BaseController):
                         self._format_point(entry.keypoints.tip),
                         self._format_point(entry.keypoints.flight),
                         source,
+                        self._visibility_label(entry.keypoints),
                     )
                 )
         return rows
+
+    def _visibility_label(self, keypoints: DartKeypoints) -> str:
+        """List which keypoints of a dart are visible, e.g. ``"T, F"``."""
+        visible = [
+            name
+            for name, flag in (
+                ("T", keypoints.tip_visible),
+                ("F", keypoints.flight_visible),
+            )
+            if flag
+        ]
+        return ", ".join(visible) if visible else "none"
 
     def _metrics_for(self, annotation) -> str:
         timestamp = datetime.fromtimestamp(annotation.timestamp).strftime("%H:%M:%S")
@@ -437,6 +511,7 @@ class AnnotationController(BaseController):
     def reset_selection(self) -> None:
         self._selected_throw = None
         self._selected_entry = None
+        self._selected_kind = None
         self._draft_tip = None
         self._follow_newest = True
 
