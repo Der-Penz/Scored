@@ -7,6 +7,7 @@ import torch
 import torchvision.transforms as T
 from nn.data.transform import Transform
 from PIL import Image
+from scored_lib.annotation.image_annotation import ImageAnnotation
 from tqdm import tqdm
 
 
@@ -28,18 +29,24 @@ class DatasetConfig:
 
 class SampleIndex(TypedDict):
     image_path: Path
-    annotation: dict
+    annotation: ImageAnnotation
     annotation_path: Path
 
 
 class DartKeypointDataset(torch.utils.data.Dataset):
     def __init__(
-        self, samples: list[str], path: Path, cls_dict: dict[str, int], transforms: list[Transform]
+        self,
+        samples: list[str],
+        path: Path,
+        cls_dict: dict[str, int],
+        num_keypoints: int,
+        transforms: list[Transform],
     ):
         super().__init__()
         self.samples = samples
         self.path = path
         self.cls_dict = cls_dict
+        self.num_keypoints = num_keypoints
         self.transforms = transforms
         self.index: list[SampleIndex] = self.build_index()
 
@@ -59,7 +66,14 @@ class DartKeypointDataset(torch.utils.data.Dataset):
             if not annotation_path.exists():
                 raise FileNotFoundError(f"Annotation file not found: {annotation_path}")
 
-            annotation = self.load_annotation(annotation_path)
+            try:
+                annotation = self.load_annotation(annotation_path)
+            except FileNotFoundError as err:
+                raise FileNotFoundError(f"Annotation file not found: {annotation_path}") from err
+            except json.JSONDecodeError as err:
+                raise ValueError(
+                    f"Failed to decode JSON from annotation file: {annotation_path}"
+                ) from err
 
             index.append(
                 {
@@ -81,9 +95,6 @@ class DartKeypointDataset(torch.utils.data.Dataset):
             f"No image file found in {sample_path} with extensions {img_extensions}"
         )
 
-    def load_annotation(self, annotation_path: Path) -> dict:
-        return json.loads(annotation_path.read_text())
-
     def __len__(self):
         return len(self.samples)
 
@@ -95,10 +106,15 @@ class DartKeypointDataset(torch.utils.data.Dataset):
                 f"Index {idx} is out of bounds for dataset of size {len(self)}"
             ) from err
 
-        image = self.load_image(sample["image_path"])
-        gt_boxes = torch.tensor(sample["annotation"]["boxes"], dtype=torch.float32)
-        gt_labels = torch.tensor(sample["annotation"]["labels"], dtype=torch.int64)
-        gt_keypoints = torch.tensor(sample["annotation"]["keypoints"], dtype=torch.float32)
+        try:
+            image = self.load_image(sample["image_path"])
+        except FileNotFoundError as err:
+            raise FileNotFoundError(f"Image file not found: {sample['image_path']}") from err
+
+        img_size: tuple[int, int] = image.shape[1:]  # type: ignore # (C, H, W) -> (H, W)
+        gt_boxes, gt_labels, gt_keypoints = self.extract_annotation_data(
+            sample["annotation"], img_size
+        )
 
         for transform in self.transforms:
             image, gt_boxes, gt_labels, gt_keypoints = transform(
@@ -115,3 +131,58 @@ class DartKeypointDataset(torch.utils.data.Dataset):
         image = Image.open(image_path).convert("RGB")
         transform = T.ToTensor()
         return transform(image)
+
+    def load_annotation(self, annotation_path: Path) -> ImageAnnotation:
+        """
+        Load an annotation from the given path and return it as an ImageAnnotation object.
+        """
+        return ImageAnnotation.from_json(json.loads(annotation_path.read_text()))
+
+    def extract_annotation_data(
+        self, annotation: ImageAnnotation, img_size: tuple[int, int]
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+        Extract ground truth keypoints and build the bbox from the keypoints.
+        """
+
+        h, w = img_size
+
+        gt_boxes = []
+        gt_labels = []
+        gt_keypoints = []
+
+        for annotated_throw in annotation.throws:
+            keypoints = annotated_throw.keypoints
+
+            if keypoints is None:
+                print(
+                    f"No keypoints found for throw {annotated_throw.throw_data.label} in annotation"
+                    f"{annotation.round}-{annotation.throw}. Skipping this throw."
+                )
+                continue
+
+            gt_labels.append(self.cls_dict["dart"])
+
+            keypoints_tensor = torch.zeros((self.num_keypoints, 3), dtype=torch.float32)
+
+            actual_kpts = torch.tensor([keypoints.tip, keypoints.flight, 1], dtype=torch.float32)
+            num_actual = actual_kpts.shape[0]
+            keypoints_tensor[:num_actual] = actual_kpts
+
+            gt_keypoints.append(keypoints_tensor)
+
+            # compute bounding box from keypoints with padding from the tip to the flight
+            tip, flight = keypoints.tip, keypoints.flight
+            padding = 2.0  # Add some padding to the bounding box
+            x_min = min(min(tip[0], flight[0]) - padding, 0)
+            y_min = min(min(tip[1], flight[1]) - padding, 0)
+            x_max = max(max(tip[0], flight[0]) + padding, w)
+            y_max = max(max(tip[1], flight[1]) + padding, h)
+
+            gt_boxes.append([x_min, y_min, x_max, y_max])
+
+        return (
+            torch.tensor(gt_boxes, dtype=torch.float32),
+            torch.tensor(gt_labels, dtype=torch.long),
+            torch.tensor(gt_keypoints, dtype=torch.float32),
+        )
