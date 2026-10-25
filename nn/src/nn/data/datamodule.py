@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import NamedTuple
 
 import pytorch_lightning as pl
 import torch
@@ -6,6 +7,14 @@ from nn.data.config import DataModuleConfig
 from nn.data.dataset import DartKeypointDataset, DatasetConfig
 from nn.data.transform import Transform
 from torch.utils.data import DataLoader
+
+
+class Batch(NamedTuple):
+    images: torch.Tensor
+    gt_boxes: torch.Tensor
+    gt_labels: torch.Tensor
+    gt_keypoints: torch.Tensor
+    annotation_paths: list[Path]
 
 
 class DartKeyPointDataModule(pl.LightningDataModule):
@@ -71,7 +80,9 @@ class DartKeyPointDataModule(pl.LightningDataModule):
         )
 
 
-def collate_fn(batch: list[tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, Path]]):
+def collate_fn(
+    batch: list[tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, Path]],
+) -> Batch:
     """
     Custom collate function to handle batches of data.
     """
@@ -94,4 +105,6 @@ def collate_fn(batch: list[tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch
         gt_keypoints, batch_first=True, padding_value=0.0
     )
 
-    return image_batch, gt_boxes_padded, gt_labels_padded, gt_keypoints_padded, annotation_paths
+    return Batch(
+        image_batch, gt_boxes_padded, gt_labels_padded, gt_keypoints_padded, annotation_paths
+    )

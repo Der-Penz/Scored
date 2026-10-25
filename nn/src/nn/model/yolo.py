@@ -49,17 +49,11 @@ class YoloV10(torch.nn.Module):
                 "Model should be in eval mode during inference when no aux_head is provided."
             )
             cls, reg, kpts = self.head(neck_features)
-            return self.decode_raw_predictions(cls, reg, kpts)
-
-        # training mode with aux_head
+            return self.decode_raw_predictions(cls, reg, kpts, self.backbone.get_strides())
 
         one2one = self.head([feature.detach() for feature in neck_features])
-
-        if not self.training:
-            cls, reg, kpts = one2one
-            return self.decode_raw_predictions(cls, reg, kpts)
-
         one2many = self.aux_head(neck_features)
+
         return TrainingPredictions(one2one, one2many)
 
     def num_boxes_per_scale(self, img_size: tuple[int, int]) -> tuple[int, ...]:
@@ -79,11 +73,38 @@ class YoloV10(torch.nn.Module):
 
         return tuple(img_size[0] // s * img_size[1] // s for s in strides)
 
+    def anchors(self, img_size: tuple[int, int], device: torch.device) -> list[torch.Tensor]:
+        """
+        Returns the anchor boxes for each scale.
+
+        Parameters
+        ----------
+        img_size : tuple[int, int]
+            The size of the input image (height, width).
+        device : torch.device
+            The device on which the anchor boxes should be created.
+
+        Returns
+        -------
+        tuple[torch.Tensor, ...]
+            A tuple containing the anchor boxes for each scale.
+        """
+        return [
+            make_anchors(
+                img_size[0] // stride,
+                img_size[1] // stride,
+                device=device,
+                dtype=torch.float32,
+            )
+            for stride in self.backbone.get_strides()
+        ]
+
+    @staticmethod
     def decode_raw_predictions(
-        self,
-        cls: list[torch.Tensor],
+        cls: list[torch.Tensor],  # pyright: ignore[reportSelfClsParameterName]
         regs: list[torch.Tensor],
         kpts: list[torch.Tensor],
+        strides: tuple[int, ...],
     ) -> DecodedPredictions:
         """
         Decodes raw multi-scale head predictions into bounding boxes, class scores, and keypoints.
@@ -97,6 +118,8 @@ class YoloV10(torch.nn.Module):
             Shape: (B, 4, H_i, W_i) or (B, 4 * reg_max, H_i, W_i)
         kpts : list[torch.Tensor]
             Keypoint feature maps per scale. Shape: (B, num_kpts * 3, H_i, W_i)
+        strides : tuple[int, ...]
+            Strides corresponding to each feature map scale.
 
         Returns
         -------
@@ -106,7 +129,6 @@ class YoloV10(torch.nn.Module):
             - "scores": (B, Total_Anchors, n_classes) class probabilities
             - "keypoints": (B, Total_Anchors, num_kpts, 3) in (x, y, visibility) pixel space
         """
-        strides = self.backbone.get_strides()
 
         decoded_boxes = []
         decoded_scores = []
