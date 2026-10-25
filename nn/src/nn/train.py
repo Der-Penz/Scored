@@ -19,6 +19,7 @@ from nn.training.dart_keypoint_module import DartKeypointModule
 def load_dataset_config_from_json(dataset_config_path: Path) -> DatasetConfig:
     with open(dataset_config_path) as f:
         data = json.load(f)
+    data["path"] = Path(data["path"])
     return DatasetConfig(**data)
 
 

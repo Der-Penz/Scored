@@ -30,9 +30,10 @@ name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
-
-
 [dependency-groups]
 dev = [
     "ipykernel>=7.4.0",
 ]
+
+[project.scripts]
+dataset = "dataset.generate_dataset:main"

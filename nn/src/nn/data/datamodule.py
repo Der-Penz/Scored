@@ -24,12 +24,14 @@ class DartKeyPointDataModule(pl.LightningDataModule):
                 self.dataset.train,
                 self.dataset.path,
                 self.dataset.cls_dict,
+                self.dataset.num_keypoints,
                 [transform for transform in self.transforms if transform.train_only()],
             )
             self.val_set = DartKeypointDataset(
                 self.dataset.val,
                 self.dataset.path,
                 self.dataset.cls_dict,
+                self.dataset.num_keypoints,
                 [transform for transform in self.transforms if not transform.train_only()],
             )
         elif stage == "test":
@@ -37,6 +39,7 @@ class DartKeyPointDataModule(pl.LightningDataModule):
                 self.dataset.test,
                 self.dataset.path,
                 self.dataset.cls_dict,
+                self.dataset.num_keypoints,
                 [transform for transform in self.transforms if not transform.train_only()],
             )
 
