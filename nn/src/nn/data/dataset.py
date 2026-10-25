@@ -136,7 +136,7 @@ class DartKeypointDataset(torch.utils.data.Dataset):
         """
         Load an annotation from the given path and return it as an ImageAnnotation object.
         """
-        return ImageAnnotation.from_json(json.loads(annotation_path.read_text()))
+        return ImageAnnotation.from_json(annotation_path.read_text())
 
     def extract_annotation_data(
         self, annotation: ImageAnnotation, img_size: tuple[int, int]
@@ -147,9 +147,9 @@ class DartKeypointDataset(torch.utils.data.Dataset):
 
         h, w = img_size
 
-        gt_boxes = []
-        gt_labels = []
-        gt_keypoints = []
+        gt_boxes: list[list[float]] = []
+        gt_labels: list[int] = []
+        gt_keypoints: list[torch.Tensor] = []
 
         for annotated_throw in annotation.throws:
             keypoints = annotated_throw.keypoints
@@ -179,16 +179,23 @@ class DartKeypointDataset(torch.utils.data.Dataset):
 
             # compute bounding box from keypoints with padding from the tip to the flight
             tip, flight = keypoints.tip, keypoints.flight
-            padding = 2.0  # Add some padding to the bounding box
-            x_min = min(min(tip[0], flight[0]) - padding, 0)
-            y_min = min(min(tip[1], flight[1]) - padding, 0)
-            x_max = max(max(tip[0], flight[0]) + padding, w)
-            y_max = max(max(tip[1], flight[1]) + padding, h)
+            padding_h, padding_w = 2 / h, 2 / w  # Add some padding to the bounding box
+            x_min = max(min(tip[0], flight[0]) - padding_w, 0)
+            y_min = max(min(tip[1], flight[1]) - padding_h, 0)
+            x_max = min(max(tip[0], flight[0]) + padding_w, 1)
+            y_max = min(max(tip[1], flight[1]) + padding_h, 1)
 
             gt_boxes.append([x_min, y_min, x_max, y_max])
+
+        if len(gt_boxes) == 0:
+            return (
+                torch.empty((0, 4), dtype=torch.float32),
+                torch.empty((0,), dtype=torch.long),
+                torch.empty((0, self.num_keypoints, 3), dtype=torch.float32),
+            )
 
         return (
             torch.tensor(gt_boxes, dtype=torch.float32),
             torch.tensor(gt_labels, dtype=torch.long),
-            torch.tensor(gt_keypoints, dtype=torch.float32),
+            torch.stack(gt_keypoints, dim=0),
         )
