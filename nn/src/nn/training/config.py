@@ -6,8 +6,6 @@ from lightning_fabric.plugins.precision.precision import _PRECISION_INPUT
 
 @dataclass(frozen=True)
 class ModelConfig:
-    n_classes: int
-    num_kpts: int
     reg_max: int = 16
     include_aux_head: bool = True
 

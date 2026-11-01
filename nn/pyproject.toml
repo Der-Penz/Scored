@@ -37,3 +37,4 @@ dev = [
 
 [project.scripts]
 dataset = "dataset.generate_dataset:main"
+train = "nn.train:main"

@@ -63,9 +63,12 @@ def main() -> None:
             n_classes, num_kpts, reg_max, channels
         ),
     )
+
+    unique_classes = len(set(args.dataset.cls_dict.items()))
+
     model = YoloV10(
-        n_classes=args.model.n_classes,
-        num_kpts=args.model.num_kpts,
+        n_classes=unique_classes,
+        num_kpts=args.dataset.num_keypoints,
         reg_max=args.model.reg_max,
         parts=parts,
         include_aux_head=args.model.include_aux_head,
