@@ -49,6 +49,7 @@ def decode_raw_predictions(
     regs: list[torch.Tensor],
     kpts: list[torch.Tensor],
     strides: tuple[int, ...],
+    sigmoid_visibility: bool = True,
 ) -> DecodedPredictions:
     """
     Decodes raw multi-scale head predictions into bounding boxes, class scores, and keypoints.
@@ -64,6 +65,10 @@ def decode_raw_predictions(
         Keypoint feature maps per scale. Shape: (B, num_kpts * 3, H_i, W_i)
     strides : tuple[int, ...]
         Strides corresponding to each feature map scale.
+    sigmoid_visibility : bool, optional
+        Whether to squash keypoint visibility through a sigmoid. Leave enabled for
+        inference (visibility as probabilities), disable when the output feeds a
+        logits-based loss such as ``BCEWithLogitsLoss``.
 
     Returns
     -------
@@ -107,7 +112,9 @@ def decode_raw_predictions(
 
         # Keypoint coordinates scaled to image pixels with grid offsets
         kpt_xy = (anchors.unsqueeze(2) + k_reshaped[..., :2] * 2.0) * stride
-        kpt_vis = k_reshaped[..., 2:].sigmoid()  # Keypoint visibility score
+        kpt_vis = k_reshaped[..., 2:]
+        if sigmoid_visibility:
+            kpt_vis = kpt_vis.sigmoid()
         keypoints = torch.cat([kpt_xy, kpt_vis], dim=-1)  # (B, H*W, num_kpts, 3)
 
         decoded_boxes.append(boxes)

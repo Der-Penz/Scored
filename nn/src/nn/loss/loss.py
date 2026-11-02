@@ -62,20 +62,23 @@ class YoloV10Loss(torch.nn.Module):
         gt_boxes_stride_space = YoloV10Loss.scale_gt_to_stride_space(batch.gt_boxes, strides)
 
         stride_space_preds = decode_raw_predictions(
-            cls_preds, reg_preds, kpt_preds, (1,) * len(cls_preds)
+            cls_preds, reg_preds, kpt_preds, (1,) * len(cls_preds), sigmoid_visibility=False
         )  # we pass stride 1 to keep
-        # boxes in stride space for assignment and loss calculation
+        # boxes in stride space for assignment and loss calculation. Visibility stays as
+        # logits because the keypoint loss consumes it with BCEWithLogitsLoss.
 
-        target_labels, target_boxes, target_scores, target_gt_idx, fg_mask = assign_box(
-            gt_boxes_stride_space,
-            batch.gt_labels,
-            pred_boxes=stride_space_preds.boxes,
-            pred_scores=stride_space_preds.scores,
-            anchors=anchors,
-            alpha=self.loss_config.assignment.alpha,
-            beta=self.loss_config.assignment.beta,
-            topk=1 if one2one else self.loss_config.assignment.o2m_topk,
-        )
+        # Assignment is a target-generation step: it must not backprop into the heads.
+        with torch.no_grad():
+            target_labels, target_boxes, target_scores, target_gt_idx, fg_mask = assign_box(
+                gt_boxes_stride_space,
+                batch.gt_labels,
+                pred_boxes=stride_space_preds.boxes,
+                pred_scores=stride_space_preds.scores,
+                anchors=anchors,
+                alpha=self.loss_config.assignment.alpha,
+                beta=self.loss_config.assignment.beta,
+                topk=1 if one2one else self.loss_config.assignment.o2m_topk,
+            )
 
         target_scores_sum = max(target_scores.sum().item(), 1.0)
 

@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 class KeypointLoss(nn.Module):
@@ -8,10 +7,11 @@ class KeypointLoss(nn.Module):
         super().__init__()
 
         self.register_buffer("sigmas", torch.tensor(sigmas))
+        self.binary_cross_entropy = nn.BCEWithLogitsLoss(reduction="sum")
 
     def forward(
         self,
-        pred_kpts: torch.Tensor,  # (B, N, K, 3)
+        pred_kpts: torch.Tensor,  # (B, N, K, 3), visibility as raw logits
         target_kpts: torch.Tensor,  # (B, N, K, 3)
         target_boxes: torch.Tensor,  # (B, N, 4)
         fg_mask: torch.Tensor,  # (B, N)
@@ -52,8 +52,7 @@ class KeypointLoss(nn.Module):
         pred_vis_logits = pk[..., 2]
         target_vis_targets = (vis > 0).float()
         loss_vis = (
-            F.binary_cross_entropy_with_logits(pred_vis_logits, target_vis_targets, reduction="sum")
-            / target_scores_sum
+            self.binary_cross_entropy(pred_vis_logits, target_vis_targets) / target_scores_sum
         )
 
         return loss_kpt, loss_vis
