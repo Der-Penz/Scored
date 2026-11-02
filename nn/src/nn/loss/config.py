@@ -4,7 +4,8 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class WeightsConfig:
     box: float = 7.5
-    keypoint: float = 1.0
+    kpt_pos: float = 12.0
+    kpt_vis: float = 1.0
     dfl: float = 1.5
     cls: float = 0.5
 
@@ -20,3 +21,4 @@ class AssignmentConfig:
 class LossConfig:
     weights: WeightsConfig = WeightsConfig()
     assignment: AssignmentConfig = AssignmentConfig()
+    sigmas: list[float] = [0.025, 0.04]

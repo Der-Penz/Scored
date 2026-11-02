@@ -12,7 +12,7 @@ def assign_box(
     alpha: float,
     beta: float,
     topk: int,
-) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     r"""
     Assign predicted boxes to ground truth boxes based on a combination
     of classification score and IoU.
@@ -29,7 +29,7 @@ def assign_box(
         Concatenated predicted boxes across all scales for the current batch.
         Shape: (N, num_pred_boxes, 4)
     pred_scores : torch.Tensor
-        Concated predicted scores across all scales for the current batch.
+        Concatenated predicted scores across all scales for the current batch.
         Shape: (N, num_pred_boxes, num_classes)
     anchors : torch.Tensor
         Anchor boxes across all scales in the same order as pred_<> in p1 coordinates.
@@ -44,13 +44,16 @@ def assign_box(
     Returns
     -------
     target_labels : torch.Tensor
-        Target labels for each predicted box. Shape: (N, num_pred_boxes)
+        Target labels for each predicted box. Shape: (B, num_pred_boxes)
     target_boxes : torch.Tensor
-        Target boxes for each predicted box. Shape: (N, num_pred_boxes, 4)
+        Target boxes for each predicted box. Shape: (B, num_pred_boxes, 4)
     target_scores : torch.Tensor
-        Target scores for each predicted box. Shape: (N, num_pred_boxes, num_classes)
+        Target soft probabilities. Shape: (B, num_pred_boxes, num_classes)
+    target_gt_idx : torch.Tensor
+        Index of the assigned ground truth box (0 to M-1) for each anchor.
+        Shape: (B, num_pred_boxes)
     fg_mask : torch.Tensor
-        Boolean mask indicating foreground anchors. Shape: (N, num_pred_boxes)
+        Boolean mask indicating foreground anchors. Shape: (B, num_pred_boxes)
     """
     gt_mask = (gt_labels >= 0).float().unsqueeze(-1)  # (B, M, 1)
 
@@ -102,7 +105,7 @@ def assign_box(
         )
     target_scores = target_scores * fg_mask.unsqueeze(-1)
 
-    return target_labels, target_boxes, target_scores, fg_mask
+    return target_labels, target_boxes, target_scores, target_gt_idx, fg_mask
 
 
 def compute_pred_scores(pred_scores: torch.Tensor, gt_labels: torch.Tensor) -> torch.Tensor:

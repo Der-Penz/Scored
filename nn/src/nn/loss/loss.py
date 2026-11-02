@@ -6,6 +6,7 @@ from nn.loss.assigner import assign_box
 from nn.loss.box import BoxLoss
 from nn.loss.classification import ClassificationLoss
 from nn.loss.config import LossConfig
+from nn.loss.keypoint import KeypointLoss
 from nn.model.decode import decode_raw_predictions
 from nn.training.dart_keypoint_module import Batch
 
@@ -15,6 +16,8 @@ class LossParts(TypedDict):
     cls_loss: torch.Tensor
     box_loss: torch.Tensor
     dfl_loss: torch.Tensor
+    kpt_pos_loss: torch.Tensor
+    kpt_vis_loss: torch.Tensor
 
 
 class YoloV10Loss(torch.nn.Module):
@@ -27,6 +30,7 @@ class YoloV10Loss(torch.nn.Module):
 
         self.classification_loss = ClassificationLoss()
         self.box_loss = BoxLoss()
+        self.keypoint_loss = KeypointLoss(loss_config.sigmas)
 
     def forward(
         self,
@@ -62,7 +66,7 @@ class YoloV10Loss(torch.nn.Module):
         )  # we pass stride 1 to keep
         # boxes in stride space for assignment and loss calculation
 
-        target_labels, target_boxes, target_scores, fg_mask = assign_box(
+        target_labels, target_boxes, target_scores, target_gt_idx, fg_mask = assign_box(
             gt_boxes_stride_space,
             batch.gt_labels,
             pred_boxes=stride_space_preds.boxes,
@@ -76,11 +80,10 @@ class YoloV10Loss(torch.nn.Module):
         target_scores_sum = max(target_scores.sum().item(), 1.0)
 
         cls_loss = self.classification_loss(cls_preds, target_scores)
-        weighted_cls_loss = cls_loss * self.cls_gain
 
         target_ltrb_stride_space = YoloV10Loss.lrtb_from_boxes(target_boxes, anchors)
 
-        total_box_loss, weighted_ciou, weighted_dfl = self.box_loss(
+        ciou_loss, dfl_loss = self.box_loss(
             pred_boxes=stride_space_preds.boxes,
             pred_dist=reg_preds,
             target_boxes=target_boxes,
@@ -89,13 +92,33 @@ class YoloV10Loss(torch.nn.Module):
             target_scores_sum=target_scores_sum,
         )
 
-        total_loss = weighted_cls_loss + total_box_loss
+        target_kpts_stride_space = YoloV10Loss.prepare_target_keypoints_from_gt(
+            batch.gt_keypoints, strides, target_gt_idx
+        )
+
+        kpt_pos_loss, kpt_vis_loss = self.keypoint_loss(
+            stride_space_preds.keypoints,
+            target_kpts=target_kpts_stride_space,
+            target_boxes=target_boxes,
+            fg_mask=fg_mask,
+            target_scores_sum=target_scores_sum,
+        )
+
+        total_loss = (
+            cls_loss * self.loss_config.weights.cls
+            + ciou_loss * self.loss_config.weights.box
+            + dfl_loss * self.loss_config.weights.dfl
+            + kpt_pos_loss * self.loss_config.weights.kpt_pos
+            + kpt_vis_loss * self.loss_config.weights.kpt_vis
+        )
 
         loss_items: LossParts = {
             "loss": total_loss,
-            "cls_loss": weighted_cls_loss,
-            "box_loss": weighted_ciou,
-            "dfl_loss": weighted_dfl,
+            "cls_loss": cls_loss,
+            "box_loss": ciou_loss,
+            "kpt_pos_loss": kpt_pos_loss,
+            "kpt_vis_loss": kpt_vis_loss,
+            "dfl_loss": dfl_loss,
         }
 
         return loss_items, fg_mask.sum().item()  # type: ignore
@@ -164,3 +187,51 @@ class YoloV10Loss(torch.nn.Module):
         ltrb = torch.stack([left, top, right, bottom], dim=-1)  # Shape: (B, N, 4)
 
         return ltrb.clamp(min=0.0)  # ensure positive distances
+
+    @staticmethod
+    def prepare_target_keypoints_from_gt(
+        gt_keypoints: torch.Tensor, strides: torch.Tensor, target_gt_idx: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Prepares the gt keypoints for loss calculation by scaling them to stride space and
+        aligning them with the predicted anchors.
+
+        Parameters
+        ----------
+        gt_keypoints : torch.Tensor
+            Ground truth keypoints for the current batch. Shape: (B, M, K, 3)
+        strides : torch.Tensor
+            The pre-concatenated strides tensor matching each predicted box,
+            containing [stride_x, stride_y] for each anchor.
+            Shape: (num_pred_boxes, 2) or broadcastable.
+        target_gt_idx : torch.Tensor
+            Index of the assigned ground truth box (0 to M-1) for each anchor.
+            Shape: (B, N)
+
+        Returns
+        -------
+        torch.Tensor
+            Scaled target keypoints. Shape: (B, num_pred_boxes, K, 3)
+        """
+        # Scale the target keypoints to the stride space
+        if strides.shape[-1] == 2:
+            stride_x = strides[..., 0:1]
+            stride_y = strides[..., 1:2]
+            strides_3d = torch.cat(
+                [stride_x, stride_y, torch.ones_like(stride_x)], dim=-1
+            )  # (N, 3)
+        else:
+            strides_3d = strides.repeat(1, 3) if strides.ndim > 1 else strides.repeat(3, 1).T
+
+        strides_expanded = strides_3d.unsqueeze(0).unsqueeze(2)  # (1, N, 1, 3)
+
+        target_keypoints = gt_keypoints.gather(
+            dim=1,
+            index=target_gt_idx.unsqueeze(-1)
+            .unsqueeze(-1)
+            .expand(-1, -1, gt_keypoints.shape[2], 3),
+        )  # (B, N, K, 3)
+
+        target_scaled_keypoints = target_keypoints / strides_expanded
+
+        return target_scaled_keypoints
