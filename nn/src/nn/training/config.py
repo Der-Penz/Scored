@@ -19,13 +19,6 @@ class OptimizerConfig:
 
 
 @dataclass(frozen=True)
-class AssignmentConfig:
-    alpha: float = 0.5
-    beta: float = 6.0
-    o2m_topk: int = 10
-
-
-@dataclass(frozen=True)
 class TrainerConfig:
     max_epochs: int = 100
     accelerator: str = "auto"

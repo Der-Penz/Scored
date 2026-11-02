@@ -12,7 +12,7 @@ def assign_box(
     alpha: float,
     beta: float,
     topk: int,
-):
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     r"""
     Assign predicted boxes to ground truth boxes based on a combination
     of classification score and IoU.

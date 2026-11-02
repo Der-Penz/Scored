@@ -12,7 +12,7 @@ from nn.loss.loss import YoloV10Loss
 from nn.model.impl.simple import MobileYoloHead, MobileYoloNeck, TimmYoloBackbone
 from nn.model.parts import YoloParts
 from nn.model.yolo import YoloV10
-from nn.training.config import AssignmentConfig, ModelConfig, OptimizerConfig, TrainerConfig
+from nn.training.config import ModelConfig, OptimizerConfig, TrainerConfig
 from nn.training.dart_keypoint_module import DartKeypointModule
 
 
@@ -38,7 +38,6 @@ class TrainCLIArgs:
 
     model: ModelConfig
     optimizer: OptimizerConfig = OptimizerConfig()
-    assignment: AssignmentConfig = AssignmentConfig()
     trainer: TrainerConfig = TrainerConfig()
     datamodule: DataModuleConfig = DataModuleConfig()
     loss: LossConfig = LossConfig()
@@ -73,7 +72,7 @@ def main() -> None:
         parts=parts,
         include_aux_head=args.model.include_aux_head,
     )
-    loss = YoloV10Loss(args.loss, args.model)
+    loss = YoloV10Loss(args.loss)
 
     module = DartKeypointModule(
         model=model,

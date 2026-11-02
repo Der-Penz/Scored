@@ -4,10 +4,8 @@ import pytorch_lightning as pl
 import torch
 
 from nn.data.datamodule import Batch
-from nn.loss.assigner import assign_box
 from nn.model.yolo import DecodedPredictions, TrainingPredictions, YoloV10
 from nn.training.config import (
-    AssignmentConfig,
     ModelConfig,
     OptimizerConfig,
 )
@@ -20,7 +18,6 @@ class DartKeypointModule(pl.LightningModule):
         loss: torch.nn.Module,
         model_config: ModelConfig,
         optimizer_config: OptimizerConfig | None = None,
-        assignment_config: AssignmentConfig | None = None,
     ):
         super().__init__()
 
@@ -28,72 +25,48 @@ class DartKeypointModule(pl.LightningModule):
         self.model_config = model_config
         self.optimizer_config = optimizer_config or OptimizerConfig()
         self.loss = loss
-        self.assignment_config = assignment_config or AssignmentConfig()
 
     def forward(self, images: torch.Tensor) -> TrainingPredictions | DecodedPredictions:
         return self.model(images)
-
-    def compute_loss(
-        self,
-        batch: Batch,
-        head_outputs: tuple[list[torch.Tensor], list[torch.Tensor], list[torch.Tensor]],
-        one2one: bool,
-    ) -> tuple[torch.Tensor, float]:
-        cls_preds, reg_preds, kpt_preds = head_outputs
-        decoded_preds = self.model.decode_raw_predictions(
-            cls_preds, reg_preds, kpt_preds, self.model.backbone.get_strides()
-        )
-
-        anchors = torch.cat(self.model.anchors(batch.images.shape[2:], batch.images.device), dim=0)  # pyright: ignore[reportArgumentType]
-        assignment = assign_box(
-            batch.gt_boxes,
-            batch.gt_labels,
-            pred_boxes=decoded_preds["boxes"],
-            pred_scores=decoded_preds["scores"],
-            anchors=anchors,
-            alpha=self.assignment_config.alpha,
-            beta=self.assignment_config.beta,
-            topk=1 if one2one else self.assignment_config.o2m_topk,
-        )
-
-        return self.loss(
-            decoded_preds, batch.gt_boxes, batch.gt_labels, batch.gt_keypoints, assignment
-        ), assignment[3].sum().item()
 
     def common_step(self, batch: Batch, batch_idx, stage: str):
         outputs: TrainingPredictions = self(batch.images)
 
         one2one, one2many = outputs.one2one, outputs.one2many
 
-        loss_o2m, assignment_o2m = self.compute_loss(batch, one2many, one2one=False)
-        loss_o2o, assignment_o2o = self.compute_loss(batch, one2one, one2one=True)
+        anchors = torch.cat(self.model.anchors(batch.images.shape[2:], batch.images.device), dim=0)  # pyright: ignore[reportArgumentType]
+        strides = torch.cat(self.model.strides(batch.images.shape[2:], batch.images.device), dim=0)  # pyright: ignore[reportArgumentType]
 
-        loss = loss_o2m + loss_o2o
+        loss_o2m, num_assignment_o2m = self.loss(batch, one2many, anchors, strides, one2one=False)
+        loss_o2o, num_assignment_o2o = self.loss(batch, one2one, anchors, strides, one2one=True)
 
-        self.log(f"{stage}_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
-        self.log(
-            f"{stage}_loss_o2m",
-            loss_o2m,
-            on_step=True,
-            on_epoch=True,
-        )
-        self.log(
-            f"{stage}_loss_o2o",
-            loss_o2o,
-            on_step=True,
-            on_epoch=True,
-        )
+        loss = loss_o2m["loss"] + loss_o2o["loss"]
+
+        for key, value in loss_o2m.items():
+            self.log(
+                f"loss/{stage}_o2m_{key}",
+                value,
+                on_step=True,
+                on_epoch=True,
+            )
+        for key, value in loss_o2o.items():
+            self.log(
+                f"loss/{stage}_o2o_{key}",
+                value,
+                on_step=True,
+                on_epoch=True,
+            )
 
         self.log(
-            f"{stage}_assignment_o2m",
-            assignment_o2m,
+            f"assignment/{stage}_o2m",
+            num_assignment_o2m,
             on_step=False,
             on_epoch=True,
         )
 
         self.log(
-            f"{stage}_assignment_o2o",
-            assignment_o2o,
+            f"assignment/{stage}_o2o",
+            num_assignment_o2o,
             on_step=False,
             on_epoch=True,
         )
