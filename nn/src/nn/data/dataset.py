@@ -1,4 +1,5 @@
 import json
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TypedDict
@@ -143,6 +144,9 @@ class DartKeypointDataset(torch.utils.data.Dataset):
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Extract ground truth keypoints and build the bbox from the keypoints.
+
+        Annotations store normalized image coordinates. The returned boxes and keypoints
+        are in pixels of the image with the given size.
         """
 
         h, w = img_size
@@ -155,20 +159,25 @@ class DartKeypointDataset(torch.utils.data.Dataset):
             keypoints = annotated_throw.keypoints
 
             if keypoints is None:
-                print(
-                    f"No keypoints found for throw {annotated_throw.throw_data.label} in annotation"
-                    f"{annotation.round}-{annotation.throw}. Skipping this throw."
+                logging.warning(
+                    "No keypoints found for throw %s in annotation %s-%s. Skipping this throw.",
+                    annotated_throw.throw_data.label,
+                    annotation.round,
+                    annotation.throw,
                 )
                 continue
 
             gt_labels.append(self.cls_dict["dart"])
 
+            tip = (keypoints.tip[0] * w, keypoints.tip[1] * h)
+            flight = (keypoints.flight[0] * w, keypoints.flight[1] * h)
+
             keypoints_tensor = torch.zeros((self.num_keypoints, 3), dtype=torch.float32)
 
             actual_kpts = torch.tensor(
                 [
-                    [*keypoints.tip, float(keypoints.tip_visible)],
-                    [*keypoints.flight, float(keypoints.flight_visible)],
+                    [*tip, float(keypoints.tip_visible)],
+                    [*flight, float(keypoints.flight_visible)],
                 ],
                 dtype=torch.float32,
             )
@@ -178,12 +187,11 @@ class DartKeypointDataset(torch.utils.data.Dataset):
             gt_keypoints.append(keypoints_tensor)
 
             # compute bounding box from keypoints with padding from the tip to the flight
-            tip, flight = keypoints.tip, keypoints.flight
-            padding_h, padding_w = 2 / h, 2 / w  # Add some padding to the bounding box
-            x_min = max(min(tip[0], flight[0]) - padding_w, 0)
-            y_min = max(min(tip[1], flight[1]) - padding_h, 0)
-            x_max = min(max(tip[0], flight[0]) + padding_w, 1)
-            y_max = min(max(tip[1], flight[1]) + padding_h, 1)
+            padding = 2.0  # pixels
+            x_min = max(min(tip[0], flight[0]) - padding, 0.0)
+            y_min = max(min(tip[1], flight[1]) - padding, 0.0)
+            x_max = min(max(tip[0], flight[0]) + padding, float(w))
+            y_max = min(max(tip[1], flight[1]) + padding, float(h))
 
             gt_boxes.append([x_min, y_min, x_max, y_max])
 

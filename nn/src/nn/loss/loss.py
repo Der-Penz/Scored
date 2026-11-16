@@ -7,7 +7,7 @@ from nn.loss.box import BoxLoss
 from nn.loss.classification import ClassificationLoss
 from nn.loss.config import LossConfig
 from nn.loss.keypoint import KeypointLoss
-from nn.model.decode import decode_raw_predictions
+from nn.model.decode import decode_flat_predictions
 from nn.training.dart_keypoint_module import Batch
 
 
@@ -35,7 +35,7 @@ class YoloV10Loss(torch.nn.Module):
     def forward(
         self,
         batch: Batch,
-        head_outputs: tuple[list[torch.Tensor], list[torch.Tensor], list[torch.Tensor]],
+        head_outputs: tuple[torch.Tensor, torch.Tensor, torch.Tensor],
         anchors: torch.Tensor,
         strides: torch.Tensor,
         one2one: bool,
@@ -47,11 +47,12 @@ class YoloV10Loss(torch.nn.Module):
         ----------
         batch : Batch
             A batch of data containing ground truth boxes, labels, and other relevant information.
-        head_outputs : tuple[list[torch.Tensor], list[torch.Tensor], list[torch.Tensor]]
-            Tuple containing lists of predicted classification scores, regression outputs,
-            and keypoint predictions.
+        head_outputs : tuple[torch.Tensor, torch.Tensor, torch.Tensor]
+            Flattened prediction tensors for classification, box regression and keypoints,
+            see ``nn.model.decode.flatten_head_outputs``. Shapes: (B, N, n_classes),
+            (B, N, 4 * reg_max) and (B, N, num_kpts * 3).
         anchors : torch.Tensor
-            The anchor boxes for each box in the shape of (num_pred_boxes, 4).
+            The anchor points for each predicted box in the shape of (num_pred_boxes, 2).
         strides : torch.Tensor
             The strides value for each box in the shape of (num_pred_boxes, 2).
         one2one : bool
@@ -59,22 +60,26 @@ class YoloV10Loss(torch.nn.Module):
         """
         cls_preds, reg_preds, kpt_preds = head_outputs
 
-        gt_boxes_stride_space = YoloV10Loss.scale_gt_to_stride_space(batch.gt_boxes, strides)
+        strides_4d = torch.cat([strides, strides], dim=-1)  # (N, 4)
 
-        stride_space_preds = decode_raw_predictions(
-            cls_preds, reg_preds, kpt_preds, (1,) * len(cls_preds), sigmoid_visibility=False
-        )  # we pass stride 1 to keep
-        # boxes in stride space for assignment and loss calculation. Visibility stays as
-        # logits because the keypoint loss consumes it with BCEWithLogitsLoss.
+        # Predictions are decoded in anchor space, where the losses consume them.
+        decoded_preds = decode_flat_predictions(
+            cls_preds, reg_preds, kpt_preds, anchors=anchors, sigmoid_visibility=False
+        )  # no strides passed keeps everything in anchor space. Visibility stays as logits
+        # because the keypoint loss consumes it with BCEWithLogitsLoss.
+
+        # Assignment happens in image pixel space, since the ground truth is in pixels.
+        pred_boxes_px = decoded_preds.boxes * strides_4d.unsqueeze(0)
+        anchor_points_px = anchors * strides
 
         # Assignment is a target-generation step: it must not backprop into the heads.
         with torch.no_grad():
-            target_labels, target_boxes, target_scores, target_gt_idx, fg_mask = assign_box(
-                gt_boxes_stride_space,
+            target_labels, target_boxes_px, target_scores, target_gt_idx, fg_mask = assign_box(
+                batch.gt_boxes,
                 batch.gt_labels,
-                pred_boxes=stride_space_preds.boxes,
-                pred_scores=stride_space_preds.scores,
-                anchors=anchors,
+                pred_boxes=pred_boxes_px,
+                pred_scores=decoded_preds.scores,
+                anchors=anchor_points_px,
                 alpha=self.loss_config.assignment.alpha,
                 beta=self.loss_config.assignment.beta,
                 topk=1 if one2one else self.loss_config.assignment.o2m_topk,
@@ -84,10 +89,13 @@ class YoloV10Loss(torch.nn.Module):
 
         cls_loss = self.classification_loss(cls_preds, target_scores)
 
+        # Bring the assigned boxes back into the per-anchor space the losses work in.
+        target_boxes = target_boxes_px / strides_4d.unsqueeze(0)
+
         target_ltrb_stride_space = YoloV10Loss.lrtb_from_boxes(target_boxes, anchors)
 
         ciou_loss, dfl_loss = self.box_loss(
-            pred_boxes=stride_space_preds.boxes,
+            pred_boxes=decoded_preds.boxes,
             pred_dist=reg_preds,
             target_boxes=target_boxes,
             target_ltrb=target_ltrb_stride_space,
@@ -100,7 +108,7 @@ class YoloV10Loss(torch.nn.Module):
         )
 
         kpt_pos_loss, kpt_vis_loss = self.keypoint_loss(
-            stride_space_preds.keypoints,
+            decoded_preds.keypoints,
             target_kpts=target_kpts_stride_space,
             target_boxes=target_boxes,
             fg_mask=fg_mask,
@@ -125,41 +133,6 @@ class YoloV10Loss(torch.nn.Module):
         }
 
         return loss_items, fg_mask.sum().item()  # type: ignore
-
-    @staticmethod
-    def scale_gt_to_stride_space(target_boxes: torch.Tensor, strides: torch.Tensor) -> torch.Tensor:
-        """
-        Scales assigned ground truth target boxes from absolute image space
-        to per-anchor stride space using 2-value (X, Y) strides.
-
-        Parameters
-        ----------
-        target_boxes : torch.Tensor
-            Assigned target boxes in absolute image pixel coordinates.
-            Shape: (B, num_pred_boxes, 4) [x1, y1, x2, y2]
-        strides : torch.Tensor
-            The pre-concatenated strides tensor matching each predicted box,
-            containing [stride_x, stride_y] for each anchor.
-            Shape: (num_pred_boxes, 2) or broadcastable.
-
-        Returns
-        -------
-        torch.Tensor
-            Scaled target boxes. Shape: (B, num_pred_boxes, 4)
-        """
-        if strides.shape[-1] == 2:
-            stride_x = strides[..., 0:1]
-            stride_y = strides[..., 1:2]
-            strides_4d = torch.cat([stride_x, stride_y, stride_x, stride_y], dim=-1)
-        else:
-            strides_4d = strides.repeat(1, 4) if strides.ndim > 1 else strides.repeat(4, 1).T
-
-        strides_expanded = strides_4d.unsqueeze(0)  # Shape: (1, N, 4)
-
-        # Scale down coordinates: [x1/sx, y1/sy, x2/sx, y2/sy]
-        scaled_boxes = target_boxes / strides_expanded
-
-        return scaled_boxes
 
     @staticmethod
     def lrtb_from_boxes(target_boxes: torch.Tensor, anchors: torch.Tensor) -> torch.Tensor:

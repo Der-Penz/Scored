@@ -4,6 +4,7 @@ import pytorch_lightning as pl
 import torch
 
 from nn.data.datamodule import Batch
+from nn.model.decode import flatten_head_outputs
 from nn.model.yolo import DecodedPredictions, TrainingPredictions, YoloV10
 from nn.training.config import (
     ModelConfig,
@@ -32,7 +33,8 @@ class DartKeypointModule(pl.LightningModule):
     def common_step(self, batch: Batch, batch_idx, stage: str):
         outputs: TrainingPredictions = self(batch.images)
 
-        one2one, one2many = outputs.one2one, outputs.one2many
+        one2one = flatten_head_outputs(*outputs.one2one)
+        one2many = flatten_head_outputs(*outputs.one2many)
 
         anchors = torch.cat(self.model.anchors(batch.images.shape[2:], batch.images.device), dim=0)  # pyright: ignore[reportArgumentType]
         strides = torch.cat(self.model.strides(batch.images.shape[2:], batch.images.device), dim=0)  # pyright: ignore[reportArgumentType]

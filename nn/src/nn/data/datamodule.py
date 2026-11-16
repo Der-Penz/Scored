@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 import torch
 from nn.data.config import DataModuleConfig
 from nn.data.dataset import DartKeypointDataset, DatasetConfig
-from nn.data.transform import Transform
+from nn.data.transform import Resize, Transform
 from torch.utils.data import DataLoader
 
 
@@ -27,6 +27,9 @@ class DartKeyPointDataModule(pl.LightningDataModule):
         self.dataset = dataset
 
     def setup(self, stage: str):
+        transforms = [Resize(self.config.image_size), *self.transforms]
+        train_transforms = [transform for transform in transforms if transform.train_only()]
+        eval_transforms = [transform for transform in transforms if not transform.train_only()]
 
         if stage == "fit":
             self.train_set = DartKeypointDataset(
@@ -34,14 +37,14 @@ class DartKeyPointDataModule(pl.LightningDataModule):
                 self.dataset.path,
                 self.dataset.cls_dict,
                 self.dataset.num_keypoints,
-                [transform for transform in self.transforms if transform.train_only()],
+                train_transforms,
             )
             self.val_set = DartKeypointDataset(
                 self.dataset.val,
                 self.dataset.path,
                 self.dataset.cls_dict,
                 self.dataset.num_keypoints,
-                [transform for transform in self.transforms if not transform.train_only()],
+                eval_transforms,
             )
         elif stage == "test":
             self.test_set = DartKeypointDataset(
@@ -49,7 +52,7 @@ class DartKeyPointDataModule(pl.LightningDataModule):
                 self.dataset.path,
                 self.dataset.cls_dict,
                 self.dataset.num_keypoints,
-                [transform for transform in self.transforms if not transform.train_only()],
+                eval_transforms,
             )
 
     def train_dataloader(self):

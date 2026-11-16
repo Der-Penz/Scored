@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
@@ -21,4 +21,4 @@ class AssignmentConfig:
 class LossConfig:
     weights: WeightsConfig = WeightsConfig()
     assignment: AssignmentConfig = AssignmentConfig()
-    sigmas: list[float] = [0.025, 0.04]
+    sigmas: list[float] = field(default_factory=lambda: [0.025, 0.04])

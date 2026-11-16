@@ -93,17 +93,24 @@ class YoloV10(torch.nn.Module):
 
     def strides(self, img_size: tuple[int, int], device: torch.device) -> list[torch.Tensor]:
         """
-        Returns the strides for each scale.
+        Returns the strides for each scale, flattened to one entry per anchor.
+
+        Parameters
+        ----------
+        img_size : tuple[int, int]
+            The size of the input image (height, width).
+        device : torch.device
+            The device on which the strides should be created.
 
         Returns
         -------
         list[torch.Tensor]
-            A list containing the strides for each scale.
+            A list containing the strides for each scale of shape (h * w, 2).
         """
 
         return [
             torch.full(
-                (img_size[0] // stride, img_size[1] // stride, 2),
+                (img_size[0] // stride * img_size[1] // stride, 2),
                 stride,
                 device=device,
                 dtype=torch.float32,
