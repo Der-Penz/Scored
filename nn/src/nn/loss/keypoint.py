@@ -44,9 +44,9 @@ class KeypointLoss(nn.Module):
         sigmas_sq = (2 * self.sigmas**2).unsqueeze(0)  # type: ignore # (1, K)
         oks = torch.exp(-d2 / (2 * (scale**2) * sigmas_sq + 1e-9))
 
-        # OKS Loss: 1 - OKS
+        # OKS Loss: 1 - OKS, normalized like the other losses
         kpt_loss = (1.0 - oks) * vis_mask
-        loss_kpt = kpt_loss.sum() / (vis_mask.sum() + 1e-9)
+        loss_kpt = kpt_loss.sum() / target_scores_sum
 
         # Visibility score loss (BCE)
         pred_vis_logits = pk[..., 2]

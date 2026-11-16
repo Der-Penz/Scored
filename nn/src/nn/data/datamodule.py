@@ -27,9 +27,9 @@ class DartKeyPointDataModule(pl.LightningDataModule):
         self.dataset = dataset
 
     def setup(self, stage: str):
-        transforms = [Resize(self.config.image_size), *self.transforms]
-        train_transforms = [transform for transform in transforms if transform.train_only()]
-        eval_transforms = [transform for transform in transforms if not transform.train_only()]
+        resize = Resize(self.config.image_size)
+        train_transforms = [resize, *[t for t in self.transforms if t.train_only()]]
+        eval_transforms = [resize, *[t for t in self.transforms if not t.train_only()]]
 
         if stage == "fit":
             self.train_set = DartKeypointDataset(

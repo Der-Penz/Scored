@@ -12,7 +12,7 @@ def assign_box(
     alpha: float,
     beta: float,
     topk: int,
-) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, float]:
     r"""
     Assign predicted boxes to ground truth boxes based on a combination
     of classification score and IoU.
@@ -54,6 +54,8 @@ def assign_box(
         Shape: (B, num_pred_boxes)
     fg_mask : torch.Tensor
         Boolean mask indicating foreground anchors. Shape: (B, num_pred_boxes)
+    target_scores_sum : float
+        Normalization factor of the target scores, clamped to at least 1.0.
     """
     gt_mask = (gt_labels >= 0).float().unsqueeze(-1)  # (B, M, 1)
 
@@ -65,6 +67,7 @@ def assign_box(
     scores = is_in_gts.float() * (pred_cls_scores**alpha) * (ious**beta) * gt_mask  # (B, M, N)
 
     # Top-k selection per ground truth box
+    topk = min(topk, scores.shape[-1])
     _, topk_indices = torch.topk(scores, topk, dim=-1)  # (B, M, topk)
     topk_mask = torch.zeros_like(scores, dtype=torch.bool)
     topk_mask.scatter_(-1, topk_indices, True)
@@ -105,7 +108,9 @@ def assign_box(
         )
     target_scores = target_scores * fg_mask.unsqueeze(-1)
 
-    return target_labels, target_boxes, target_scores, target_gt_idx, fg_mask
+    target_scores_sum = max(target_scores.sum().item(), 1.0)
+
+    return target_labels, target_boxes, target_scores, target_gt_idx, fg_mask, target_scores_sum
 
 
 def compute_pred_scores(pred_scores: torch.Tensor, gt_labels: torch.Tensor) -> torch.Tensor:

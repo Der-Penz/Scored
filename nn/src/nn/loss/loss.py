@@ -74,7 +74,14 @@ class YoloV10Loss(torch.nn.Module):
 
         # Assignment is a target-generation step: it must not backprop into the heads.
         with torch.no_grad():
-            target_labels, target_boxes_px, target_scores, target_gt_idx, fg_mask = assign_box(
+            (
+                target_labels,
+                target_boxes_px,
+                target_scores,
+                target_gt_idx,
+                fg_mask,
+                target_scores_sum,
+            ) = assign_box(
                 batch.gt_boxes,
                 batch.gt_labels,
                 pred_boxes=pred_boxes_px,
@@ -85,9 +92,7 @@ class YoloV10Loss(torch.nn.Module):
                 topk=1 if one2one else self.loss_config.assignment.o2m_topk,
             )
 
-        target_scores_sum = max(target_scores.sum().item(), 1.0)
-
-        cls_loss = self.classification_loss(cls_preds, target_scores)
+        cls_loss = self.classification_loss(cls_preds, target_scores, target_scores_sum)
 
         # Bring the assigned boxes back into the per-anchor space the losses work in.
         target_boxes = target_boxes_px / strides_4d.unsqueeze(0)
