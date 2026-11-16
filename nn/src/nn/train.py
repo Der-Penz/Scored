@@ -63,7 +63,7 @@ def main() -> None:
         ),
     )
 
-    unique_classes = len(set(args.dataset.cls_dict.items()))
+    unique_classes = len(set(args.dataset.cls_dict.values()))
 
     model = YoloV10(
         n_classes=unique_classes,
