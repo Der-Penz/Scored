@@ -16,7 +16,7 @@ from scored_lib.logging_setup import setup_logging
 
 # Fixed for the current dart keypoint model, so they are not exposed on the CLI.
 NUM_KEYPOINTS = 2
-CLS_DICT = {"dart": 1}
+CLS_DICT = {"dart": 0}
 
 _REMOVED_SAMPLE_DIR = re.compile(r"\d+_\d+_d+")
 
