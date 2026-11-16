@@ -5,7 +5,7 @@ import torch
 
 from nn.data.datamodule import Batch
 from nn.model.decode import flatten_head_outputs
-from nn.model.yolo import DecodedPredictions, TrainingPredictions, YoloV10
+from nn.model.yolo import YoloOutput, YoloV10
 from nn.training.config import (
     ModelConfig,
     OptimizerConfig,
@@ -27,51 +27,33 @@ class DartKeypointModule(pl.LightningModule):
         self.optimizer_config = optimizer_config or OptimizerConfig()
         self.loss = loss
 
-    def forward(self, images: torch.Tensor) -> TrainingPredictions | DecodedPredictions:
+    def forward(self, images: torch.Tensor) -> YoloOutput:
         return self.model(images)
 
     def common_step(self, batch: Batch, batch_idx, stage: str):
-        outputs: TrainingPredictions = self(batch.images)
-
-        one2one = flatten_head_outputs(*outputs.one2one)
-        one2many = flatten_head_outputs(*outputs.one2many)
+        outputs = self(batch.images)
 
         anchors = torch.cat(self.model.anchors(batch.images.shape[2:], batch.images.device), dim=0)  # pyright: ignore[reportArgumentType]
         strides = torch.cat(self.model.strides(batch.images.shape[2:], batch.images.device), dim=0)  # pyright: ignore[reportArgumentType]
 
-        loss_o2m, num_assignment_o2m = self.loss(batch, one2many, anchors, strides, one2one=False)
+        one2one = flatten_head_outputs(*outputs.one2one)
         loss_o2o, num_assignment_o2o = self.loss(batch, one2one, anchors, strides, one2one=True)
+        loss = loss_o2o["loss"]
 
-        loss = loss_o2m["loss"] + loss_o2o["loss"]
-
-        for key, value in loss_o2m.items():
-            self.log(
-                f"loss/{stage}_o2m_{key}",
-                value,
-                on_step=True,
-                on_epoch=True,
-            )
         for key, value in loss_o2o.items():
-            self.log(
-                f"loss/{stage}_o2o_{key}",
-                value,
-                on_step=True,
-                on_epoch=True,
+            self.log(f"loss/{stage}_o2o_{key}", value, on_step=True, on_epoch=True)
+        self.log(f"assignment/{stage}_o2o", num_assignment_o2o, on_step=False, on_epoch=True)
+
+        if outputs.one2many is not None:
+            one2many = flatten_head_outputs(*outputs.one2many)
+            loss_o2m, num_assignment_o2m = self.loss(
+                batch, one2many, anchors, strides, one2one=False
             )
+            loss = loss + loss_o2m["loss"]
 
-        self.log(
-            f"assignment/{stage}_o2m",
-            num_assignment_o2m,
-            on_step=False,
-            on_epoch=True,
-        )
-
-        self.log(
-            f"assignment/{stage}_o2o",
-            num_assignment_o2o,
-            on_step=False,
-            on_epoch=True,
-        )
+            for key, value in loss_o2m.items():
+                self.log(f"loss/{stage}_o2m_{key}", value, on_step=True, on_epoch=True)
+            self.log(f"assignment/{stage}_o2m", num_assignment_o2m, on_step=False, on_epoch=True)
 
         return loss
 

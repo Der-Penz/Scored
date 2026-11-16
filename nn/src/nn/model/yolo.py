@@ -5,9 +5,26 @@ from nn.model.decode import DecodedPredictions, decode_raw_predictions, make_anc
 from nn.model.parts import YoloParts
 
 
-class TrainingPredictions(NamedTuple):
+class YoloOutput(NamedTuple):
+    """
+    Output of :class:`YoloV10`.
+
+    Attributes
+    ----------
+    one2one : tuple[list[torch.Tensor], list[torch.Tensor], list[torch.Tensor]]
+        Raw per-scale head predictions from the one-to-one head, consumed by the loss
+        after flattening with ``flatten_head_outputs``.
+    one2many : tuple[list[torch.Tensor], list[torch.Tensor], list[torch.Tensor]] | None
+        Raw per-scale head predictions from the auxiliary one-to-many head, ``None`` when
+        the model was built without it.
+    predictions : DecodedPredictions | None
+        Decoded predictions of the one-to-one head in image pixels. Only computed in eval
+        mode, where they are needed for metrics; ``None`` while training.
+    """
+
     one2one: tuple[list[torch.Tensor], list[torch.Tensor], list[torch.Tensor]]
-    one2many: tuple[list[torch.Tensor], list[torch.Tensor], list[torch.Tensor]]
+    one2many: tuple[list[torch.Tensor], list[torch.Tensor], list[torch.Tensor]] | None
+    predictions: DecodedPredictions | None
 
 
 class YoloV10(torch.nn.Module):
@@ -27,7 +44,7 @@ class YoloV10(torch.nn.Module):
             self.aux_head,
         ) = parts.build_parts(n_classes, num_kpts, reg_max, include_aux_head=include_aux_head)
 
-    def forward(self, x) -> TrainingPredictions | DecodedPredictions:
+    def forward(self, x) -> YoloOutput:
         assert isinstance(x, torch.Tensor), (
             f"Expected input to be a torch.Tensor, but got {type(x)}"
         )
@@ -36,17 +53,16 @@ class YoloV10(torch.nn.Module):
 
         neck_features = self.neck(backbone_feature_maps)
 
-        if self.aux_head is None:  # Inference-only model
-            assert self.training is False, (
-                "Model should be in eval mode during inference when no aux_head is provided."
-            )
-            cls, reg, kpts = self.head(neck_features)
-            return decode_raw_predictions(cls, reg, kpts, self.backbone.get_strides())
-
         one2one = self.head([feature.detach() for feature in neck_features])
-        one2many = self.aux_head(neck_features)
+        one2many = None if self.aux_head is None else self.aux_head(neck_features)
 
-        return TrainingPredictions(one2one, one2many)
+        return YoloOutput(
+            one2one=one2one,
+            one2many=one2many,
+            predictions=None
+            if self.training
+            else decode_raw_predictions(*one2one, self.backbone.get_strides()),
+        )
 
     def num_boxes_per_scale(self, img_size: tuple[int, int]) -> tuple[int, ...]:
         """
