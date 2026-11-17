@@ -55,32 +55,26 @@ class DartKeyPointDataModule(pl.LightningDataModule):
                 eval_transforms,
             )
 
-    def train_dataloader(self):
+    def _dataloader(self, dataset: DartKeypointDataset, shuffle: bool) -> DataLoader:
         return DataLoader(
-            self.train_set,
+            dataset,
             batch_size=self.config.batch_size,
-            shuffle=True,
+            shuffle=shuffle,
             num_workers=self.config.num_workers,
+            pin_memory=self.config.pin_memory,
+            # PyTorch rejects a prefetch factor when no worker processes are used.
+            prefetch_factor=self.config.prefetch_factor if self.config.num_workers > 0 else None,
             collate_fn=collate_fn,
         )
+
+    def train_dataloader(self):
+        return self._dataloader(self.train_set, shuffle=True)
 
     def val_dataloader(self):
-        return DataLoader(
-            self.val_set,
-            batch_size=self.config.batch_size,
-            shuffle=False,
-            num_workers=self.config.num_workers,
-            collate_fn=collate_fn,
-        )
+        return self._dataloader(self.val_set, shuffle=False)
 
     def test_dataloader(self):
-        return DataLoader(
-            self.test_set,
-            batch_size=self.config.batch_size,
-            shuffle=False,
-            num_workers=self.config.num_workers,
-            collate_fn=collate_fn,
-        )
+        return self._dataloader(self.test_set, shuffle=False)
 
 
 def collate_fn(

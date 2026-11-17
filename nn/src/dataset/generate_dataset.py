@@ -6,7 +6,7 @@ import os
 import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 
 import tyro
 from dataset.dataset_util import ANNOTATION_FILENAME, IMAGE_EXTENSIONS, discover, find_image
@@ -55,8 +55,9 @@ class CliArgs:
     seed: int = 42
     """Random seed of the train/val/test split."""
 
-    splitter: str = "random"
-    """Splitting strategy (e.g. random, stratified)."""
+    splitter: Literal["random", "stratified"] = "random"
+    """Splitting strategy. ``random`` splits individual samples, ``stratified`` keeps every
+    leg together in one split."""
 
     log_level: str = "INFO"
     """Logging level (e.g. INFO, DEBUG, WARNING)."""
