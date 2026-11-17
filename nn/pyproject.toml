@@ -5,6 +5,7 @@ description = "nn training and inference library for scored"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "kornia>=0.9.1",
     "matplotlib>=3.11.2",
     "opencv-python>=4.13.0.92",
     "pytorch-lightning>=2.6.6",

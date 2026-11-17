@@ -3,6 +3,8 @@ import math
 import pytorch_lightning as pl
 import torch
 
+from nn.data.augmentation import TrainAugmentation
+from nn.data.config import AugmentConfig
 from nn.data.datamodule import Batch
 from nn.model.decode import flatten_head_outputs
 from nn.model.yolo import YoloOutput, YoloV10
@@ -19,6 +21,7 @@ class DartKeypointModule(pl.LightningModule):
         loss: torch.nn.Module,
         model_config: ModelConfig,
         optimizer_config: OptimizerConfig | None = None,
+        augment_config: AugmentConfig | None = None,
     ):
         super().__init__()
 
@@ -26,11 +29,44 @@ class DartKeypointModule(pl.LightningModule):
         self.model_config = model_config
         self.optimizer_config = optimizer_config or OptimizerConfig()
         self.loss = loss
+        self.augment = (
+            TrainAugmentation(augment_config)
+            if augment_config is not None and augment_config.enabled
+            else None
+        )
 
     def forward(self, images: torch.Tensor) -> YoloOutput:
         return self.model(images)
 
+    def augment_batch(self, batch: Batch) -> Batch:
+        """
+        Apply the training augmentations on the device of the batch.
+
+        Parameters
+        ----------
+        batch : Batch
+            The batch as it was transferred to the training device.
+
+        Returns
+        -------
+        Batch
+            The augmented batch, or the unchanged batch when augmentation is disabled.
+        """
+        if self.augment is None:
+            return batch
+
+        images, gt_boxes, gt_labels, gt_keypoints = self.augment(
+            batch.images, batch.gt_boxes, batch.gt_labels, batch.gt_keypoints
+        )
+
+        return batch._replace(
+            images=images, gt_boxes=gt_boxes, gt_labels=gt_labels, gt_keypoints=gt_keypoints
+        )
+
     def common_step(self, batch: Batch, batch_idx, stage: str):
+        if stage == "train":
+            batch = self.augment_batch(batch)
+
         outputs = self(batch.images)
 
         anchors = torch.cat(self.model.anchors(batch.images.shape[2:], batch.images.device), dim=0)  # pyright: ignore[reportArgumentType]

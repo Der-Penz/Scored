@@ -5,6 +5,7 @@ from typing import Annotated
 
 import tyro
 
+from nn.data.config import AugmentConfig
 from nn.data.datamodule import DartKeyPointDataModule, DataModuleConfig
 from nn.data.dataset import DatasetConfig
 from nn.loss.config import LossConfig
@@ -40,6 +41,7 @@ class TrainCLIArgs:
     optimizer: OptimizerConfig = OptimizerConfig()
     trainer: TrainerConfig = TrainerConfig()
     datamodule: DataModuleConfig = DataModuleConfig()
+    augment: AugmentConfig = AugmentConfig()
     loss: LossConfig = LossConfig()
 
     backbone_model_name: str = "mobilenetv4_conv_small.e1200_r224_in1k"
@@ -79,6 +81,7 @@ def main() -> None:
         loss=loss,
         model_config=args.model,
         optimizer_config=args.optimizer,
+        augment_config=args.augment,
     )
 
     trainer = args.trainer.build()
