@@ -126,6 +126,16 @@ class TrainAugmentation(torch.nn.Module):
         if self.geometric is not None and gt_boxes.shape[1] > 0:
             images, gt_boxes, gt_keypoints = self.apply_geometric(images, gt_boxes, gt_keypoints)
 
+        if self.config.mixup_p > 0:
+            images, gt_boxes, gt_labels, gt_keypoints = self.mixup(
+                images,
+                gt_boxes,
+                gt_labels,
+                gt_keypoints,
+                self.config.mixup_p,
+                self.config.mixup_alpha,
+            )
+
         if self.photometric is not None:
             images = self.photometric(images)
 
@@ -293,6 +303,72 @@ class TrainAugmentation(torch.nn.Module):
             out_labels,
             out_keypoints,
         )
+
+    @staticmethod
+    def mixup(
+        images: torch.Tensor,
+        gt_boxes: torch.Tensor,
+        gt_labels: torch.Tensor,
+        gt_keypoints: torch.Tensor,
+        p: float,
+        alpha: float,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+        Blend a sample with another sample of the batch and keep the targets of both.
+
+        The blend ratio is drawn per sample from ``Beta(alpha, alpha)`` and the partner is a
+        different sample of the same batch. Since a blended image still shows the darts of
+        both frames, the targets of both are kept, which grows the object axis from M to
+        2 * M. Samples that are not blended get the partner targets as padding.
+
+        Parameters
+        ----------
+        images : torch.Tensor
+            Batch of images of shape (B, 3, H, W).
+        gt_boxes : torch.Tensor
+            Boxes in pixels in (x1, y1, x2, y2) format of shape (B, M, 4).
+        gt_labels : torch.Tensor
+            Class labels of shape (B, M), ``-1`` marks padding.
+        gt_keypoints : torch.Tensor
+            Keypoints in pixels of shape (B, M, num_keypoints, 3).
+        p : float
+            Probability that a sample is blended with another sample.
+        alpha : float
+            Both parameters of the Beta distribution the blend ratio is drawn from.
+
+        Returns
+        -------
+        tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]
+            Images, boxes, labels and keypoints after the blend.
+        """
+        batch = images.shape[0]
+        num_objects = gt_boxes.shape[1]
+
+        if batch < 2 or num_objects == 0:
+            return images, gt_boxes, gt_labels, gt_keypoints
+
+        mixup_mask = torch.rand(batch, device=images.device) < p
+        if not mixup_mask.any():
+            return images, gt_boxes, gt_labels, gt_keypoints
+
+        # offset by at least one so a sample never blends with itself
+        offset = torch.randint(1, batch, (batch,), device=images.device)
+        partner = (torch.arange(batch, device=images.device) + offset) % batch
+
+        ratio = torch.distributions.Beta(alpha, alpha).sample((batch,)).to(images)
+        ratio = torch.where(mixup_mask, ratio, torch.ones_like(ratio)).view(batch, 1, 1, 1)
+        images = images * ratio + images[partner] * (1.0 - ratio)
+
+        out_boxes = torch.cat([gt_boxes, gt_boxes[partner]], dim=1)
+        out_labels = torch.cat([gt_labels, gt_labels[partner]], dim=1)
+        out_keypoints = torch.cat([gt_keypoints, gt_keypoints[partner]], dim=1)
+
+        # samples that were not blended must not gain the targets of their partner
+        out_labels[~mixup_mask, num_objects:] = -1
+        out_boxes[~mixup_mask, num_objects:] = 0
+        out_keypoints[~mixup_mask, num_objects:] = 0
+
+        return images, out_boxes, out_labels, out_keypoints
 
     @staticmethod
     def postprocess(

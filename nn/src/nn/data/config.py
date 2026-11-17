@@ -17,6 +17,12 @@ class AugmentConfig:
         Probability of building a 2x2 mosaic from the batch for a sample. The anchor image
         always occupies the top-left tile, the other three tiles are sampled at random from
         the same batch.
+    mixup_p : float
+        Probability of blending a sample with another sample of the batch. The blend ratio is
+        drawn from a Beta distribution, the targets of both samples are kept.
+    mixup_alpha : float
+        Both parameters of the Beta distribution the blend ratio is drawn from. Larger values
+        concentrate the ratio around 0.5.
     hflip_p : float
         Probability of a horizontal flip.
     vflip_p : float
@@ -54,6 +60,8 @@ class AugmentConfig:
 
     enabled: bool = True
     mosaic_p: float = 0.5
+    mixup_p: float = 0.1
+    mixup_alpha: float = 32.0
     hflip_p: float = 0.5
     vflip_p: float = 0.0
     affine_p: float = 0.5
