@@ -9,10 +9,11 @@ from pathlib import Path
 from typing import Annotated, Literal
 
 import tyro
-from dataset.dataset_util import ANNOTATION_FILENAME, IMAGE_EXTENSIONS, discover, find_image
-from dataset.splitting import SPLITTERS
 from nn.data.dataset import DatasetConfig
 from scored_lib.logging_setup import setup_logging
+
+from dataset.dataset_util import ANNOTATION_FILENAME, IMAGE_EXTENSIONS, discover, find_image
+from dataset.splitting import SPLITTERS
 
 # Fixed for the current dart keypoint model, so they are not exposed on the CLI.
 NUM_KEYPOINTS = 2

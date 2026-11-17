@@ -1,6 +1,7 @@
 from typing import NamedTuple
 
 import torch
+
 from nn.box_util import XYXYBox
 
 

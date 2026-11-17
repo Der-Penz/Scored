@@ -1,6 +1,7 @@
 from typing import NamedTuple
 
 import torch
+
 from nn.model.decode import DecodedPredictions, decode_raw_predictions, make_anchors
 from nn.model.parts import YoloParts
 

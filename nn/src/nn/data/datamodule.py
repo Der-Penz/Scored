@@ -3,10 +3,11 @@ from typing import NamedTuple
 
 import pytorch_lightning as pl
 import torch
+from torch.utils.data import DataLoader
+
 from nn.data.config import DataModuleConfig
 from nn.data.dataset import DartKeypointDataset, DatasetConfig
 from nn.data.transform import Resize, Transform
-from torch.utils.data import DataLoader
 
 
 class Batch(NamedTuple):

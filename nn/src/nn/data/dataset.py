@@ -6,10 +6,11 @@ from typing import TypedDict
 
 import torch
 import torchvision.transforms as T
-from nn.data.transform import Transform
 from PIL import Image
 from scored_lib.annotation.image_annotation import ImageAnnotation
 from tqdm import tqdm
+
+from nn.data.transform import Transform
 
 
 @dataclass
