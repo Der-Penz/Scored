@@ -23,10 +23,11 @@ class HTTPCaptureSource(CV2CaptureSource):
         Open the HTTP video stream using the FFMPEG backend.
         """
         stream_url = self.source
-        if not stream_url.endswith(("/video", "/stream.mjpg", "/mjpeg")):
-            if not stream_url.endswith("/"):
-                stream_url += "/"
-            stream_url += "video"
+
+        assert isinstance(stream_url, str), "The source URL must be a string."
+
+        if not stream_url.startswith(("http://", "https://")):
+            stream_url = "http://" + stream_url
 
         self.cap = cv2.VideoCapture(stream_url, cv2.CAP_FFMPEG)
 
