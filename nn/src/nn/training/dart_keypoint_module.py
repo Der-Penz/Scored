@@ -6,6 +6,7 @@ import torch
 from nn.data.augmentation import TrainAugmentation
 from nn.data.config import AugmentConfig
 from nn.data.datamodule import Batch
+from nn.metrics.map import MeanAveragePrecision
 from nn.model.decode import flatten_head_outputs
 from nn.model.yolo import YoloOutput, YoloV10
 from nn.training.config import (
@@ -34,6 +35,10 @@ class DartKeypointModule(pl.LightningModule):
             if augment_config is not None and augment_config.enabled
             else None
         )
+        self.epoch_average_precision = {
+            "val": MeanAveragePrecision(),
+            "test": MeanAveragePrecision(),
+        }
 
     def forward(self, images: torch.Tensor) -> YoloOutput:
         return self.model(images)
@@ -91,7 +96,27 @@ class DartKeypointModule(pl.LightningModule):
                 self.log(f"loss/{stage}_o2m_{key}", value, on_step=True, on_epoch=True)
             self.log(f"assignment/{stage}_o2m", num_assignment_o2m, on_step=False, on_epoch=True)
 
+        if stage in self.epoch_average_precision and outputs.predictions is not None:
+            self.epoch_average_precision[stage].update(
+                outputs.predictions.boxes,
+                outputs.predictions.scores,
+                batch.gt_boxes,
+                batch.gt_labels,
+            )
+
         return loss
+
+    def _log_average_precision(self, stage: str) -> None:
+        metric = self.epoch_average_precision[stage]
+        for name, value in metric.compute().items():
+            self.log(f"metrics/{stage}_{name}", value, prog_bar=name == "mAP50")
+        metric.reset()
+
+    def on_validation_epoch_end(self) -> None:
+        self._log_average_precision("val")
+
+    def on_test_epoch_end(self) -> None:
+        self._log_average_precision("test")
 
     def training_step(self, batch: Batch, batch_idx):
         return self.common_step(batch, batch_idx, stage="train")
