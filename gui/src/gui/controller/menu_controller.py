@@ -1,7 +1,14 @@
 import ttkbootstrap as ttk
 
 from gui.events.event_channel import EventChannel
-from gui.events.event_types import GameEnded, GameStarted, GameStateChanged, TurnChanged
+from gui.events.event_types import (
+    GameEnded,
+    GameStarted,
+    GameStateChanged,
+    ModeChanged,
+    TurnChanged,
+)
+from gui.model.args import AppMode
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
@@ -20,6 +27,7 @@ class MenuController(BaseController):
         self._event_channel.subscribe(GameStateChanged, lambda _: self.set_normal_status())
         self._event_channel.subscribe(TurnChanged, lambda _: self.set_normal_status())
         self._event_channel.subscribe(GameEnded, lambda _: self.on_game_ended())
+        self._event_channel.subscribe(ModeChanged, self._on_mode_changed)
 
     def on_game_ended(self) -> None:
         assert self._model.game is not None, "GameEnded event received but no game is active"
@@ -29,7 +37,19 @@ class MenuController(BaseController):
         )
 
     def start(self) -> None:
-        pass
+        self._refresh_mode_status(self._model.mode)
+
+    def _on_mode_changed(self, event: ModeChanged) -> None:
+        self._refresh_mode_status(event.mode)
+
+    def _refresh_mode_status(self, mode: AppMode) -> None:
+        """Show what the app is doing in *mode* in the menu bar."""
+        if mode is AppMode.LABEL:
+            self.set_status("Label mode")
+        elif self._model.game is None:
+            self.set_status("Scored")
+        else:
+            self.set_normal_status()
 
     def set_status(self, msg: str) -> None:
         self.status_label.config(text=msg)

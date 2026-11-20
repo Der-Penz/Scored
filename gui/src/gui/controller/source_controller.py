@@ -7,6 +7,7 @@ import ttkbootstrap as ttk
 
 from gui.events.event_channel import EventChannel
 from gui.events.event_types import FrameCapturedEvent
+from gui.model.args import AppMode
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.services.images.http_source import HTTPCaptureSource
@@ -131,6 +132,9 @@ class SourceController(BaseController):
         Handle source selection from the UI. Prompts the user for any required
         parameters (camera index, file path, URL) and then starts the stream.
         """
+        if self._model.mode is not AppMode.GAME:
+            logging.info("Sources are only available while playing a game")
+            return
         try:
             if source_name == VideoSource.get_name():
                 path = filedialog.askopenfilename(title="Open video file")

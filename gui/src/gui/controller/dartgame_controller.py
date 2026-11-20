@@ -17,6 +17,7 @@ from gui.events.event_types import (
     TurnChanged,
     UndoRequested,
 )
+from gui.model.args import AppMode
 from gui.model.layout import Panel
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
@@ -166,6 +167,10 @@ class DartGameController(BaseController):
     def _add_player(self) -> None:
         """Prompt for a player name and add them to the player list."""
 
+        if self._model.mode is not AppMode.GAME:
+            logging.info("Players can only be added while playing a game")
+            return
+
         if self._model.game is not None:
             ttk.Messagebox.show_info(
                 message="Cannot add players while a game is in progress.",
@@ -188,6 +193,10 @@ class DartGameController(BaseController):
 
     def _remove_player(self) -> None:
         """Prompt the user to select a player to remove, then update the view."""
+
+        if self._model.mode is not AppMode.GAME:
+            logging.info("Players can only be removed while playing a game")
+            return
 
         if self._model.game is not None:
             ttk.Messagebox.show_info(
@@ -215,6 +224,10 @@ class DartGameController(BaseController):
 
     def _start_game(self) -> None:
         """Start a new game session after validating players and settings."""
+        if self._model.mode is not AppMode.GAME:
+            logging.info("A game can only be started in game mode")
+            return
+
         if not self._model.players:
             ttk.Messagebox.show_info(
                 message="Add at least one player before starting.",

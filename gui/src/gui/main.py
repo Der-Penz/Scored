@@ -56,7 +56,7 @@ def main() -> None:
         except Exception:
             pass
 
-    view = AppView(root)
+    view = AppView(root, args.config.app_mode)
 
     controller = AppController(view, model, args.config)
     controller.start()

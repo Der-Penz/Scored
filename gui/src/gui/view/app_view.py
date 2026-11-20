@@ -4,6 +4,7 @@ from typing import TypeVar
 import ttkbootstrap as ttk
 
 from gui.events.event_channel import EventChannel
+from gui.model.args import AppMode
 from gui.model.layout import Layout, Panel, load_layout
 from gui.view.annotation.annotation_view import AnnotationView
 from gui.view.game.dartgame_view import DartGameView
@@ -23,20 +24,20 @@ class AppView(ttk.Frame):
     is shown: in the left or right column, in a window of its own, or not at all.
     """
 
-    def __init__(self, master: tk.Tk):
+    def __init__(self, master: tk.Tk, mode: AppMode = AppMode.GAME):
         super().__init__(master, style="Card.TFrame", padding=0)
         self.master = master
 
         self._event_channel = EventChannel()
 
-        self.create_widgets()
+        self.create_widgets(mode)
 
     @property
     def event_channel(self) -> EventChannel:
         """Bus shared with the controllers for panel lifecycle notifications."""
         return self._event_channel
 
-    def create_widgets(self) -> None:
+    def create_widgets(self, mode: AppMode = AppMode.GAME) -> None:
         """Build the menu bar and the panel area."""
         self.menu_frame = ttk.Frame(self.master)
         self.menu_frame.pack(fill="x", side="top")
@@ -46,6 +47,7 @@ class AppView(ttk.Frame):
 
         self.pack(fill="both", expand=True)
 
+        layout = load_layout(mode)
         self.panel_manager = PanelManager(
             self,
             self._event_channel,
@@ -55,9 +57,10 @@ class AppView(ttk.Frame):
                 Panel.CONTROL: DartGameView,
                 Panel.ANNOTATION: AnnotationView,
             },
+            initial=layout,
         )
         self.panel_manager.pack(fill="both", expand=True)
-        self.panel_manager.apply(load_layout())
+        self.panel_manager.apply(layout)
 
     @property
     def layout(self) -> Layout:

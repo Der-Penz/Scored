@@ -7,8 +7,8 @@ from collections.abc import Callable
 import ttkbootstrap as ttk
 
 from gui.events.event_channel import EventChannel
-from gui.events.event_types import PanelClosed
-from gui.model.layout import Layout, Panel, Placement, save_layout
+from gui.events.event_types import ModeChanged, PanelClosed
+from gui.model.layout import Layout, Panel, Placement, load_layout, save_layout
 from gui.model.model import AppModel
 from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
@@ -63,6 +63,7 @@ class LayoutController(BaseController):
 
     def bind_components(self) -> None:
         self._event_channel.subscribe(PanelClosed, self._on_panel_closed)
+        self._event_channel.subscribe(ModeChanged, self._on_mode_changed)
 
     def start(self) -> None:
         """Sync the menu and the listeners with the layout already on screen."""
@@ -79,12 +80,18 @@ class LayoutController(BaseController):
         """Hide a panel whose floating window the user closed."""
         self._commit(self._view.layout.with_placement(event.panel, Placement.HIDDEN))
 
+    def _on_mode_changed(self, event: ModeChanged) -> None:
+        """Show the layout that was persisted for the new mode."""
+        layout = load_layout(mode=event.mode)
+        self._view.apply_layout(layout)
+        self._sync(layout)
+
     # -- plumbing ---------------------------------------------------------
 
     def _commit(self, layout: Layout) -> None:
         """Apply, persist and announce a new layout."""
         self._view.apply_layout(layout)
-        save_layout(layout)
+        save_layout(layout, mode=self._model.mode)
         self._sync(layout)
         logging.debug(
             "Layout: "
