@@ -46,6 +46,9 @@ class AnnotationView(ttk.Frame):
     on_throw_selected: Callable[[int], None] = _noop
     on_copy_clicked: Callable[[], None] = _noop
     on_delete_clicked: Callable[[], None] = _noop
+    on_previous_clicked: Callable[[], None] = _noop
+    on_next_clicked: Callable[[], None] = _noop
+    on_save_clicked: Callable[[], None] = _noop
     on_point_placed: Callable[[float, float], None] = _noop
     on_point_selected: Callable[[int, str | None], None] = _noop
     on_point_moved: Callable[[int, str, float, float], None] = _noop
@@ -63,6 +66,8 @@ class AnnotationView(ttk.Frame):
         self._iid_to_row: dict[str, int] = {}
         self._circle_images: dict[str, ImageTk.PhotoImage] = {}
         self._last_image: np.ndarray | None = None
+        self._position = "0 / 0"
+        self._dirty = False
         self.create_widgets()
 
     def create_widgets(self) -> None:
@@ -93,7 +98,44 @@ class AnnotationView(ttk.Frame):
         toolbar = ttk.Frame(self)
         toolbar.columnconfigure(0, weight=1)
 
-        self._notebook = ttk.Notebook(toolbar)
+        self._throw_group = ttk.Frame(toolbar)
+        self._throw_group.grid(row=0, column=0, sticky="w")
+        self._create_throw_tabs().pack()
+
+        self._nav_group = ttk.Frame(toolbar)
+        self._nav_group.grid(row=0, column=0, sticky="w")
+        ttk.Button(
+            self._nav_group, text="‹ Prev", bootstyle="secondary", command=self._handle_previous
+        ).pack(side="left")
+        self._position_label = ttk.Label(self._nav_group, style="TLabel", anchor="center", width=14)
+        self._position_label.pack(side="left", padx=6)
+        ttk.Button(
+            self._nav_group, text="Next ›", bootstyle="secondary", command=self._handle_next
+        ).pack(side="left")
+        self._save_button = ttk.Button(
+            self._nav_group, text="Save", bootstyle="success-outline", command=self._handle_save
+        )
+        self._save_button.pack(side="left", padx=(12, 0))
+
+        self._copy_button = ttk.Button(
+            toolbar,
+            text="Copy Previous",
+            bootstyle="secondary",
+            command=self._handle_copy,
+        )
+        self._copy_button.grid(row=0, column=1, padx=(4, 0))
+        ttk.Button(
+            toolbar,
+            text="Delete",
+            bootstyle="danger-outline",
+            command=self._handle_delete,
+        ).grid(row=0, column=2)
+
+        self.set_toolbar_mode("round")
+        return toolbar
+
+    def _create_throw_tabs(self) -> ttk.Notebook:
+        self._notebook = ttk.Notebook(self._throw_group)
         self._throw_tabs: list[ttk.Frame] = []
         for throw in THROWS:
             tab = ttk.Frame(self._notebook)
@@ -101,21 +143,25 @@ class AnnotationView(ttk.Frame):
             self._throw_tabs.append(tab)
             self._notebook.tab(tab, state="disabled")
         self._notebook.bind("<<NotebookTabChanged>>", self._on_throw_selected)
-        self._notebook.grid(row=0, column=0, sticky="w")
+        return self._notebook
 
-        ttk.Button(
-            toolbar,
-            text="Copy Previous",
-            bootstyle="secondary",
-            command=self._handle_copy,
-        ).grid(row=0, column=1, padx=(4, 0))
-        ttk.Button(
-            toolbar,
-            text="Delete",
-            bootstyle="danger-outline",
-            command=self._handle_delete,
-        ).grid(row=0, column=2)
-        return toolbar
+    def set_toolbar_mode(self, mode: str) -> None:
+        """Show the throw tabs of a round or the navigation of a folder.
+
+        Parameters
+        ----------
+        mode : str
+            ``"round"`` for the three throw tabs of the game, ``"label"`` for
+            previous/next through a list of independent images.
+        """
+        if mode == "label":
+            self._throw_group.grid_remove()
+            self._copy_button.grid_remove()
+            self._nav_group.grid()
+            return
+        self._nav_group.grid_remove()
+        self._copy_button.grid()
+        self._throw_group.grid()
 
     @property
     def selected_throw(self) -> int | None:
@@ -139,6 +185,27 @@ class AnnotationView(ttk.Frame):
     def _handle_delete(self) -> None:
         self.on_delete_clicked()
 
+    def _handle_previous(self) -> None:
+        self.on_previous_clicked()
+
+    def _handle_next(self) -> None:
+        self.on_next_clicked()
+
+    def _handle_save(self) -> None:
+        self.on_save_clicked()
+
+    def set_session(self, position: str, dirty: bool, read_only: bool) -> None:
+        """Show where the folder navigation stands and whether saving is allowed."""
+        self._position = position
+        self._dirty = dirty
+        self._refresh_position()
+        self._save_button.configure(state="disabled" if read_only else "normal")
+
+    def _refresh_position(self) -> None:
+        """Repaint the sample counter, including the unsaved marker."""
+        marker = " •" if self._dirty else ""
+        self._position_label.configure(text=f"{self._position}{marker}")
+
     def set_throw_tabs(self, available: Sequence[int]) -> None:
         """Enable the tabs the current round has a sample for."""
         for throw in THROWS:
@@ -160,7 +227,21 @@ class AnnotationView(ttk.Frame):
         self._notebook.tab(tab, state="normal")
         if self.selected_throw != throw:
             self._notebook.select(tab)
-        if image is not None and image is not self._last_image:
+        self.show_image(image, points, rows, selected, metrics)
+
+    def show_image(
+        self,
+        image: np.ndarray | None,
+        points: Sequence[AnnotationPoint],
+        rows: Sequence[tuple[str, str, str, str, str]],
+        selected: int | None,
+        metrics: str = "",
+    ) -> None:
+        """Show a frame with its points, dart list and header."""
+        if image is None:
+            self.canvas.set_image(None)
+            self._last_image = None
+        elif image is not self._last_image:
             self.canvas.set_image(Image.fromarray(image))
             self._last_image = image
         self.set_points(points)
@@ -216,15 +297,17 @@ class AnnotationView(ttk.Frame):
         """Show a short transient message under the table."""
         self._status_label.config(text=message)
 
+    def set_banner(self, text: str, style: str = "secondary") -> None:
+        """Show *text* in the banner above the toolbar."""
+        self._data_banner.configure(text=text, bootstyle=style)
+
     def set_data_collection(self, enabled: bool, directory: Path | None = None) -> None:
         """Show in the banner whether the labels of this panel are being saved."""
         if enabled:
             message = f"Saving data to {directory}" if directory else "Data collection is on."
-            self._data_banner.configure(text=message, bootstyle="success")
+            self.set_banner(message, "success")
         else:
-            self._data_banner.configure(
-                text="Data collection is off — labels are not saved.", bootstyle="warning"
-            )
+            self.set_banner("Data collection is off — labels are not saved.", "warning")
 
     def clear(self) -> None:
         """Remove the frame, its points, the table rows and the labels."""
@@ -239,6 +322,9 @@ class AnnotationView(ttk.Frame):
         self._draft_active = False
         self._drag = None
         self._last_image = None
+        self._position = "0 / 0"
+        self._dirty = False
+        self._refresh_position()
 
     def _on_canvas_press(self, event: tk.Event) -> None:
         """Place a point, or pick up an existing point for selection or drag."""

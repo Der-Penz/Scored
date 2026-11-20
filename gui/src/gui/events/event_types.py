@@ -8,6 +8,7 @@ from scored_lib.dart.dart_throw import DartThrow
 from scored_lib.game.dart_leg import ThrowResult
 from scored_lib.game.player import Player
 
+from gui.model.args import AppMode
 from gui.model.layout import Panel
 
 
@@ -125,3 +126,10 @@ class PanelClosed:
     """Notification that the user closed the window of a floating panel."""
 
     panel: Panel
+
+
+@dataclass(frozen=True)
+class ModeChanged:
+    """Notification that the application switched between game and label mode."""
+
+    mode: AppMode

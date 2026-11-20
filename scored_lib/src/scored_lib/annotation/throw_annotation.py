@@ -15,14 +15,15 @@ class AnnotatedThrow(DataClassJsonMixin):
 
     Parameters
     ----------
-    throw_data : DartThrow
+    throw_data : DartThrow | None
         The score the dart scored, None for darts that carry no known score,
-        e.g. a leftover dart of an earlier visit.
+        e.g. a leftover dart of an earlier visit or a dart labeled on a
+        standalone image that was never part of a game.
     keypoints : DartKeypoints | None
         The labeled tip and flight of this dart, by default unlabeled.
     """
 
-    throw_data: DartThrow
+    throw_data: DartThrow | None
     keypoints: DartKeypoints | None = None
 
     def make_copy(self) -> AnnotatedThrow:

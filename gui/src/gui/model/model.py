@@ -5,7 +5,7 @@ from scored_lib.annotation.image_annotation import ImageAnnotation
 from scored_lib.game.game_leg import GameLeg
 from scored_lib.game.player import Player
 
-from gui.model.args import AppConfig
+from gui.model.args import AppConfig, AppMode
 
 
 class AppModel:
@@ -13,6 +13,7 @@ class AppModel:
 
     def __init__(self, config: AppConfig) -> None:
         self.config = config
+        self.mode: AppMode = config.app_mode
         self.players: list[Player] = []
         self.game: GameLeg | None = None
         self.annotations: list[tuple[ImageAnnotation, np.ndarray]] = []

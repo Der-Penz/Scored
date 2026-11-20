@@ -10,6 +10,8 @@ from pathlib import Path
 from dataclasses_json import DataClassJsonMixin, config, dataclass_json
 from platformdirs import user_state_dir
 
+from gui.model.args import AppMode
+
 APP_NAME = "scored"
 
 
@@ -151,8 +153,17 @@ class Layout(DataClassJsonMixin):
         )
 
 
-def default_layout() -> Layout:
-    """Return the layout used when nothing has been persisted yet."""
+def default_layout(mode: AppMode = AppMode.GAME) -> Layout:
+    """Return the layout used for *mode* when nothing has been persisted yet."""
+    if mode is AppMode.LABEL:
+        return Layout(
+            placements={
+                Panel.ANNOTATION: Placement.LEFT,
+                Panel.DARTBOARD: Placement.HIDDEN,
+                Panel.SOURCE: Placement.HIDDEN,
+                Panel.CONTROL: Placement.HIDDEN,
+            }
+        )
     return Layout(
         placements={
             Panel.DARTBOARD: Placement.LEFT,
@@ -162,38 +173,39 @@ def default_layout() -> Layout:
     )
 
 
-def _layout_path() -> Path:
-    """Return the file the layout is persisted to."""
-    return Path(user_state_dir(appname=APP_NAME, appauthor=False)) / "layout.json"
+def _layout_path(mode: AppMode = AppMode.GAME) -> Path:
+    """Return the file the layout of *mode* is persisted to."""
+    name = "layout.json" if mode is AppMode.GAME else f"layout_{mode.value}.json"
+    return Path(user_state_dir(appname=APP_NAME, appauthor=False)) / name
 
 
-def load_layout(path: Path | None = None) -> Layout:
+def load_layout(mode: AppMode = AppMode.GAME, path: Path | None = None) -> Layout:
     """
-    Read the persisted layout, falling back to the default.
+    Read the persisted layout of *mode*, falling back to the default.
 
     A missing file, unreadable file, malformed JSON or unusable layout all end up
     as the default layout, because a broken layout must never stop the app from
     starting.
     """
-    target = path or _layout_path()
+    target = path or _layout_path(mode)
     try:
         raw = target.read_text(encoding="utf-8")
     except FileNotFoundError:
         logging.debug(f"No layout file at {target}, using the default layout")
-        return default_layout()
+        return default_layout(mode)
     except OSError as exc:
         logging.warning(f"Could not read layout from {target}: {exc}")
-        return default_layout()
+        return default_layout(mode)
     try:
         return Layout.from_json(raw)
     except (json.JSONDecodeError, TypeError, ValueError) as exc:
         logging.warning(f"Ignoring unusable layout in {target}: {exc}")
-        return default_layout()
+        return default_layout(mode)
 
 
-def save_layout(layout: Layout, path: Path | None = None) -> None:
-    """Write *layout* to disk, logging but not raising on failure."""
-    target = path or _layout_path()
+def save_layout(layout: Layout, mode: AppMode = AppMode.GAME, path: Path | None = None) -> None:
+    """Write *layout* of *mode* to disk, logging but not raising on failure."""
+    target = path or _layout_path(mode)
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(layout.to_json(indent=2), encoding="utf-8")

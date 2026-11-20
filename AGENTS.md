@@ -58,6 +58,13 @@ No test suite and no CI.
 ## GUI architecture
 
 - `main.py` builds `AppModel` -> `AppView` -> `AppController`.
+- The app runs in one of two modes (`gui/model/args.py::AppMode`): `game` plays
+  legs, `label` steps through a folder of images. Controllers of the inactive
+  mode stay constructed and gate their handlers on `AppModel.mode`; switching
+  emits `ModeChanged`, which flushes the active side, swaps the per-mode layout
+  and re-hides the mode-only menus. The two modes share `AnnotationEditor`
+  (`gui/controller/annotation_editor.py`) for the labeling rules, and
+  `AnnotationView` switches its toolbar between throw tabs and prev/next.
 - Controllers extend `BaseController` (`gui/protocols/controller.py`) and communicate
   **only** via the typed `EventChannel` (`gui/events/`); they never hold references to
   each other. Add an event in `gui/events/event_types.py` and subscribe in a controller.
@@ -86,6 +93,11 @@ No test suite and no CI.
 - `LegAnnotationHandler` (`scored_lib/annotation/leg_annotation_handler.py`) owns the
   on-disk layout: `<leg>/leg.json` plus one folder per sample `<round>_<throw>/`
   containing `image.jpg` + `annotation.json` (one-based round/throw).
+- The reading and writing itself lives in `scored_lib/annotation/sample_store.py`
+  so label mode uses the same format: a recorded `image.jpg` keeps its
+  `annotation.json`, while a standalone image gets a JSON file named after it
+  (`IMG_1234.jpg` -> `IMG_1234.json`). `discover_samples` accepts both layouts in
+  one folder tree.
 - Images are held as RGB but written with `cv2` as BGR (`COLOR_RGB2BGR`).
 - Removed samples are tombstoned as `<round>_<throw>_d` by default, or deleted,
   depending on the Data menu setting.

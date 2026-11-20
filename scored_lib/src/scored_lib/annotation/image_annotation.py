@@ -23,10 +23,12 @@ class ImageAnnotation(DataClassJsonMixin):
 
     Parameters
     ----------
-    round : int
-        One-based index of the round (visit) within the leg.
-    throw : int
-        One-based index of the throw within the round (1, 2, or 3).
+    round : int | None
+        One-based index of the round (visit) within the leg, None for samples
+        that do not belong to a recorded leg.
+    throw : int | None
+        One-based index of the throw within the round (1, 2, or 3), None for
+        samples that do not belong to a recorded leg.
     timestamp : float
         POSIX timestamp recording when the throw occurred.
     is_bust : bool
@@ -35,20 +37,21 @@ class ImageAnnotation(DataClassJsonMixin):
         The darts labeled in the linked camera frame, by default empty.
     """
 
-    round: int
-    throw: int
+    round: int | None = None
+    throw: int | None = None
     timestamp: float = field(default_factory=lambda: time())
     is_bust: bool = False
     throws: list[AnnotatedThrow] = field(default_factory=list)
 
     @property
-    def index(self) -> tuple[int, int]:
+    def index(self) -> tuple[int | None, int | None]:
         """The one-based ``(round, throw)`` coordinates of this annotation.
 
         Returns
         -------
-        tuple[int, int]
-            The round index and the throw index within that round.
+        tuple[int | None, int | None]
+            The round index and the throw index within that round, both None
+            for a sample that stands on its own.
         """
         return (self.round, self.throw)
 

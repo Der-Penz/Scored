@@ -114,6 +114,7 @@ class PanelManager(ttk.Frame):
         master: tk.Misc,
         event_channel: EventChannel,
         factories: Mapping[Panel, PanelFactory],
+        initial: Layout | None = None,
     ) -> None:
         super().__init__(master, style="Card.TFrame", padding=0)
         self._event_channel = event_channel
@@ -126,7 +127,7 @@ class PanelManager(ttk.Frame):
         self._widgets: dict[Panel, tk.Misc] = {}
         self._floaters: dict[Panel, tk.Toplevel] = {}
         self._rebuilt: list[Panel] = []
-        self._layout = default_layout()
+        self._layout = initial or default_layout()
 
         self._window_minimum = self._read_window_minimum()
         self._window_chrome: tuple[int, int] | None = None

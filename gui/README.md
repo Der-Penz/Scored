@@ -10,6 +10,18 @@ To start the GUI, run the following command:
 uv run scored-gui
 ```
 
+The app has two modes. **Game** (the default) plays legs with the scoreboard and
+the capture controls; **Label** steps through a folder of images and labels the
+darts on them. Start straight in label mode with:
+
+```bash
+uv run scored-gui --mode label --label_dir <folder of images>
+```
+
+Add `--read_only` to inspect existing labels without writing anything. The
+**Mode** menu switches between the two modes at runtime; the game state, the
+open folder and the unsaved labels are kept when switching.
+
 Data collection is **disabled** by default, so no frames or labels are saved.
 Enable it before playing a game from the **Data** menu in the menu bar
 (*Select Data Directory…*), or start the GUI with data collection enabled from
@@ -136,7 +148,7 @@ of each `annotation.json` holds one object per dart, in this shape:
 {
   "round": 1,
   "throw": 2,
-  "time": 1730000000.0,
+  "timestamp": 1730000000.0,
   "is_bust": false,
   "throws": [
     {"throw_data": {...}, "keypoints": {"tip": [0.1, 0.2], "flight": [0.3, 0.4], "copied": true}},
@@ -148,3 +160,36 @@ of each `annotation.json` holds one object per dart, in this shape:
 `throw_data` is `null` for darts that were drawn on top of the frame without a
 known score, and `keypoints` is `null` as long as the dart has not been
 labeled. `tip` and `flight` are relative image coordinates (0.0-1.0).
+
+## Label Mode
+
+The label mode steps through a folder of images one at a time, which is how old
+photos and already recorded samples are labeled or corrected. Open a folder
+from **Labels ▸ Open Folder…** (`Ctrl+O`), or start with it:
+
+```bash
+uv run scored-gui --mode label --label_dir <folder> --read_only
+```
+
+- The toolbar shows `‹ Prev`, the position in the folder, `Next ›` and `Save`.
+  `PgUp`/`PgDn` move through the folder, `Ctrl+S` saves, `F5` rescans it for
+  new or changed images.
+- Leaving an image saves its labels, so nothing is lost while browsing. A `•`
+  next to the position marks unsaved changes.
+- A frame may show any number of darts: once every dart on screen is labeled,
+  the next pair of clicks starts another one. Clicking, dragging, zooming,
+  `A`/`S`/`D` and Delete work exactly like in the game panel.
+- An image with a label file next to it is opened with those labels, an image
+  without one starts unlabeled. Both a plain folder of photos and a recorded
+  leg directory (`<leg>/<round>_<throw>/image.jpg`) are understood.
+- Labels are written next to the image. A recorded `image.jpg` keeps its
+  `annotation.json`, any other image gets a JSON file with its own name:
+  `IMG_1234.jpg` gets `IMG_1234.json`.
+- Standalone images are not part of a leg, so their `round` and `throw` stay
+  `null`; the image path is what identifies the sample.
+- `--read_only` shows the existing labels without writing anything.
+- Only the annotation panel is shown; dartboard, camera feed and control panel
+  are hidden. Each mode remembers its own layout (`layout.json` and
+  `layout_label.json`), and the View menu can still move or show any panel.
+- The **Mode** menu switches between playing and labeling at any time. A
+  running game keeps its state and an open folder keeps its position.

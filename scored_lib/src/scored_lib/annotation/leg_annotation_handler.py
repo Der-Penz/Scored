@@ -1,72 +1,38 @@
 from __future__ import annotations
 
 import logging
-import re
 import shutil
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from time import time
-from typing import NamedTuple
 
-import cv2
 import numpy as np
 
 from scored_lib.annotation.image_annotation import ImageAnnotation
 from scored_lib.annotation.leg_annotation import LegAnnotation
-
-LEG_JSON = "leg.json"
-ANNOTATION_JSON = "annotation.json"
-IMAGE_FILE = "image.jpg"
+from scored_lib.annotation.sample_store import (
+    ANNOTATION_JSON,
+    IMAGE_FILE,
+    LEG_JSON,
+    Sample,
+    is_removed_sample,
+    parse_sample_dir,
+    read_sample,
+    write_sample,
+)
 
 DELETED_MARKER = "d"
 DELETED_SUFFIX = f"_{DELETED_MARKER}"
 
-_SAMPLE_DIR_PATTERN = re.compile(r"^(\d+)_(\d+)$")
-_REMOVED_DIR_PATTERN = re.compile(r"^(\d+)_(\d+)(?:_d+)$")
-
-
-class Sample(NamedTuple):
-    """A single stored sample: its annotation and the linked camera frame."""
-
-    annotation: ImageAnnotation
-    image_path: Path
-
-
-def _parse_sample_dir(name: str) -> tuple[int, int] | None:
-    """Parse a sample folder name into its one-based (round, throw) index.
-
-    Parameters
-    ----------
-    name : str
-        The folder name to parse.
-
-    Returns
-    -------
-    tuple[int, int] | None
-        The one-based round and throw index, or None if *name* is not a
-        canonical sample folder, e.g. because it was removed or is unrelated.
-    """
-    match = _SAMPLE_DIR_PATTERN.match(name)
-    if match is None:
-        return None
-    return int(match.group(1)), int(match.group(2))
-
-
-def _is_removed_dir(name: str) -> bool:
-    """Check whether a folder name belongs to a removed sample.
-
-    Parameters
-    ----------
-    name : str
-        The folder name to check.
-
-    Returns
-    -------
-    bool
-        True if the folder is a tombstone of a removed sample, False otherwise.
-    """
-    return _REMOVED_DIR_PATTERN.match(name) is not None
+# Re-exported so callers can keep importing the on-disk names from here.
+__all__ = [
+    "ANNOTATION_JSON",
+    "IMAGE_FILE",
+    "LEG_JSON",
+    "LegAnnotationHandler",
+    "Sample",
+]
 
 
 def _sample_sort_key(directory: Path) -> tuple[int, int]:
@@ -82,7 +48,7 @@ def _sample_sort_key(directory: Path) -> tuple[int, int]:
     tuple[int, int]
         The one-based round and throw index, so that ``1_2`` sorts before ``1_10``.
     """
-    return _parse_sample_dir(directory.name) or (0, 0)
+    return parse_sample_dir(directory.name) or (0, 0)
 
 
 @dataclass
@@ -126,7 +92,7 @@ class LegAnnotationHandler:
         return sum(
             1
             for entry in self.directory.iterdir()
-            if entry.is_dir() and _is_removed_dir(entry.name)
+            if entry.is_dir() and is_removed_sample(entry.name)
         )
 
     def __iter__(self) -> Iterator[Sample]:
@@ -141,7 +107,7 @@ class LegAnnotationHandler:
             Samples unpack as ``annotation, image_path``.
         """
         for directory in self._sample_directories():
-            index = _parse_sample_dir(directory.name)
+            index = parse_sample_dir(directory.name)
             if index is None:  # unreachable, filtered out above
                 continue
             yield self.read(*index)
@@ -204,15 +170,12 @@ class LegAnnotationHandler:
         Sample
             The stored sample.
         """
+        if annotation.round is None or annotation.throw is None:
+            raise ValueError("a recorded sample needs a round and a throw index")
         directory = self.sample_directory(annotation.round, annotation.throw, create=True)
 
-        annotation_json = annotation.to_json()
-        if image is not None:
-            cv2.imwrite(str(directory / IMAGE_FILE), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-        directory.joinpath(ANNOTATION_JSON).write_text(annotation_json, encoding="utf-8")
-
         logging.debug(f"Stored sample {annotation.round}_{annotation.throw} in {self.directory}")
-        return Sample(annotation, directory / IMAGE_FILE)
+        return write_sample(directory, annotation, image)
 
     def read(self, round: int, throw: int) -> Sample:
         """Read the sample of a throw.
@@ -229,11 +192,7 @@ class LegAnnotationHandler:
         Sample
             The stored sample with its annotation and linked image path.
         """
-        directory = self.sample_directory(round, throw)
-        return Sample(
-            ImageAnnotation.from_json((directory / ANNOTATION_JSON).read_text()),
-            directory / IMAGE_FILE,
-        )
+        return read_sample(self.sample_directory(round, throw))
 
     def exists(self, round: int, throw: int) -> bool:
         """Check whether a sample exists for a throw.
@@ -342,6 +301,6 @@ class LegAnnotationHandler:
         directories = [
             entry
             for entry in self.directory.iterdir()
-            if entry.is_dir() and _parse_sample_dir(entry.name) is not None
+            if entry.is_dir() and parse_sample_dir(entry.name) is not None
         ]
         return sorted(directories, key=_sample_sort_key)
