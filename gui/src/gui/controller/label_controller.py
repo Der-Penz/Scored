@@ -93,7 +93,7 @@ class LabelController(BaseController):
         key = (getattr(event, "keysym", "") or "").lower()
         if not key_targets_annotation(event.widget, self.annotation_view):
             return None
-        if event.state & 0x0004:
+        if int(event.state) & 0x0004:
             if key == "s":
                 self._save()
                 return "break"
@@ -263,7 +263,7 @@ class LabelController(BaseController):
 
     def _select_dart(self, index: int) -> None:
         """Select the dart at *index* (0, 1 or 2) in the current image."""
-        self._on_point_selected(index)
+        self._on_point_selected(index, kind=None)
 
     def _on_panel_rebound(self, event: events.PanelRebound) -> None:
         if event.panel is Panel.ANNOTATION and self._active:
