@@ -25,7 +25,7 @@ from gui.protocols.controller import BaseController
 from gui.view.app_view import AppView
 
 # Menus that only make sense for one of the two modes.
-GAME_ONLY_MENUS = ("Source", "Game", "Data")
+GAME_ONLY_MENUS = ("Source", "Game", "Data", "View")
 LABEL_ONLY_MENUS = ("Labels",)
 
 
